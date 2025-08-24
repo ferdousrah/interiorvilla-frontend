@@ -376,7 +376,7 @@ export const GLBModelViewer: React.FC<GLBModelViewerProps> = ({
               <div className="w-20 h-20 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
               <div className="absolute inset-0 w-20 h-20 border-4 border-secondary/30 rounded-full mx-auto animate-pulse"></div>
             </div>
-            <div className="text-white text-xl font-medium mb-3 [font-family:'Fahkwang',Helvetica]">Loading Interior Villa 3D Experience</div>
+            <div className="text-white text-xl font-medium mb-3 [font-family:'Fahkwang',Helvetica]">Loading 3D Experience</div>
             <div className="text-gray-400 text-base mb-6 [font-family:'Fahkwang',Helvetica]">Preparing your immersive journey...</div>
             <div className="w-64 h-2 bg-gray-700 rounded-full overflow-hidden mx-auto">
               <div 
@@ -492,26 +492,7 @@ export const GLBModelViewer: React.FC<GLBModelViewerProps> = ({
         </div>
       )}
 
-      {/* Instructions overlay */}
-      {isLoaded && (
-        <div className="absolute top-6 right-6 bg-black/80 backdrop-blur-md text-white px-6 py-4 rounded-xl border border-gray-600/50 shadow-xl">
-          <div className="text-center">
-            <div className="text-primary text-lg font-semibold mb-2 [font-family:'Fahkwang',Helvetica]">Interior Villa 3D</div>
-            <div className="text-sm text-gray-300 [font-family:'Fahkwang',Helvetica]">Interactive Experience</div>
-            <div className="text-xs text-gray-400 mt-1 [font-family:'Fahkwang',Helvetica]">Drag • Zoom • Explore</div>
-          </div>
-        </div>
-      )}
-
-      {/* Performance indicator */}
-      {isLoaded && (
-        <div className="absolute top-6 left-6 bg-green-500/20 backdrop-blur-sm text-green-400 px-3 py-2 rounded-lg border border-green-500/30">
-          <div className="flex items-center space-x-2">
-            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-            <span className="text-xs font-medium [font-family:'Fahkwang',Helvetica]">3D Ready</span>
-          </div>
-        </div>
-      )}
+      
 
      {/* Scroll Down Arrow Indicator */}
      {isLoaded && (
@@ -529,9 +510,7 @@ export const GLBModelViewer: React.FC<GLBModelViewerProps> = ({
            className="group flex flex-col items-center space-y-2 bg-black/80 backdrop-blur-md text-white px-4 py-3 rounded-2xl border border-gray-600/50 shadow-xl hover:bg-black/90 transition-all duration-300 hover:scale-105"
            title="Scroll to next section"
          >
-           <span className="text-sm font-medium [font-family:'Fahkwang',Helvetica] text-gray-300 group-hover:text-white transition-colors duration-300">
-             Explore More
-           </span>
+           
            <div className="relative">
              <div className="w-8 h-8 border-2 border-primary rounded-full flex items-center justify-center group-hover:border-white transition-colors duration-300">
                <svg 
