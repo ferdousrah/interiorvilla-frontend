@@ -512,6 +512,44 @@ export const GLBModelViewer: React.FC<GLBModelViewerProps> = ({
           </div>
         </div>
       )}
+
+     {/* Scroll Down Arrow Indicator */}
+     {isLoaded && (
+       <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-50">
+         <button
+           onClick={() => {
+             const nextSection = document.querySelector('[data-next-section]');
+             if (nextSection) {
+               nextSection.scrollIntoView({ behavior: 'smooth' });
+             } else {
+               // Fallback: scroll down by viewport height
+               window.scrollBy({ top: window.innerHeight, behavior: 'smooth' });
+             }
+           }}
+           className="group flex flex-col items-center space-y-2 bg-black/80 backdrop-blur-md text-white px-4 py-3 rounded-2xl border border-gray-600/50 shadow-xl hover:bg-black/90 transition-all duration-300 hover:scale-105"
+           title="Scroll to next section"
+         >
+           <span className="text-sm font-medium [font-family:'Fahkwang',Helvetica] text-gray-300 group-hover:text-white transition-colors duration-300">
+             Explore More
+           </span>
+           <div className="relative">
+             <div className="w-8 h-8 border-2 border-primary rounded-full flex items-center justify-center group-hover:border-white transition-colors duration-300">
+               <svg 
+                 className="w-4 h-4 text-primary group-hover:text-white transition-colors duration-300 animate-bounce" 
+                 fill="none" 
+                 stroke="currentColor" 
+                 viewBox="0 0 24 24"
+                 style={{ animationDuration: '2s' }}
+               >
+                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+               </svg>
+             </div>
+             {/* Pulsing ring effect */}
+             <div className="absolute inset-0 w-8 h-8 border-2 border-primary rounded-full animate-ping opacity-30 group-hover:border-white"></div>
+           </div>
+         </button>
+       </div>
+     )}
     </div>
   );
 };

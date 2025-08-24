@@ -132,6 +132,7 @@ export const FeaturedWorksHeaderSection = (): JSX.Element => {
   return (
     <section 
       ref={sectionRef}
+      data-next-section
       className="w-full pt-16 md:pt-20 lg:pt-24 pb-0 bg-white relative overflow-hidden"
     >
       {/* Background decorative elements */}
