@@ -40,12 +40,12 @@ export const GLBModelViewer: React.FC<GLBModelViewerProps> = ({
 
     // Camera setup
     const camera = new THREE.PerspectiveCamera(
-      75,
+      60, // Reduced FOV for more focused view
       mountRef.current.clientWidth / mountRef.current.clientHeight,
       0.1,
       1000
     );
-    camera.position.set(4, 3, 4); // Closer default position for better initial view
+    camera.position.set(-3, 4, 6); // Front-left position to show staircase clearly
     cameraRef.current = camera;
 
     // Renderer setup
@@ -74,8 +74,8 @@ export const GLBModelViewer: React.FC<GLBModelViewerProps> = ({
     controls.enablePan = true;
     controls.autoRotate = false;
     controls.autoRotateSpeed = 1.0;
-    controls.minDistance = 1.5; // Allow closer zoom
-    controls.maxDistance = 20; // Reasonable max distance
+    controls.minDistance = 2; // Closer minimum for detailed view
+    controls.maxDistance = 15; // Reduced max distance for better control
     controls.maxPolarAngle = Math.PI;
     controls.minPolarAngle = 0;
     controlsRef.current = controls;
@@ -175,21 +175,22 @@ export const GLBModelViewer: React.FC<GLBModelViewerProps> = ({
 
         // Scale the model to fit nicely in view
         const maxDim = Math.max(size.x, size.y, size.z);
-        const scale = 8 / maxDim; // Larger scale for better visibility
+        const scale = 12 / maxDim; // Even larger scale for more detailed view
         model.scale.setScalar(scale);
 
         scene.add(model);
         
-        // Set optimal camera position for clear initial view
-        const optimalDistance = maxDim * 0.8; // Closer distance based on model size
+        // Set optimal camera position focused on staircase area
+        const optimalDistance = maxDim * 0.6; // Much closer for detailed view
         camera.position.set(
-          optimalDistance * 0.7,
-          optimalDistance * 0.5,
-          optimalDistance * 0.7
+          -optimalDistance * 0.8, // Front-left position (negative X for left side)
+          optimalDistance * 0.9,   // Higher Y position for better top-down angle
+          optimalDistance * 1.2    // Forward Z position for front view
         );
         
-        // Adjust camera to look at the model center
-        controls.target.copy(model.position);
+        // Focus camera on the staircase area (slightly above center)
+        const focusPoint = new THREE.Vector3(0, size.y * 0.2, 0); // Focus slightly above center
+        controls.target.copy(focusPoint);
         controls.update();
 
         setIsLoaded(true);
@@ -266,7 +267,7 @@ export const GLBModelViewer: React.FC<GLBModelViewerProps> = ({
     if (controlsRef.current) {
       const controls = controlsRef.current;
       const currentDistance = controls.getDistance();
-      const newDistance = Math.max(currentDistance * 0.8, controls.minDistance);
+      const newDistance = Math.max(currentDistance * 0.7, controls.minDistance); // More aggressive zoom in
       
       const direction = new THREE.Vector3();
       cameraRef.current.getWorldDirection(direction);
@@ -287,7 +288,7 @@ export const GLBModelViewer: React.FC<GLBModelViewerProps> = ({
     if (controlsRef.current) {
       const controls = controlsRef.current;
       const currentDistance = controls.getDistance();
-      const newDistance = Math.min(currentDistance * 1.25, controls.maxDistance);
+      const newDistance = Math.min(currentDistance * 1.4, controls.maxDistance); // More aggressive zoom out
       
       const direction = new THREE.Vector3();
       cameraRef.current.getWorldDirection(direction);
@@ -312,16 +313,16 @@ export const GLBModelViewer: React.FC<GLBModelViewerProps> = ({
       // Smooth reset animation
       gsap.to(camera.position, {
         duration: 1.5,
-        x: 4,
-        y: 3,
-        z: 4,
+        x: -3, // Front-left position
+        y: 4,  // Higher for better angle
+        z: 6,  // Forward position
         ease: "power2.inOut"
       });
       
       gsap.to(controls.target, {
         duration: 1.5,
         x: 0,
-        y: 0,
+        y: 1, // Focus slightly above ground level
         z: 0,
         ease: "power2.inOut",
         onUpdate: () => controls.update()
