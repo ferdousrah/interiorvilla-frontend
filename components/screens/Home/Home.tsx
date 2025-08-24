@@ -16,21 +16,9 @@ import { CTASection } from "./sections/CTASection/CTASection";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { SplitText } from "gsap/SplitText";
-import { FloorPlan3D } from "../../ui/3d-floor-plan";
+import { GLBModelViewer } from "../../ui/glb-model-viewer";
 import { X, ChevronDown, Home as HomeIcon, User, Briefcase, FolderOpen, BookOpen, Mail } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-
-// Static image fallback for low-end devices
-const StaticHeroBackground = () => (
-  <div className="w-full h-[800px] bg-gradient-to-br from-black via-gray-900 to-black relative overflow-hidden">
-    <img 
-      src="/floor-plan-static.jpg" 
-      alt="3D Floor Plan" 
-      className="w-full h-full object-cover opacity-60"
-    />
-    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/70"></div>
-  </div>
-);
 
 gsap.registerPlugin(ScrollTrigger, SplitText);
 
@@ -49,27 +37,6 @@ const Home = (): JSX.Element => {
   const menuContainerRef = useRef<HTMLDivElement>(null);
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const submenuItemRefs = useRef<{ [key: string]: (HTMLButtonElement | null)[] }>({});
-
-  // Check if device is likely low-end
-  const [isLowEndDevice, setIsLowEndDevice] = useState(false);
-  
-  useEffect(() => {
-    // Simple performance detection
-    const checkPerformance = () => {
-      // Check for mobile devices which typically have lower performance
-      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      
-      // Check for low memory (if available in the browser)
-      const hasLowMemory = navigator.deviceMemory && navigator.deviceMemory < 4;
-      
-      // Check for low CPU cores (if available in the browser)
-      const hasLowCPU = navigator.hardwareConcurrency && navigator.hardwareConcurrency < 4;
-      
-      return isMobile || hasLowMemory || hasLowCPU;
-    };
-    
-    setIsLowEndDevice(checkPerformance());
-  }, []);
 
   const navItems = [
     { 
@@ -423,13 +390,9 @@ const Home = (): JSX.Element => {
       <CustomCursor className="custom-cursor" />
       
       <div ref={heroContainerRef} className="w-full relative overflow-hidden">
-        {isLowEndDevice ? (
-          <StaticHeroBackground />
-        ) : (
-          <section className="w-full h-[800px] bg-gradient-to-br from-black via-gray-900 to-black">
-            <FloorPlan3D className="w-full h-full" lowPerformanceMode={true} />
-          </section>
-        )}
+        <section className="w-full h-[800px] bg-gradient-to-br from-black via-gray-900 to-black">
+          <GLBModelViewer className="w-full h-full" modelPath="/intro.glb" />
+        </section>
 
         <header 
           ref={headerRef}
