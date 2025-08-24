@@ -45,7 +45,7 @@ export const GLBModelViewer: React.FC<GLBModelViewerProps> = ({
       0.1,
       1000
     );
-    camera.position.set(8, 6, 8);
+    camera.position.set(4, 3, 4); // Closer default position for better initial view
     cameraRef.current = camera;
 
     // Renderer setup
@@ -74,8 +74,8 @@ export const GLBModelViewer: React.FC<GLBModelViewerProps> = ({
     controls.enablePan = true;
     controls.autoRotate = false;
     controls.autoRotateSpeed = 1.0;
-    controls.minDistance = 3;
-    controls.maxDistance = 25;
+    controls.minDistance = 1.5; // Allow closer zoom
+    controls.maxDistance = 20; // Reasonable max distance
     controls.maxPolarAngle = Math.PI;
     controls.minPolarAngle = 0;
     controlsRef.current = controls;
@@ -175,12 +175,20 @@ export const GLBModelViewer: React.FC<GLBModelViewerProps> = ({
 
         // Scale the model to fit nicely in view
         const maxDim = Math.max(size.x, size.y, size.z);
-        const scale = 6 / maxDim;
+        const scale = 8 / maxDim; // Larger scale for better visibility
         model.scale.setScalar(scale);
 
         scene.add(model);
         
-        // Adjust camera to look at the model
+        // Set optimal camera position for clear initial view
+        const optimalDistance = maxDim * 0.8; // Closer distance based on model size
+        camera.position.set(
+          optimalDistance * 0.7,
+          optimalDistance * 0.5,
+          optimalDistance * 0.7
+        );
+        
+        // Adjust camera to look at the model center
         controls.target.copy(model.position);
         controls.update();
 
@@ -304,9 +312,9 @@ export const GLBModelViewer: React.FC<GLBModelViewerProps> = ({
       // Smooth reset animation
       gsap.to(camera.position, {
         duration: 1.5,
-        x: 8,
-        y: 6,
-        z: 8,
+        x: 4,
+        y: 3,
+        z: 4,
         ease: "power2.inOut"
       });
       
