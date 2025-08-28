@@ -43,7 +43,7 @@ const convertToWebp = (url: string) =>
   url.replace(/\.jpe?g(\?[^#]*)?$/i, ".webp$1");
 
 const getFeaturedImageUrl = (fi: any): string => {
-  const placeholder = "/create-an-image-for-interior-design-about-us-section.png";
+  const placeholder = "/placeholder.webp";
   if (!fi) return placeholder;
 
   if (typeof fi === "string") return convertToWebp(absolutize(fi));
@@ -95,7 +95,7 @@ export const OurFeaturedWorksSection = (): JSX.Element => {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch(`${CMS_ORIGIN}/api/projects?limit=10`, { cache: "no-store" });
+        const res = await fetch(`${CMS_ORIGIN}/api/projects?where[featuredOnHome][equals]=true`, { cache: "no-store" });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data: ProjectsApiResponse = await res.json();
 

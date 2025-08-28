@@ -20,7 +20,7 @@ const toWebp = (url: string) => url.replace(/\.jpe?g(\?[^#]*)?$/i, ".webp$1");
 type ImgSrcs = { primary: string; fallback: string };
 
 const resolveFeaturedImage = (fi: any): ImgSrcs => {
-  const placeholder = "/create-an-image-for-interior-design-about-us-section.png";
+  const placeholder = "/placeholder.webp";
 
   const pick = (raw?: string): ImgSrcs => {
     if (!raw) return { primary: placeholder, fallback: placeholder };

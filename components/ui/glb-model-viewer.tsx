@@ -471,24 +471,7 @@ export const GLBModelViewer: React.FC<GLBModelViewerProps> = ({
               </button>
             </div>
             
-            <div className="space-y-2 text-xs text-gray-300 [font-family:'Fahkwang',Helvetica]">
-              <div className="flex items-center space-x-2">
-                <span>🖱️</span>
-                <span>Drag to rotate</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <span>🔍</span>
-                <span>Scroll to zoom</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <span>📱</span>
-                <span>Touch to interact</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <span>⚡</span>
-                <span>Click controls for actions</span>
-              </div>
-            </div>
+            
           </div>
         </div>
       )}
