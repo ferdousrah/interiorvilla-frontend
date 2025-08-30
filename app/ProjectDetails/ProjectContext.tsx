@@ -48,6 +48,8 @@ function extractMediaUrl(raw: any): string | undefined {
     raw.file?.url ||
     raw.image?.url ||
     raw.media?.url ||
+    raw.sizes?.large?.url ||
+    raw.sizes?.medium?.url ||
     raw.sizes?.card?.url ||
     raw.sizes?.preview?.url ||
     raw.sizes?.thumbnail?.url;
@@ -56,6 +58,7 @@ function extractMediaUrl(raw: any): string | undefined {
   if (raw.filename) return `${CMS_BASE}/api/media/file/${raw.filename}`;
   return;
 }
+
 const isVideoUrl = (u?: string) => !!u && /\.(mp4|webm|mov|m4v|avi|mkv)$/i.test(u);
 const looksLikePlan = (x: any) => {
   const t = (x?.type || x?.kind || x?.imageType || "").toString().toLowerCase();
@@ -66,6 +69,7 @@ function collectRawGallery(project: any): any[] {
   const pools: any[] = [];
   const pushArr = (arr: any) => Array.isArray(arr) && pools.push(...arr);
 
+  // Try different possible gallery field names
   pushArr(project?.gallery);
   pushArr(project?.galleries);
   pushArr(project?.images);
@@ -77,6 +81,14 @@ function collectRawGallery(project: any): any[] {
   pushArr(project?.galleryImages);
   pushArr(project?.floorPlans);
   pushArr(project?.plans);
+
+  // Also check for nested gallery structures
+  if (project?.projectGallery?.images) {
+    pushArr(project.projectGallery.images);
+  }
+  if (project?.gallery?.images) {
+    pushArr(project.gallery.images);
+  }
 
   const single =
     project?.gallery ||
@@ -111,14 +123,19 @@ function buildGallery(project: any) {
   const plans:  GalleryItem[] = [];
 
   const raw = collectRawGallery(project);
+  console.log('Raw gallery data:', raw); // Debug log
+  
   raw.forEach((r, i) => {
     const it = normalizeGalleryItem(r, i);
     if (!it) return;
+    console.log('Normalized gallery item:', it); // Debug log
+    
     if (it.type === "photo") photos.push(it);
     else if (it.type === "video") videos.push(it);
     else plans.push(it);
   });
 
+  console.log('Built gallery:', { photos: photos.length, videos: videos.length, plans: plans.length }); // Debug log
   return { photos, videos, plans };
 }
 
@@ -188,7 +205,12 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [proj, setProj] = useState<any | null>(null);
 
   useEffect(() => {
-    if (!id) return;
+    if (!id) {
+      setErr("No project ID provided");
+      setLoading(false);
+      return;
+    }
+    
     let alive = true;
     const ac = new AbortController();
 
@@ -196,17 +218,37 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
       setLoading(true);
       setErr(null);
       try {
-        const res = await fetch(`${CMS_BASE}/api/projects/${id}`, { signal: ac.signal });
-        if (!res.ok) throw new Error(`Failed to load project ${id}`);
+        console.log('Fetching project with ID:', id); // Debug log
+        const res = await fetch(`${CMS_BASE}/api/projects/${id}?depth=2`, { 
+          signal: ac.signal,
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
+        
+        if (!res.ok) {
+          throw new Error(`Failed to load project ${id}: ${res.status} ${res.statusText}`);
+        }
+        
         const json = await res.json();
+        console.log('Fetched project data:', json); // Debug log
+        
         if (!alive) return;
-        setProj(json?.doc || json || null);
+        
+        // Handle both direct project object and wrapped response
+        const projectData = json?.doc || json || null;
+        setProj(projectData);
+        
+        if (!projectData) {
+          throw new Error(`Project ${id} not found`);
+        }
       } catch (e: any) {
         if (!alive || e?.name === "AbortError") return;
-        setErr(e?.message || "Failed to load");
+        console.error('Project fetch error:', e); // Debug log
+        setErr(e?.message || "Failed to load project");
         setProj(null);
       } finally {
-        alive && setLoading(false);
+        if (alive) setLoading(false);
       }
     })();
 

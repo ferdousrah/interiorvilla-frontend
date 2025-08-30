@@ -7,8 +7,7 @@ import "@fancyapps/ui/dist/fancybox/fancybox.css";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useProject } from "../../ProjectContext";
-import { swapToWebp, toMediaUrl, toWebpCandidate, youtubeId } from "../../../../lib/media";
-import "./project-gallery.css"; // <-- our own CSS (replaces <style jsx global>)
+import "./project-gallery.css";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -17,15 +16,35 @@ type PhotoItem = {
   type: "photo" | "plan";
   alt: string;
   full: string;
-  fullWebp: string;
   thumb: string;
-  thumbWebp: string;
 };
 
-type VideoItem = { id: string; videoUrl: string; title: string };
+type VideoItem = { 
+  id: string; 
+  videoUrl: string; 
+  title: string;
+  thumbnail?: string;
+};
+
+// Helper to extract YouTube ID
+const getYouTubeId = (url: string): string | null => {
+  if (!url) return null;
+  try {
+    const urlObj = new URL(url);
+    if (urlObj.hostname.includes("youtu.be")) {
+      return urlObj.pathname.slice(1);
+    }
+    if (urlObj.hostname.includes("youtube.com")) {
+      return urlObj.searchParams.get("v");
+    }
+  } catch {
+    // Invalid URL
+  }
+  return null;
+};
 
 export const ProjectGallerySection = (): JSX.Element => {
-  const { project } = useProject();
+  const { project, gallery, loading, error } = useProject();
 
   const [activeTab, setActiveTab] = useState<"photos" | "videos" | "plans">("photos");
   const [hovered, setHovered] = useState<string | number | null>(null);
@@ -36,53 +55,65 @@ export const ProjectGallerySection = (): JSX.Element => {
   const tabsRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
 
-  // ---------- Build data from API ----------
+  // Build data from the context
   const photoItems: PhotoItem[] = useMemo(() => {
-    const arr = (project?.gallery?.photos as any[]) || [];
-    return arr.map((p, i) => {
-      const src = p?.image ?? p?.photo ?? p?.file ?? p;
-      const full = toMediaUrl(src, { width: 1920 });
-      const thumb = toMediaUrl(src, { width: 800 });
-      return {
-        id: p?.id ?? `photo-${i}`,
-        type: "photo",
-        alt: p?.image?.alt || p?.alt || project?.title || "Photo",
-        full,
-        thumb,
-        fullWebp: toWebpCandidate(full),
-        thumbWebp: toWebpCandidate(thumb),
-      };
-    });
-  }, [project]);
+    if (!gallery?.photos) return [];
+    
+    return gallery.photos.map((p, i) => ({
+      id: p.id || `photo-${i}`,
+      type: "photo" as const,
+      alt: p.alt || project?.title || "Photo",
+      full: p.src,
+      thumb: p.src, // Use same URL for thumb, could be optimized with size params
+    }));
+  }, [gallery?.photos, project?.title]);
 
   const planItems: PhotoItem[] = useMemo(() => {
-    const arr = (project?.gallery?.plans as any[]) || [];
-    return arr.map((p, i) => {
-      const src = p?.image ?? p?.plan ?? p?.file ?? p;
-      const full = toMediaUrl(src, { width: 1920 });
-      const thumb = toMediaUrl(src, { width: 800 });
-      return {
-        id: p?.id ?? `plan-${i}`,
-        type: "plan",
-        alt: p?.image?.alt || p?.alt || "Plan",
-        full,
-        thumb,
-        fullWebp: toWebpCandidate(full),
-        thumbWebp: toWebpCandidate(thumb),
-      };
-    });
-  }, [project]);
+    if (!gallery?.plans) return [];
+    
+    return gallery.plans.map((p, i) => ({
+      id: p.id || `plan-${i}`,
+      type: "plan" as const,
+      alt: p.alt || "Floor Plan",
+      full: p.src,
+      thumb: p.src,
+    }));
+  }, [gallery?.plans]);
 
   const videoItems: VideoItem[] = useMemo(() => {
-    const arr = (project?.gallery?.videos as any[]) || [];
-    return arr.map((v, i) => ({
-      id: youtubeId(v?.videoUrl) || v?.id || `video-${i}`,
-      videoUrl: v?.videoUrl || "",
-      title: project?.title || "Video",
-    }));
-  }, [project]);
+    if (!gallery?.videos) return [];
+    
+    return gallery.videos.map((v, i) => {
+      const youtubeId = getYouTubeId(v.src);
+      return {
+        id: youtubeId || v.id || `video-${i}`,
+        videoUrl: v.src,
+        title: v.alt || project?.title || "Video",
+        thumbnail: youtubeId ? `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg` : undefined,
+      };
+    });
+  }, [gallery?.videos, project?.title]);
 
-  // ---------- Animations ----------
+  // Debug logs
+  useEffect(() => {
+    console.log('Gallery data:', gallery);
+    console.log('Photo items:', photoItems);
+    console.log('Plan items:', planItems);
+    console.log('Video items:', videoItems);
+  }, [gallery, photoItems, planItems, videoItems]);
+
+  // Set default active tab based on available content
+  useEffect(() => {
+    if (photoItems.length > 0) {
+      setActiveTab("photos");
+    } else if (planItems.length > 0) {
+      setActiveTab("plans");
+    } else if (videoItems.length > 0) {
+      setActiveTab("videos");
+    }
+  }, [photoItems.length, planItems.length, videoItems.length]);
+
+  // Animations
   useEffect(() => {
     if (!sectionRef.current) return;
 
@@ -155,7 +186,7 @@ export const ProjectGallerySection = (): JSX.Element => {
           scrollTrigger: {
             trigger: gridRef.current,
             start: "top 85%",
-            toggleActions: "play none none none", // don't reverse -> prevent faded state
+            toggleActions: "play none none none",
           },
         }
       );
@@ -166,7 +197,7 @@ export const ProjectGallerySection = (): JSX.Element => {
     };
   }, []);
 
-  // ---------- Fancybox ----------
+  // Fancybox setup
   useEffect(() => {
     Fancybox.destroy();
     const timer = setTimeout(() => {
@@ -194,17 +225,63 @@ export const ProjectGallerySection = (): JSX.Element => {
     };
   }, [activeTab, photoItems.length, planItems.length, videoItems.length]);
 
-  // ---------- UI ----------
-  const tabs = [
-    { id: "photos" as const, label: `Photos (${photoItems.length})` },
-    { id: "videos" as const, label: `Videos (${videoItems.length})` },
-    { id: "plans" as const, label: `Plans (${planItems.length})` },
-  ];
+  // Show loading state
+  if (loading) {
+    return (
+      <section className="py-16 md:py-24 bg-white">
+        <div className="container mx-auto px-4 max-w-6xl">
+          <div className="text-center">
+            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-[#626161] [font-family:'Fahkwang',Helvetica]">Loading gallery...</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
-  const renderThumb = (item: PhotoItem, idx: number) => (
+  // Show error state
+  if (error) {
+    return (
+      <section className="py-16 md:py-24 bg-white">
+        <div className="container mx-auto px-4 max-w-6xl">
+          <div className="text-center">
+            <p className="text-red-600 [font-family:'Fahkwang',Helvetica]">Failed to load gallery: {error}</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // Check if we have any content to show
+  const hasContent = photoItems.length > 0 || planItems.length > 0 || videoItems.length > 0;
+
+  if (!hasContent) {
+    return (
+      <section className="py-16 md:py-24 bg-white">
+        <div className="container mx-auto px-4 max-w-6xl">
+          <div className="text-center">
+            <h2 className="text-2xl md:text-3xl lg:text-4xl font-medium [font-family:'Fahkwang',Helvetica] text-[#01190c] mb-6">
+              Project Gallery
+            </h2>
+            <p className="text-[#626161] [font-family:'Fahkwang',Helvetica]">
+              No gallery content available for this project.
+            </p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  const tabs = [
+    { id: "photos" as const, label: `Photos (${photoItems.length})`, count: photoItems.length },
+    { id: "videos" as const, label: `Videos (${videoItems.length})`, count: videoItems.length },
+    { id: "plans" as const, label: `Plans (${planItems.length})`, count: planItems.length },
+  ].filter(tab => tab.count > 0); // Only show tabs with content
+
+  const renderPhotoItem = (item: PhotoItem, idx: number) => (
     <a
       key={item.id}
-      href={item.full} // keep original for maximum compatibility
+      href={item.full}
       data-fancybox={`gallery-${activeTab}`}
       data-caption={`${item.alt} - ${item.type}`}
       className="block w-full cursor-pointer group"
@@ -212,17 +289,17 @@ export const ProjectGallerySection = (): JSX.Element => {
       onMouseLeave={() => setHovered(null)}
     >
       <div className="relative w-full aspect-[4/3] overflow-hidden rounded-xl shadow-lg group-hover:shadow-2xl transition-all duration-500">
-        <picture>
-          <source srcSet={item.thumbWebp} type="image/webp" />
-          <source srcSet={swapToWebp(item.thumb)} type="image/webp" />
-          <img
-            src={item.thumb}
-            alt={item.alt}
-            className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
-            loading={idx < 3 ? "eager" : "lazy"}
-            decoding="async"
-          />
-        </picture>
+        <img
+          src={item.thumb}
+          alt={item.alt}
+          className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+          loading={idx < 6 ? "eager" : "lazy"}
+          decoding="async"
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            target.src = "/create-an-image-for-interior-design-about-us-section.png";
+          }}
+        />
 
         {/* Category pill */}
         <div className="absolute top-3 left-3 z-20">
@@ -257,9 +334,9 @@ export const ProjectGallerySection = (): JSX.Element => {
   );
 
   const renderVideo = (v: VideoItem) => {
-    const id = v.id;
-    const thumb = id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : "";
-    const href = id ? `https://www.youtube.com/watch?v=${id}` : v.videoUrl;
+    const youtubeId = getYouTubeId(v.videoUrl);
+    const thumbnail = v.thumbnail || (youtubeId ? `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg` : "");
+    const href = youtubeId ? `https://www.youtube.com/watch?v=${youtubeId}` : v.videoUrl;
 
     return (
       <a
@@ -270,34 +347,59 @@ export const ProjectGallerySection = (): JSX.Element => {
         className="block w-full cursor-pointer group"
       >
         <div className="relative w-full aspect-[16/9] overflow-hidden rounded-xl shadow-lg group-hover:shadow-2xl transition-all duration-500">
-          {!!thumb && (
+          {thumbnail && (
             <img
-              src={thumb}
+              src={thumbnail}
               alt={v.title}
               className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
               loading="lazy"
               decoding="async"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.src = "/create-an-image-for-interior-design-about-us-section.png";
+              }}
             />
           )}
+          
+          {/* Video play button */}
           <div className="absolute inset-0 flex items-center justify-center z-20">
-            <div className="w-16 h-16 rounded-full bg-white/90 flex items-center justify-center shadow-xl">
-              <svg viewBox="0 0 24 24" className="w-8 h-8 text-primary" fill="currentColor">
+            <div className="w-16 h-16 rounded-full bg-white/90 flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform duration-300">
+              <svg viewBox="0 0 24 24" className="w-8 h-8 text-primary ml-1" fill="currentColor">
                 <path d="M8 5v14l11-7z" />
               </svg>
             </div>
+          </div>
+
+          {/* Video label */}
+          <div className="absolute top-3 left-3 z-20">
+            <span className="px-3 py-1 bg-red-500/90 backdrop-blur-sm text-xs font-semibold text-white rounded-full shadow-sm">
+              Video
+            </span>
           </div>
         </div>
       </a>
     );
   };
 
-  const current =
-    activeTab === "photos" ? photoItems : activeTab === "plans" ? planItems : videoItems;
+  const getCurrentItems = () => {
+    switch (activeTab) {
+      case "photos":
+        return photoItems;
+      case "plans":
+        return planItems;
+      case "videos":
+        return videoItems;
+      default:
+        return [];
+    }
+  };
+
+  const currentItems = getCurrentItems();
 
   return (
     <section ref={sectionRef} className="py-16 md:py-24 bg-white">
       <div className="container mx-auto px-4 max-w-6xl">
-        {/* header */}
+        {/* Header */}
         <div className="text-center mb-12 md:mb-16">
           <h2
             ref={headingRef}
@@ -314,26 +416,28 @@ export const ProjectGallerySection = (): JSX.Element => {
           </p>
         </div>
 
-        {/* tabs */}
-        <div ref={tabsRef} className="flex justify-center mb-16">
-          <div className="relative bg-white rounded-2xl p-2 shadow-lg border border-gray-100 inline-flex space-x-2">
-            {tabs.map((t) => (
-              <button
-                key={t.id}
-                onClick={() => setActiveTab(t.id)}
-                className={`relative px-6 py-3 text-base [font-family:'Fahkwang',Helvetica] font-medium transition-all duration-300 rounded-xl z-10 min-w-[140px] ${
-                  activeTab === t.id
-                    ? "bg-primary text-white shadow-lg"
-                    : "bg-transparent text-[#626161] hover:text-[#01190c] hover:bg-gray-50"
-                }`}
-              >
-                {t.label}
-              </button>
-            ))}
+        {/* Tabs - Only show if we have multiple types of content */}
+        {tabs.length > 1 && (
+          <div ref={tabsRef} className="flex justify-center mb-16">
+            <div className="relative bg-white rounded-2xl p-2 shadow-lg border border-gray-100 inline-flex space-x-2">
+              {tabs.map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => setActiveTab(t.id)}
+                  className={`relative px-6 py-3 text-base [font-family:'Fahkwang',Helvetica] font-medium transition-all duration-300 rounded-xl z-10 min-w-[140px] ${
+                    activeTab === t.id
+                      ? "bg-primary text-white shadow-lg"
+                      : "bg-transparent text-[#626161] hover:text-[#01190c] hover:bg-gray-50"
+                  }`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
-        {/* grid */}
+        {/* Content Grid */}
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
@@ -344,11 +448,28 @@ export const ProjectGallerySection = (): JSX.Element => {
             ref={gridRef}
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
           >
-            {activeTab === "videos"
-              ? (current as VideoItem[]).map(renderVideo)
-              : (current as PhotoItem[]).map((it, idx) => renderThumb(it, idx))}
+            {currentItems.length === 0 ? (
+              <div className="col-span-full text-center py-12">
+                <p className="text-[#626161] [font-family:'Fahkwang',Helvetica]">
+                  No {activeTab} available for this project.
+                </p>
+              </div>
+            ) : activeTab === "videos" ? (
+              (currentItems as VideoItem[]).map(renderVideo)
+            ) : (
+              (currentItems as PhotoItem[]).map((item, idx) => renderPhotoItem(item, idx))
+            )}
           </motion.div>
         </AnimatePresence>
+
+        {/* Debug info (remove in production) */}
+        {process.env.NODE_ENV === 'development' && (
+          <div className="mt-8 p-4 bg-gray-100 rounded-lg text-xs text-gray-600">
+            <p>Debug: Photos: {photoItems.length}, Videos: {videoItems.length}, Plans: {planItems.length}</p>
+            <p>Active Tab: {activeTab}</p>
+            <p>Current Items: {currentItems.length}</p>
+          </div>
+        )}
       </div>
     </section>
   );
