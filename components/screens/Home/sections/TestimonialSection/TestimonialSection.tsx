@@ -1,5 +1,5 @@
 import { ArrowLeft, ArrowRight, PlayIcon } from "lucide-react";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Card, CardContent } from "../../../../ui/card";
 import useEmblaCarousel from "embla-carousel-react";
 import { Fancybox } from "@fancyapps/ui";
@@ -7,26 +7,75 @@ import "@fancyapps/ui/dist/fancybox/fancybox.css";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { SplitText } from "gsap/SplitText";
+import "./testimonial.css";
 
 gsap.registerPlugin(ScrollTrigger, SplitText);
 
-/* -------- CMS image helpers (jpg->webp + absolute URLs) -------- */
-const CMS_ORIGIN = "https://interiorvillabd.com";
-const MEDIA_BASE = `${CMS_ORIGIN}/api/media/file/`;
+/* ----------------------------------------
+   Tiny hook: wait until fonts are loaded
+----------------------------------------- */
+function useFontsReady() {
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        // @ts-ignore
+        const fonts = (document as any).fonts;
+        if (fonts?.ready) await fonts.ready;
+        else await new Promise((r) => requestAnimationFrame(() => setTimeout(r, 50)));
+      } finally {
+        if (!cancelled) setReady(true);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+  return ready;
+}
+
+/* -------- CMS image helpers: absolute URLs + size picking -------- */
+const CMS_ORIGIN = "https://interiorvillabd.com"; // change to your CMS origin if needed
 const absolutize = (u: string) =>
   /^https?:\/\//i.test(u) ? u : new URL(u, CMS_ORIGIN).href;
-const convertToWebp = (url: string) =>
-  typeof url === "string" ? url.replace(/\.jpe?g(\?[^#]*)?$/i, ".webp$1") : url;
-const getMediaUrl = (m: any): string => {
-  const placeholder = "/create-an-image-for-interior-design-about-us-section.png";
+
+type MediaSize = { url?: string | null };
+type Media = {
+  url?: string | null;
+  alt?: string | null;
+  sizes?: {
+    thumbnail?: MediaSize;
+    square?: MediaSize;
+    small?: MediaSize;
+    medium?: MediaSize;
+    large?: MediaSize;
+    xlarge?: MediaSize;
+    og?: MediaSize;
+    [k: string]: MediaSize | undefined;
+  };
+};
+
+// prefer best size, fallback to original
+const getBestImageUrl = (m?: Media | string | null): string => {
+  const placeholder = "/placeholder.webp";
   if (!m) return placeholder;
-  if (typeof m === "string") return convertToWebp(absolutize(m));
-  if (m?.url) return convertToWebp(absolutize(m.url));
-  if (m?.sizes?.large?.url) return convertToWebp(absolutize(m.sizes.large.url));
-  if (m?.sizes?.medium?.url) return convertToWebp(absolutize(m.sizes.medium.url));
-  if (m?.sizes?.card?.url) return convertToWebp(absolutize(m.sizes.card.url));
-  if (m?.filename) return convertToWebp(`${MEDIA_BASE}${m.filename}`);
+
+  if (typeof m === "string") return absolutize(m);
+
+  const order = ["large", "xlarge", "medium", "small", "og", "square", "thumbnail", "card"];
+  for (const k of order) {
+    const u = m?.sizes?.[k]?.url;
+    if (u) return absolutize(u);
+  }
+  if (m?.url) return absolutize(m.url);
   return placeholder;
+};
+
+const getImageAlt = (m?: Media | string | null, fallback = "Client story") => {
+  if (m && typeof m !== "string") {
+    const a = (m.alt || "").trim();
+    if (a) return a;
+  }
+  return fallback;
 };
 
 /* -------- YouTube helpers -------- */
@@ -45,14 +94,29 @@ const getYouTubeId = (u: string): string | null => {
   return null;
 };
 
+// replace your toYouTubeEmbed with this:
 const toYouTubeEmbed = (u: string) => {
   const id = getYouTubeId(u);
-  const origin =
-    typeof window !== "undefined" ? encodeURIComponent(window.location.origin) : "";
-  return id
-    ? `https://www.youtube.com/embed/${id}?autoplay=1&rel=0&controls=1&modestbranding=1&playsinline=1&enablejsapi=1&origin=${origin}`
-    : u;
+  if (!id) return null;
+
+  const base = `https://www.youtube-nocookie.com/embed/${id}`;
+  const qp = new URLSearchParams({
+    autoplay: "1",
+    rel: "0",
+    controls: "1",
+    modestbranding: "1",
+    playsinline: "1",
+  });
+
+  // Only use JS API + origin on HTTPS non-localhost
+  if (typeof window !== "undefined" && window.location.protocol === "https:" && window.location.hostname !== "localhost") {
+    qp.set("enablejsapi", "1");
+    qp.set("origin", window.location.origin);
+  }
+
+  return `${base}?${qp.toString()}`;
 };
+
 
 type Testimonial = {
   id: number;
@@ -85,30 +149,37 @@ export const TestimonialSection = (): JSX.Element => {
   const navigationRef = useRef<HTMLDivElement>(null);
   const backgroundElementsRef = useRef<HTMLDivElement>(null);
 
+  const fontsReady = useFontsReady();
+
   /* ----------------- Fetch testimonials from CMS ----------------- */
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-       
-        const res = await fetch('/api/testimonials');
+        const res = await fetch("https://interiorvillabd.com/api/testimonials", { cache: "no-store" });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         const docs = Array.isArray(data?.docs) ? data.docs : Array.isArray(data) ? data : [];
 
         const mapped: Testimonial[] = docs
-          .map((doc: any, i: number) => ({
-            id: Number(doc?.id ?? i + 1),
-            title: doc?.title || doc?.name || `Testimonial ${i + 1}`,
-            description: doc?.shortDescription || doc?.description || "",
-            image: getMediaUrl(doc?.thumbnail || doc?.image || doc?.coverImage || doc?.photo),
-            alt: doc?.alt || doc?.title || "Client story",
-            video:
-              doc?.videoUrl ||
-              doc?.video?.url ||
-              (typeof doc?.video === "string" ? doc.video : "") ||
-              "",
-          }))
+          .map((doc: any, i: number) => {
+            const media: Media | string | null =
+              doc?.thumbnail || doc?.image || doc?.coverImage || doc?.photo || null;
+
+            const title = doc?.title || doc?.name || `Testimonial ${i + 1}`;
+            return {
+              id: Number(doc?.id ?? i + 1),
+              title,
+              description: doc?.shortDescription || doc?.description || "",
+              image: getBestImageUrl(media),
+              alt: getImageAlt(media, title),
+              video:
+                doc?.videoUrl ||
+                doc?.video?.url ||
+                (typeof doc?.video === "string" ? doc.video : "") ||
+                "",
+            };
+          })
           .filter((t) => !!t.video);
 
         if (!cancelled) setItems(mapped);
@@ -117,9 +188,7 @@ export const TestimonialSection = (): JSX.Element => {
         if (!cancelled) setItems([]);
       }
     })();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, []);
 
   /* ----------------- Fancybox bootstrap ----------------- */
@@ -137,242 +206,200 @@ export const TestimonialSection = (): JSX.Element => {
     };
   }, []);
 
-  /* ----------------- Hover heading animation ----------------- */
-  useEffect(() => {
-    if (!headingRef.current || !headingWrapperRef.current) return;
-    const splitText = new SplitText(headingRef.current, {
-      type: "chars,words",
-      charsClass: "char",
-      wordsClass: "word",
-    });
+  /* ----------------- Hover heading animation (fonts gated) ----------------- */
+  useLayoutEffect(() => {
+    if (!fontsReady) return;
+    if (!sectionRef.current || !headingRef.current || !headingWrapperRef.current) return;
 
-    const onMove = (e: MouseEvent) => {
-      const rect = headingWrapperRef.current!.getBoundingClientRect();
-      const x = (e.clientX - rect.left) / rect.width;
-      const y = (e.clientY - rect.top) / rect.height;
-      gsap.to(splitText.chars, {
-        duration: 0.5,
-        y: (i: number) => (y - 0.5) * 15 * Math.sin((i + 1) * 0.5),
-        x: (i: number) => (x - 0.5) * 15 * Math.cos((i + 1) * 0.5),
-        rotationY: (x - 0.5) * 20,
-        rotationX: (y - 0.5) * -20,
-        ease: "power2.out",
-        stagger: { amount: 0.3, from: "center" },
-      });
-    };
-    const onLeave = () => {
-      gsap.to(splitText.chars, {
-        duration: 1,
-        y: 0,
-        x: 0,
-        rotationY: 0,
-        rotationX: 0,
-        ease: "elastic.out(1, 0.3)",
-        stagger: { amount: 0.3, from: "center" },
-      });
-    };
-
-    const wrapper = headingWrapperRef.current;
-    wrapper.addEventListener("mousemove", onMove);
-    wrapper.addEventListener("mouseleave", onLeave);
-    return () => {
-      splitText.revert();
-      wrapper.removeEventListener("mousemove", onMove);
-      wrapper.removeEventListener("mouseleave", onLeave);
-    };
-  }, []);
-
-  /* ----------------- Parallax & scroll anims ----------------- */
-  useEffect(() => {
-    if (!sectionRef.current) return;
-
-    if (headingRef.current) {
-      const splitText = new SplitText(headingRef.current, {
-        type: "words,chars",
+    let split: SplitText | undefined;
+    const ctx = gsap.context(() => {
+      split = new SplitText(headingRef.current!, {
+        type: "chars,words",
         charsClass: "char",
         wordsClass: "word",
       });
-      gsap.set(splitText.chars, { opacity: 1, y: 0, rotationX: 0 });
-      gsap.fromTo(
-        splitText.chars,
-        { opacity: 0.2, y: 30, scale: 0.9, rotationY: -15 },
-        {
-          opacity: 1,
-          y: 0,
-          scale: 1,
-          rotationY: 0,
-          duration: 1,
-          stagger: { amount: 0.6, from: "start" },
-          ease: "power3.out",
-          scrollTrigger: {
-            trigger: headingRef.current,
-            start: "top 90%",
-            end: "top 60%",
-            toggleActions: "play none none reverse",
-          },
-        }
-      );
-      gsap.to(headingRef.current, {
-        yPercent: -8,
-        ease: "none",
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start: "top bottom",
-          end: "bottom top",
-          scrub: 0.8,
-        },
-      });
-    }
 
-    if (descriptionRef.current) {
-      gsap.fromTo(
-        descriptionRef.current,
-        { opacity: 0, y: 40, filter: "blur(8px)" },
-        {
-          opacity: 1,
-          y: 0,
-          filter: "blur(0px)",
-          duration: 1.2,
+      const wrapper = headingWrapperRef.current!;
+      const onMove = (e: MouseEvent) => {
+        const rect = wrapper.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / rect.width;
+        const y = (e.clientY - rect.top) / rect.height;
+        gsap.to(split!.chars, {
+          duration: 0.5,
+          y: (_, i) => (y - 0.5) * 15 * Math.sin((Number(i) + 1) * 0.5),
+          x: (_, i) => (x - 0.5) * 15 * Math.cos((Number(i) + 1) * 0.5),
+          rotationY: (x - 0.5) * 20,
+          rotationX: (y - 0.5) * -20,
           ease: "power2.out",
-          scrollTrigger: {
-            trigger: descriptionRef.current,
-            start: "top 85%",
-            end: "top 65%",
-            toggleActions: "play none none reverse",
-          },
-        }
-      );
-      gsap.to(descriptionRef.current, {
-        yPercent: -5,
-        ease: "none",
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start: "top bottom",
-          end: "bottom top",
-          scrub: 0.5,
-        },
-      });
-    }
+          stagger: { amount: 0.3, from: "center" },
+        });
+      };
+      const onLeave = () => {
+        gsap.to(split!.chars, {
+          duration: 1,
+          y: 0, x: 0, rotationY: 0, rotationX: 0,
+          ease: "elastic.out(1, 0.3)",
+          stagger: { amount: 0.3, from: "center" },
+        });
+      };
 
-    if (carouselContainerRef.current) {
-      gsap.fromTo(
-        carouselContainerRef.current,
-        { opacity: 0, y: 60, scale: 0.95 },
-        {
-          opacity: 1,
-          y: 0,
-          scale: 1,
-          duration: 1.5,
-          ease: "power3.out",
-          scrollTrigger: {
-            trigger: carouselContainerRef.current,
-            start: "top 85%",
-            end: "top 55%",
-            toggleActions: "play none none reverse",
-          },
-        }
-      );
-      gsap.to(carouselContainerRef.current, {
-        yPercent: -3,
-        ease: "none",
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start: "top bottom",
-          end: "bottom top",
-          scrub: 0.3,
-        },
-      });
-    }
+      wrapper.addEventListener("mousemove", onMove);
+      wrapper.addEventListener("mouseleave", onLeave);
 
-    if (navigationRef.current) {
-      const navButtons = navigationRef.current.querySelectorAll("button");
-      gsap.fromTo(
-        navButtons,
-        { opacity: 0, scale: 0.8, x: (i) => (i === 0 ? -30 : 30) },
-        {
-          opacity: 1,
-          scale: 1,
-          x: 0,
-          duration: 0.8,
-          stagger: 0.2,
-          ease: "back.out(1.7)",
-          scrollTrigger: {
-            trigger: carouselContainerRef.current,
-            start: "top 80%",
-            end: "top 60%",
-            toggleActions: "play none none reverse",
-          },
-        }
-      );
-      gsap.to(navButtons, {
-        yPercent: -6,
-        ease: "none",
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start: "top bottom",
-          end: "bottom top",
-          scrub: 0.4,
-        },
-      });
-    }
-
-    if (backgroundElementsRef.current) {
-      gsap.to(backgroundElementsRef.current, {
-        yPercent: -15,
-        rotation: 90,
-        ease: "none",
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start: "top bottom",
-          end: "bottom top",
-          scrub: 1.2,
-        },
-      });
-    }
-
-    const cards = carouselContainerRef.current?.querySelectorAll("[data-card]");
-    cards?.forEach((el, index) => {
-      const card = el as HTMLElement;
-      gsap.fromTo(
-        card,
-        { opacity: 0, y: 80, rotationX: -20, scale: 0.9 },
-        {
-          opacity: 1,
-          y: 0,
-          rotationX: 0,
-          scale: 1,
-          duration: 1.2,
-          delay: index * 0.15,
-          ease: "power3.out",
-          scrollTrigger: {
-            trigger: card,
-            start: "top 90%",
-            end: "top 70%",
-            toggleActions: "play none none reverse",
-          },
-        }
-      );
-      gsap.to(card, {
-        yPercent: -2 - index * 1.5,
-        ease: "none",
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start: "top bottom",
-          end: "bottom top",
-          scrub: 0.2 + index * 0.1,
-        },
-      });
-    });
+      // return cleanup for DOM listeners inside context
+      return () => {
+        wrapper.removeEventListener("mousemove", onMove);
+        wrapper.removeEventListener("mouseleave", onLeave);
+      };
+    }, sectionRef);
 
     return () => {
-      ScrollTrigger.getAll().forEach((t) => t.kill());
+      ctx.revert();
+      split?.revert();
     };
-  }, [items.length]);
+  }, [fontsReady]);
+
+  /* ----------------- Parallax & scroll anims (fonts + refs gated) ----------------- */
+  useLayoutEffect(() => {
+    if (!fontsReady) return;
+    if (!sectionRef.current) return;
+
+    const ctx = gsap.context(() => {
+      // heading entrance + slight parallax
+      if (headingRef.current) {
+        const st = new SplitText(headingRef.current, {
+          type: "words,chars",
+          charsClass: "char",
+          wordsClass: "word",
+        });
+        gsap.set(st.chars, { opacity: 1, y: 0, rotationX: 0 });
+        gsap.fromTo(
+          st.chars,
+          { opacity: 0.2, y: 30, scale: 0.9, rotationY: -15 },
+          {
+            opacity: 1, y: 0, scale: 1, rotationY: 0, duration: 1,
+            stagger: { amount: 0.6, from: "start" },
+            ease: "power3.out",
+            scrollTrigger: {
+              trigger: headingRef.current,
+              start: "top 90%",
+              end: "top 60%",
+              toggleActions: "play none none reverse",
+            },
+          }
+        );
+        gsap.to(headingRef.current, {
+          yPercent: -8,
+          ease: "none",
+          scrollTrigger: {
+            trigger: sectionRef.current!,
+            start: "top bottom",
+            end: "bottom top",
+            scrub: 0.8,
+          },
+        });
+      }
+
+      if (descriptionRef.current) {
+        gsap.fromTo(
+          descriptionRef.current,
+          { opacity: 0, y: 40, filter: "blur(8px)" },
+          {
+            opacity: 1, y: 0, filter: "blur(0px)", duration: 1.2, ease: "power2.out",
+            scrollTrigger: {
+              trigger: descriptionRef.current, start: "top 85%", end: "top 65%",
+              toggleActions: "play none none reverse",
+            },
+          }
+        );
+        gsap.to(descriptionRef.current, {
+          yPercent: -5, ease: "none",
+          scrollTrigger: {
+            trigger: sectionRef.current!, start: "top bottom", end: "bottom top", scrub: 0.5,
+          },
+        });
+      }
+
+      if (carouselContainerRef.current) {
+        gsap.fromTo(
+          carouselContainerRef.current,
+          { opacity: 0, y: 60, scale: 0.95 },
+          {
+            opacity: 1, y: 0, scale: 1, duration: 1.5, ease: "power3.out",
+            scrollTrigger: {
+              trigger: carouselContainerRef.current,
+              start: "top 85%", end: "top 55%",
+              toggleActions: "play none none reverse",
+            },
+          }
+        );
+        gsap.to(carouselContainerRef.current, {
+          yPercent: -3, ease: "none",
+          scrollTrigger: {
+            trigger: sectionRef.current!, start: "top bottom", end: "bottom top", scrub: 0.3,
+          },
+        });
+      }
+
+      if (navigationRef.current) {
+        const navButtons = navigationRef.current.querySelectorAll("button");
+        if (navButtons.length) {
+          gsap.fromTo(
+            navButtons,
+            { opacity: 0, scale: 0.8, x: (i) => (i === 0 ? -30 : 30) },
+            {
+              opacity: 1, scale: 1, x: 0, duration: 0.8, stagger: 0.2, ease: "back.out(1.7)",
+              scrollTrigger: {
+                trigger: carouselContainerRef.current!, start: "top 80%", end: "top 60%",
+                toggleActions: "play none none reverse",
+              },
+            }
+          );
+          gsap.to(navButtons, {
+            yPercent: -6, ease: "none",
+            scrollTrigger: {
+              trigger: sectionRef.current!, start: "top bottom", end: "bottom top", scrub: 0.4,
+            },
+          });
+        }
+      }
+
+      if (backgroundElementsRef.current) {
+        gsap.to(backgroundElementsRef.current, {
+          yPercent: -15, rotation: 90, ease: "none",
+          scrollTrigger: {
+            trigger: sectionRef.current!, start: "top bottom", end: "bottom top", scrub: 1.2,
+          },
+        });
+      }
+
+      const cards = carouselContainerRef.current?.querySelectorAll<HTMLElement>("[data-card]");
+      cards?.forEach((card, index) => {
+        gsap.fromTo(
+          card,
+          { opacity: 0, y: 80, rotationX: -20, scale: 0.9 },
+          {
+            opacity: 1, y: 0, rotationX: 0, scale: 1, duration: 1.2, delay: index * 0.15, ease: "power3.out",
+            scrollTrigger: {
+              trigger: card, start: "top 90%", end: "top 70%", toggleActions: "play none none reverse",
+            },
+          }
+        );
+        gsap.to(card, {
+          yPercent: -2 - index * 1.5, ease: "none",
+          scrollTrigger: {
+            trigger: sectionRef.current!, start: "top bottom", end: "bottom top", scrub: 0.2 + index * 0.1,
+          },
+        });
+      });
+    }, sectionRef);
+
+    return () => ctx.revert();
+  }, [fontsReady, items.length]);
 
   const scrollPrev = () => emblaApi?.scrollPrev();
   const scrollNext = () => emblaApi?.scrollNext();
 
-  // No spinning; YouTube opens via iframe, others via <video>
   const handleVideoClick = (
     e: React.MouseEvent,
     videoUrl: string,
@@ -382,44 +409,41 @@ export const TestimonialSection = (): JSX.Element => {
     if (!videoUrl) return;
 
     if (isYouTubeUrl(videoUrl)) {
-      const embed = toYouTubeEmbed(videoUrl);
-      Fancybox.show(
-        [
-          {
-            src: embed,
-            type: "iframe",
-            caption: title,
-          },
-        ],
-        {
-          animated: true,
-          showClass: "fancybox-fadeIn",
-          hideClass: "fancybox-fadeOut",
-          dragToClose: false,
-          Iframe: {
-            preload: true,
-            attr: {
-              allow:
-                "autoplay; fullscreen; picture-in-picture; encrypted-media",
-              referrerpolicy: "strict-origin-when-cross-origin",
-            },
-          },
-        }
-      );
-    } else {
+  const src = toYouTubeEmbed(videoUrl);
+  if (!src) return;
+
+  const iframeHtml = `
+    <div style="width:min(90vw,1200px);height:min(90vh,675px);background:#000;display:flex;align-items:center;justify-content:center;">
+      <iframe
+        src="${src}"
+        width="100%"
+        height="100%"
+        frameborder="0"
+        allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+        allowfullscreen
+        referrerpolicy="strict-origin-when-cross-origin"
+        style="display:block;border:0;aspect-ratio:16/9;"
+      ></iframe>
+    </div>`;
+
+  Fancybox.show([{ src: iframeHtml, type: "html", caption: title }], {
+    animated: true,
+    showClass: "fancybox-fadeIn",
+    hideClass: "fancybox-fadeOut",
+    dragToClose: false,
+  });
+  return;
+} else {
       const videoHtml = `
         <video controls autoplay style="width:100%;height:100%;max-width:1200px;max-height:675px;background:#000">
           <source src="${videoUrl}" type="video/mp4" />
           Your browser does not support the video tag.
         </video>`;
-      Fancybox.show(
-        [{ src: videoHtml, type: "html", caption: title }],
-        {
-          animated: true,
-          showClass: "fancybox-fadeIn",
-          hideClass: "fancybox-fadeOut",
-        }
-      );
+      Fancybox.show([{ src: videoHtml, type: "html", caption: title }], {
+        animated: true,
+        showClass: "fancybox-fadeIn",
+        hideClass: "fancybox-fadeOut",
+      });
     }
   };
 
@@ -514,10 +538,6 @@ export const TestimonialSection = (): JSX.Element => {
                   <Card
                     className="group h-[400px] w-full rounded-2xl md:rounded-3xl overflow-hidden border-2 border-solid border-primary/30 relative cursor-pointer"
                     style={{
-                      backgroundImage: `linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.4)), url(${t.image})`,
-                      backgroundSize: "cover",
-                      backgroundPosition: "center",
-                      backgroundRepeat: "no-repeat",
                       boxShadow:
                         hoveredCard === t.id
                           ? "0 25px 50px -12px rgba(0,0,0,0.25), 0 0 30px rgba(117,191,68,0.3)"
@@ -529,6 +549,17 @@ export const TestimonialSection = (): JSX.Element => {
                     onClick={(e) => handleVideoClick(e, t.video, t.title)}
                   >
                     <CardContent className="flex items-center justify-center h-full p-0 relative">
+                      {/* Actual image so alt is applied */}
+                      <img
+                        src={t.image}
+                        alt={t.alt}
+                        className="absolute inset-0 w-full h-full object-cover"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src =
+                            "/create-an-image-for-interior-design-about-us-section.png";
+                        }}
+                      />
+
                       {/* overlay */}
                       <div
                         className="absolute inset-0 transition-opacity duration-500"
@@ -541,7 +572,7 @@ export const TestimonialSection = (): JSX.Element => {
                         }}
                       />
 
-                      {/* Play button (no spinning ring) */}
+                      {/* Play button */}
                       <div
                         className={`relative w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 rounded-full border-3 border-solid border-white shadow-2xl flex items-center justify-center transition-all duration-500 z-10 ${
                           hoveredCard === t.id ? "bg-white scale-110" : "bg-white/20 backdrop-blur-sm"
@@ -583,67 +614,6 @@ export const TestimonialSection = (): JSX.Element => {
           </div>
         </div>
       </div>
-
-      <style jsx global>{`
-        .fancybox__container {
-          --fancybox-bg: rgba(0, 0, 0, 0.85);
-          --fancybox-accent-color: #75bf44;
-        }
-        .fancybox__backdrop {
-          background: var(--fancybox-bg);
-          backdrop-filter: blur(5px);
-        }
-        .fancybox__content {
-          padding: 0;
-          background: rgba(0, 0, 0, 0.1);
-          border-radius: 12px;
-          overflow: hidden;
-          max-width: 90vw;
-          max-height: 90vh;
-          box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
-        }
-        .fancybox__toolbar {
-          background: transparent;
-          padding: 20px;
-        }
-        .fancybox__button {
-          color: white !important;
-          background: rgba(255, 255, 255, 0.15) !important;
-          border-radius: 50% !important;
-          width: 44px !important;
-          height: 44px !important;
-          padding: 10px !important;
-          margin: 0 5px !important;
-          transition: all 0.3s ease !important;
-          backdrop-filter: blur(10px) !important;
-          border: 2px solid rgba(255, 255, 255, 0.2) !important;
-        }
-        .fancybox__button:hover {
-          background: rgba(117, 191, 68, 0.8) !important;
-          transform: scale(1.1) !important;
-          border-color: rgba(117, 191, 68, 0.8) !important;
-        }
-        .fancybox-fadeIn {
-          animation: fancybox-fadeIn 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-        }
-        .fancybox-fadeOut {
-          animation: fancybox-fadeOut 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-        }
-        @keyframes fancybox-fadeIn {
-          from { opacity: 0; transform: scale(0.9) translateY(20px); }
-          to   { opacity: 1; transform: scale(1) translateY(0); }
-        }
-        @keyframes fancybox-fadeOut {
-          from { opacity: 1; transform: scale(1) translateY(0); }
-          to   { opacity: 0; transform: scale(0.9) translateY(20px); }
-        }
-        @media (max-width: 768px) {
-          .fancybox__button { width: 36px !important; height: 36px !important; padding: 8px !important; margin: 0 3px !important; }
-          .fancybox__content { max-width: 95vw; max-height: 85vh; }
-          .fancybox__toolbar { padding: 15px; }
-        }
-        .fancybox__slide { background: transparent !important; }
-      `}</style>
     </section>
   );
 };

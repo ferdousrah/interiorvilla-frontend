@@ -22,7 +22,7 @@ export const ProjectInfoSection = (): JSX.Element => {
   };
 
   const year = first(["year", "Year"]);
-  const sqft = first(["area", "squareFootage", "square_footage", "size"]);
+  const sqft = first(["size", "squareFootage", "square_footage", "size"]);
   const location = first(["location", "address", "city", "district"]);
   const client = first(["client", "owner"]);
 

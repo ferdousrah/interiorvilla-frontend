@@ -9,7 +9,7 @@ import { BeforeAfterSlider } from "../../../../ui/before-after-slider";
 
 gsap.registerPlugin(ScrollTrigger, SplitText);
 
-// ---------- Types ----------
+/* ---------- Types from your API ---------- */
 type MediaSize = {
   url: string | null;
   width: number | null;
@@ -18,8 +18,11 @@ type MediaSize = {
   filesize: number | null;
   filename: string | null;
 };
+
 type Media = {
   id: number;
+  alt: string | null;          // ← we will use this
+  caption: string | null;
   url: string | null;
   filename: string | null;
   sizes?: {
@@ -32,6 +35,7 @@ type Media = {
     og?: MediaSize;
   };
 };
+
 type AboutSectionData = {
   sectionTitle?: string | null;
   shortDescription?: string | null;
@@ -40,13 +44,14 @@ type AboutSectionData = {
   backgroundColor?: string | null;
 };
 
-// ---------- Constants ----------
-const CMS_BASE = "https://cms.interiorvillabd.com"; // client-safe
+/* ---------- Constants ---------- */
+const CMS_BASE = "https://cms.interiorvillabd.com";
 const HOME_ENDPOINT = `${CMS_BASE}/api/globals/home?depth=1&draft=false`;
 
-// ---------- Utils ----------
+/* ---------- Utils ---------- */
 const absUrl = (u?: string | null) => (u ? (u.startsWith("/") ? `${CMS_BASE}${u}` : u) : "");
 
+/** Prefer best size, fallback to original */
 function getBestImageUrl(image?: Media | null): string {
   if (!image) return "";
   const order: (keyof NonNullable<Media["sizes"]>)[] = [
@@ -60,18 +65,26 @@ function getBestImageUrl(image?: Media | null): string {
   ];
   for (const k of order) {
     const u = image.sizes?.[k]?.url;
-    if (u) return absUrl(u);
+    if (u) return u.startsWith("/") ? `${CMS_BASE}${u}` : u;
   }
-  return absUrl(image.url) || "";
+  const u = image.url;
+  return u ? (u.startsWith("/") ? `${CMS_BASE}${u}` : u) : "";
 }
 
-// ---------- Component ----------
+/** Compose alt text with a safe fallback */
+function buildAlt(baseAlt: string | null | undefined, suffix: string) {
+  return baseAlt && baseAlt.trim()
+    ? `${baseAlt} (${suffix})`
+    : `Interior design ${suffix}`;
+}
+
+/* ---------- Component ---------- */
 export const AboutSection = (): JSX.Element => {
   const [data, setData] = useState<AboutSectionData | null>(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
 
-  // fetch inside same component
+  // Fetch in the same component
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -91,29 +104,41 @@ export const AboutSection = (): JSX.Element => {
     };
   }, []);
 
-  // derive before/after and features
-  const { beforeSrc, afterSrc, features, bg } = useMemo(() => {
+  // Derive images strictly by order: 0 = before, 1 = after
+  const {
+    beforeUrl,
+    afterUrl,
+    beforeAlt,
+    afterAlt,
+    features,
+    bg,
+  } = useMemo(() => {
     const list = Array.isArray(data?.beforeAfterImages) ? data!.beforeAfterImages : [];
-    const byName = (name: "before" | "after") =>
-      list.find((i) => i?.image?.filename && new RegExp(name, "i").test(i.image!.filename || ""));
 
-    const beforeItem = byName("before") || list[0];
-    const afterItem = byName("after") || list[1] || list[0];
+    const beforeImg = list[0]?.image ?? null;
+    const afterImg  = list[1]?.image ?? null;
 
-    return {
-      beforeSrc: getBestImageUrl(beforeItem?.image) || "/before.jpg",
-      afterSrc: getBestImageUrl(afterItem?.image) || "/after.jpg",
-      features:
-        (data?.highlights ?? []).map((h, idx) => ({
-          id: String(idx + 1).padStart(2, "0"),
-          title: h.text,
-          description: h.desc ?? "",
-        })) || [],
-      bg: data?.backgroundColor || "#f7f9fb",
-    };
+    const beforeUrl = getBestImageUrl(beforeImg);
+    const afterUrl  = getBestImageUrl(afterImg);
+
+    const beforeAlt = buildAlt(beforeImg?.alt, "before");
+    const afterAlt  = buildAlt(afterImg?.alt, "after");
+
+    const features =
+      (data?.highlights ?? []).map((h, idx) => ({
+        id: String(idx + 1).padStart(2, "0"),
+        title: h.text,
+        description: h.desc ?? "",
+      })) || [];
+
+    const bg = data?.backgroundColor && data.backgroundColor.trim()
+      ? data.backgroundColor
+      : "#f7f9fb";
+
+    return { beforeUrl, afterUrl, beforeAlt, afterAlt, features, bg };
   }, [data]);
 
-  // ----- REFS -----
+  /* ---------- Refs for GSAP ---------- */
   const headingRef = useRef<HTMLHeadingElement>(null);
   const headingWrapperRef = useRef<HTMLDivElement>(null);
   const sectionRef = useRef<HTMLElement>(null);
@@ -124,7 +149,7 @@ export const AboutSection = (): JSX.Element => {
   const featureHeadingRefs = useRef<(HTMLHeadingElement | null)[]>([]);
   const featureHeadingWrapperRefs = useRef<(HTMLDivElement | null)[]>([]);
 
-  // ----- Heading GSAP -----
+  /* ---------- Heading GSAP ---------- */
   useEffect(() => {
     if (!headingRef.current) return;
 
@@ -193,7 +218,7 @@ export const AboutSection = (): JSX.Element => {
     };
   }, [data?.sectionTitle]);
 
-  // ----- Feature headings hover -----
+  /* ---------- Feature headings hover ---------- */
   useEffect(() => {
     const cleanups: Array<() => void> = [];
 
@@ -243,7 +268,7 @@ export const AboutSection = (): JSX.Element => {
     return () => void cleanups.forEach((fn) => fn());
   }, [features.length]);
 
-  // ----- Parallax & description fade -----
+  /* ---------- Parallax & description fade ---------- */
   useEffect(() => {
     if (!sectionRef.current) return;
 
@@ -304,6 +329,7 @@ export const AboutSection = (): JSX.Element => {
     };
   }, []);
 
+  /* ---------- Loading / Error ---------- */
   if (loading) {
     return (
       <section className="py-28" style={{ backgroundColor: "#f7f9fb" }}>
@@ -322,6 +348,7 @@ export const AboutSection = (): JSX.Element => {
     );
   }
 
+  /* ---------- Render ---------- */
   return (
     <section
       ref={sectionRef}
@@ -352,15 +379,22 @@ export const AboutSection = (): JSX.Element => {
                 className="relative overflow-hidden rounded-md"
                 style={{ position: "relative", zIndex: 5 }}
               >
-                <BeforeAfterSlider
-                  beforeImage={beforeSrc}
-                  afterImage={afterSrc}
-                  alt="Interior design transformation"
-                  className="w-full h-auto max-w-[730px] will-change-transform"
-                />
+                {/* Only mount slider when both URLs exist; key forces remount on change */}
+                {beforeUrl && afterUrl ? (
+                  <BeforeAfterSlider
+                    key={`${beforeUrl}|${afterUrl}`}      // force remount when URLs change after fetch
+                    beforeImage={beforeUrl}               // e.g. https://cms.../about-before-704x521.jpg
+                    afterImage={afterUrl}                 // e.g. https://cms.../about-after-704x521.jpg
+                    altBefore={beforeAlt}                 // from API: image.alt (before) + “(before)” if you like
+                    altAfter={afterAlt}                   // from API: image.alt (after)
+                  />
+
+                ) : (
+                  <div className="aspect-[704/521] w-full max-w-[730px] bg-gray-100 rounded-md" />
+                )}
               </div>
 
-              {/* Experience badge */}
+              {/* Experience badge (unchanged UI) */}
               <div
                 ref={experienceCircleRef}
                 className="absolute bottom-4 right-4 md:bottom-6 md:right-6 lg:bottom-10 lg:right-8 w-[140px] h-[150px] md:w-[160px] md:h-[170px] lg:w-[180px] lg:h-[190px] z-10 cursor-pointer transition-transform duration-500 ease-out hover:scale-110 group"
@@ -411,9 +445,9 @@ export const AboutSection = (): JSX.Element => {
                 {(features.length
                   ? features
                   : [
-                      { id: "01", title: "Flexible Budget & Taste", description: "" },
-                      { id: "02", title: "On-time Delivery", description: "" },
-                      { id: "03", title: "700+ Happy Customers", description: "" },
+                      { id: "01", title: "Flexible Budget & Taste", description: "Your style, your budget, our flexible designs." },
+                      { id: "02", title: "On-time Delivery", description: "Delivering your dream space, precisely on schedule, every time." },
+                      { id: "03", title: "700+ Happy Customers", description: "Proudly serving 700+ happy customers with exceptional design." },
                     ]
                 ).map((feature, index) => (
                   <div key={feature.id + feature.title} className="flex items-start gap-8">

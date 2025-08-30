@@ -16,6 +16,7 @@ interface Project {
   title: string;
   description: string;
   image: string;
+  imageAlt: string;        // ← new
   color: string;
   accent: string;
 }
@@ -33,29 +34,51 @@ interface ProjectsApiResponse {
   totalPages?: number;
 }
 
+/** If your CMS is reverse-proxied through the site domain, keep this.
+ *  If not, switch to: https://cms.interiorvillabd.com
+ */
 const CMS_ORIGIN = "https://interiorvillabd.com";
-const MEDIA_BASE = `${CMS_ORIGIN}/api/media/file/`;
 
+// Build absolute URLs when API returns "/api/media/file/..."
 const absolutize = (u: string) =>
   /^https?:\/\//i.test(u) ? u : new URL(u, CMS_ORIGIN).href;
 
-const convertToWebp = (url: string) =>
-  url.replace(/\.jpe?g(\?[^#]*)?$/i, ".webp$1");
-
-const getFeaturedImageUrl = (fi: any): string => {
-  const placeholder = "/placeholder.webp";
-  if (!fi) return placeholder;
-
-  if (typeof fi === "string") return convertToWebp(absolutize(fi));
-  if (typeof fi.url === "string") return convertToWebp(absolutize(fi.url));
-  if (fi?.sizes?.large?.url)  return convertToWebp(absolutize(fi.sizes.large.url));
-  if (fi?.sizes?.medium?.url) return convertToWebp(absolutize(fi.sizes.medium.url));
-  if (fi?.sizes?.card?.url)   return convertToWebp(absolutize(fi.sizes.card.url));
-  if (typeof fi.filename === "string") return convertToWebp(`${MEDIA_BASE}${fi.filename}`);
-
-  return placeholder;
+/* ---------- Size + Alt helpers ---------- */
+type MediaSize = { url?: string | null };
+type Media = {
+  url?: string | null;
+  alt?: string | null;
+  sizes?: {
+    thumbnail?: MediaSize;
+    square?: MediaSize;
+    small?: MediaSize;
+    medium?: MediaSize;
+    large?: MediaSize;
+    xlarge?: MediaSize;
+    og?: MediaSize;
+    // some setups add custom sizes like "card"
+    [k: string]: MediaSize | undefined;
+  };
 };
 
+/** Prefer best size, fallback to original */
+const getBestImageUrl = (img?: Media | null): string => {
+  if (!img) return "/placeholder.webp";
+  const order = ["large", "xlarge", "medium", "small", "og", "square", "thumbnail", "card"];
+  for (const key of order) {
+    const u = img.sizes?.[key]?.url;
+    if (u) return absolutize(u);
+  }
+  if (img.url) return absolutize(img.url);
+  return "/placeholder.webp";
+};
+
+const getImageAlt = (img: Media | null | undefined, fallback: string) => {
+  const fromApi = (img?.alt || "").trim();
+  return fromApi || (fallback ? `${fallback}` : "Project image");
+};
+
+/* ---------- Palette ---------- */
 const palette = [
   "#50852d", "#599432", "#62a337", "#6db53e",
   "#437724", "#72bd45", "#3c6a20", "#7bc54a"
@@ -95,24 +118,33 @@ export const OurFeaturedWorksSection = (): JSX.Element => {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch(`${CMS_ORIGIN}/api/projects?where[featuredOnHome][equals]=true`, { cache: "no-store" });
+        const res = await fetch(
+          `${CMS_ORIGIN}/api/projects?where[featuredOnHome][equals]=true`,
+          { cache: "no-store" }
+        );
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data: ProjectsApiResponse = await res.json();
 
-        const mapped: Project[] = (data.docs || []).map((doc: any, i: number) => ({
-          id: doc.id ?? i + 1,
-          category:
-            doc?.category?.title ||
-            doc?.category?.name ||
-            (typeof doc?.category === "string" ? doc.category : undefined) ||
-            doc?.type ||
-            "Project",
-          title: doc.title || doc.name || `Project ${i + 1}`,
-          description: doc.shortDescription || doc.description || "",
-          image: getFeaturedImageUrl(doc.featuredImage),
-          color: doc.color || palette[i % palette.length],
-          accent: doc.accent || palette[i % palette.length],
-        }));
+        const mapped: Project[] = (data.docs || []).map((doc: any, i: number) => {
+          const media: Media | null =
+            typeof doc?.featuredImage === "object" ? doc.featuredImage : null;
+
+          return {
+            id: doc.id ?? i + 1,
+            category:
+              doc?.category?.title ||
+              doc?.category?.name ||
+              (typeof doc?.category === "string" ? doc.category : undefined) ||
+              doc?.type ||
+              "Project",
+            title: doc.title || doc.name || `Project ${i + 1}`,
+            description: doc.shortDescription || doc.description || "",
+            image: getBestImageUrl(media),                 // ← size-aware URL
+            imageAlt: getImageAlt(media, doc.title),       // ← proper alt
+            color: doc.color || palette[i % palette.length],
+            accent: doc.accent || palette[i % palette.length],
+          };
+        });
 
         if (!cancelled) setProjects(mapped);
       } catch (e) {
@@ -330,8 +362,8 @@ export const OurFeaturedWorksSection = (): JSX.Element => {
                     <div className="absolute inset-0 w-full h-full p-4 sm:p-6 md:p-8 lg:p-10">
                       <div className="w-full h-full rounded-1xl sm:rounded-2xl overflow-hidden">
                         <img
-                          src={project.image}
-                          alt={project.title}
+                          src={project.image}          // ← sized URL
+                          alt={project.imageAlt}       // ← real alt
                           className="w-full h-full object-cover"
                           onError={(e) => {
                             (e.target as HTMLImageElement).src =

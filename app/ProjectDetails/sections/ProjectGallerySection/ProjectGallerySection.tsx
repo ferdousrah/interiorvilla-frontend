@@ -8,6 +8,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useProject } from "../../ProjectContext";
 import { swapToWebp, toMediaUrl, toWebpCandidate, youtubeId } from "../../../../lib/media";
+import "./project-gallery.css"; // <-- our own CSS (replaces <style jsx global>)
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -26,9 +27,7 @@ type VideoItem = { id: string; videoUrl: string; title: string };
 export const ProjectGallerySection = (): JSX.Element => {
   const { project } = useProject();
 
-  const [activeTab, setActiveTab] = useState<"photos" | "videos" | "plans">(
-    "photos"
-  );
+  const [activeTab, setActiveTab] = useState<"photos" | "videos" | "plans">("photos");
   const [hovered, setHovered] = useState<string | number | null>(null);
 
   const sectionRef = useRef<HTMLElement>(null);
@@ -41,13 +40,13 @@ export const ProjectGallerySection = (): JSX.Element => {
   const photoItems: PhotoItem[] = useMemo(() => {
     const arr = (project?.gallery?.photos as any[]) || [];
     return arr.map((p, i) => {
-      const src = p?.image ?? p?.photo ?? p?.file ?? p; // accept string or object
-      const full = toMediaUrl(src, { width: 1600 });
-      const thumb = toMediaUrl(src, { width: 700 });
+      const src = p?.image ?? p?.photo ?? p?.file ?? p;
+      const full = toMediaUrl(src, { width: 1920 });
+      const thumb = toMediaUrl(src, { width: 800 });
       return {
         id: p?.id ?? `photo-${i}`,
         type: "photo",
-        alt: p?.alt || project?.title || "Photo",
+        alt: p?.image?.alt || p?.alt || project?.title || "Photo",
         full,
         thumb,
         fullWebp: toWebpCandidate(full),
@@ -60,12 +59,12 @@ export const ProjectGallerySection = (): JSX.Element => {
     const arr = (project?.gallery?.plans as any[]) || [];
     return arr.map((p, i) => {
       const src = p?.image ?? p?.plan ?? p?.file ?? p;
-      const full = toMediaUrl(src, { width: 1600 });
+      const full = toMediaUrl(src, { width: 1920 });
       const thumb = toMediaUrl(src, { width: 800 });
       return {
         id: p?.id ?? `plan-${i}`,
         type: "plan",
-        alt: p?.alt || "Plan",
+        alt: p?.image?.alt || p?.alt || "Plan",
         full,
         thumb,
         fullWebp: toWebpCandidate(full),
@@ -99,8 +98,7 @@ export const ProjectGallerySection = (): JSX.Element => {
           scrollTrigger: {
             trigger: headingRef.current,
             start: "top 85%",
-            end: "top 55%",
-            toggleActions: "play none none reverse",
+            toggleActions: "play none none none",
           },
         }
       );
@@ -118,8 +116,7 @@ export const ProjectGallerySection = (): JSX.Element => {
           scrollTrigger: {
             trigger: descriptionRef.current,
             start: "top 85%",
-            end: "top 65%",
-            toggleActions: "play none none reverse",
+            toggleActions: "play none none none",
           },
         }
       );
@@ -137,8 +134,7 @@ export const ProjectGallerySection = (): JSX.Element => {
           scrollTrigger: {
             trigger: tabsRef.current,
             start: "top 85%",
-            end: "top 65%",
-            toggleActions: "play none none reverse",
+            toggleActions: "play none none none",
           },
         }
       );
@@ -153,14 +149,13 @@ export const ProjectGallerySection = (): JSX.Element => {
           opacity: 1,
           y: 0,
           scale: 1,
-          duration: 1.2,
-          stagger: 0.15,
+          duration: 1.0,
+          stagger: 0.12,
           ease: "power3.out",
           scrollTrigger: {
             trigger: gridRef.current,
             start: "top 85%",
-            end: "top 55%",
-            toggleActions: "play none none reverse",
+            toggleActions: "play none none none", // don't reverse -> prevent faded state
           },
         }
       );
@@ -180,6 +175,7 @@ export const ProjectGallerySection = (): JSX.Element => {
         showClass: "fancybox-fadeIn",
         hideClass: "fancybox-fadeOut",
         dragToClose: true,
+        Images: { zoom: true },
         Image: { zoom: true, fit: "cover", preload: 1 },
         Toolbar: {
           display: {
@@ -188,16 +184,15 @@ export const ProjectGallerySection = (): JSX.Element => {
             right: ["zoom", "slideshow", "thumbs", "download", "close"],
           },
         },
-        closeButton: true,
         wheel: "slide",
         touch: { vertical: true, momentum: true },
       });
-    }, 150);
+    }, 120);
     return () => {
       clearTimeout(timer);
       Fancybox.destroy();
     };
-  }, [activeTab, photoItems, planItems, videoItems]);
+  }, [activeTab, photoItems.length, planItems.length, videoItems.length]);
 
   // ---------- UI ----------
   const tabs = [
@@ -206,28 +201,26 @@ export const ProjectGallerySection = (): JSX.Element => {
     { id: "plans" as const, label: `Plans (${planItems.length})` },
   ];
 
-  const renderThumb = (item: PhotoItem) => (
+  const renderThumb = (item: PhotoItem, idx: number) => (
     <a
       key={item.id}
-      href={item.full} // keep JPG/PNG as the lightbox href for compatibility
+      href={item.full} // keep original for maximum compatibility
       data-fancybox={`gallery-${activeTab}`}
       data-caption={`${item.alt} - ${item.type}`}
-      className="block w-full h-80 cursor-pointer group"
+      className="block w-full cursor-pointer group"
       onMouseEnter={() => setHovered(item.id)}
       onMouseLeave={() => setHovered(null)}
     >
-      <div className="relative w-full h-80 overflow-hidden rounded-xl shadow-lg group-hover:shadow-2xl transition-all duration-500">
+      <div className="relative w-full aspect-[4/3] overflow-hidden rounded-xl shadow-lg group-hover:shadow-2xl transition-all duration-500">
         <picture>
-          {/* Prefer server-transcoded WebP */}
           <source srcSet={item.thumbWebp} type="image/webp" />
-          {/* Also try extension-swapped webp just in case */}
           <source srcSet={swapToWebp(item.thumb)} type="image/webp" />
-          {/* Fallback */}
           <img
             src={item.thumb}
             alt={item.alt}
             className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
-            loading="lazy"
+            loading={idx < 3 ? "eager" : "lazy"}
+            decoding="async"
           />
         </picture>
 
@@ -243,8 +236,7 @@ export const ProjectGallerySection = (): JSX.Element => {
           className="absolute inset-0 flex items-center justify-center transition-all duration-500 z-20"
           style={{
             opacity: hovered === item.id ? 1 : 0,
-            transform:
-              hovered === item.id ? "scale(1) rotate(0deg)" : "scale(0.8) rotate(-10deg)",
+            transform: hovered === item.id ? "scale(1) rotate(0deg)" : "scale(0.8) rotate(-10deg)",
           }}
         >
           <div className="w-14 h-14 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center shadow-xl border border-white/20">
@@ -266,24 +258,25 @@ export const ProjectGallerySection = (): JSX.Element => {
 
   const renderVideo = (v: VideoItem) => {
     const id = v.id;
-    const thumb = id
-      ? `https://img.youtube.com/vi/${id}/hqdefault.jpg`
-      : ""; // fallback empty
+    const thumb = id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : "";
+    const href = id ? `https://www.youtube.com/watch?v=${id}` : v.videoUrl;
+
     return (
       <a
         key={v.id}
-        href={v.videoUrl}
+        href={href}
         data-fancybox={`gallery-${activeTab}`}
         data-caption={v.title}
-        className="block w-full h-80 cursor-pointer group"
+        className="block w-full cursor-pointer group"
       >
-        <div className="relative w-full h-80 overflow-hidden rounded-xl shadow-lg group-hover:shadow-2xl transition-all duration-500">
+        <div className="relative w-full aspect-[16/9] overflow-hidden rounded-xl shadow-lg group-hover:shadow-2xl transition-all duration-500">
           {!!thumb && (
             <img
               src={thumb}
               alt={v.title}
               className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
               loading="lazy"
+              decoding="async"
             />
           )}
           <div className="absolute inset-0 flex items-center justify-center z-20">
@@ -299,11 +292,7 @@ export const ProjectGallerySection = (): JSX.Element => {
   };
 
   const current =
-    activeTab === "photos"
-      ? photoItems
-      : activeTab === "plans"
-      ? planItems
-      : videoItems;
+    activeTab === "photos" ? photoItems : activeTab === "plans" ? planItems : videoItems;
 
   return (
     <section ref={sectionRef} className="py-16 md:py-24 bg-white">
@@ -351,57 +340,16 @@ export const ProjectGallerySection = (): JSX.Element => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.5 }}
+            transition={{ duration: 0.4 }}
             ref={gridRef}
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
           >
             {activeTab === "videos"
               ? (current as VideoItem[]).map(renderVideo)
-              : (current as PhotoItem[]).map(renderThumb)}
+              : (current as PhotoItem[]).map((it, idx) => renderThumb(it, idx))}
           </motion.div>
         </AnimatePresence>
       </div>
-
-      {/* Fancybox polish */}
-      <style jsx global>{`
-        .fancybox__container {
-          --fancybox-bg: rgba(0, 0, 0, 0.95);
-          --fancybox-accent-color: #75bf44;
-        }
-        .fancybox__backdrop { background: var(--fancybox-bg); }
-        .fancybox__toolbar {
-          background: rgba(0,0,0,0.7);
-          backdrop-filter: blur(10px);
-          border-radius: 8px;
-          margin: 20px;
-          padding: 8px;
-        }
-        .fancybox__button {
-          color: #fff !important;
-          background: rgba(255,255,255,0.12) !important;
-          border-radius: 50% !important;
-          transition: all .3s ease !important;
-          width: 40px !important;
-          height: 40px !important;
-          margin: 0 2px !important;
-        }
-        .fancybox__button:hover { background: #75bf44 !important; transform: scale(1.07) !important; }
-        .fancybox__nav { background: rgba(0,0,0,0.7) !important; color:#fff !important; border-radius:50% !important; width:48px !important; height:48px !important; }
-        .fancybox__nav:hover { background:#75bf44 !important; }
-        .fancybox__caption {
-          background: rgba(0,0,0,0.8);
-          color: white;
-          padding: 12px 20px;
-          border-radius: 8px;
-          margin: 20px;
-          text-align: center;
-        }
-        @media (max-width: 768px) {
-          .fancybox__button { width: 35px !important; height: 35px !important; }
-          .fancybox__nav { width: 40px !important; height: 40px !important; }
-          .fancybox__toolbar { margin: 10px !important; padding: 6px !important; }
-        }
-      `}</style>
     </section>
   );
 };

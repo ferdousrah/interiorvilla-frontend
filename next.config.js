@@ -2,9 +2,6 @@
 const nextConfig = {
   images: {
     domains: ['commondatastorage.googleapis.com', "cms.interiorvillabd.com", "placehold.co", "bolt.new"],
-    remotePatterns: [
-      { protocol: 'https', hostname: 'cms.interiorvillabd.com' },
-    ],
     unoptimized: true,
   },
   webpack: (config) => {
