@@ -229,5 +229,3 @@ export const PerformanceImage = React.forwardRef<HTMLImageElement, PerformanceIm
     </div>
   );
 });
-
-PerformanceImage.displayName = 'PerformanceImage';
