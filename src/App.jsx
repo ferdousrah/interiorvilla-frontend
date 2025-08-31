@@ -5,7 +5,6 @@ import { useLocation } from 'react-router-dom'
 import { updateSEO, seoData } from './utils/seo'
 import { AccessibilityImprovements } from '../components/ui/accessibility-improvements'
 import { LazyComponent } from '../components/ui/lazy-component'
-import { PerformanceMonitor } from '../components/ui/performance-monitor'
 import { Home } from '../components/screens/Home/Home'
 import { About } from '../components/screens/About/About'
 import { Contact } from '../components/screens/Contact/Contact'
@@ -72,7 +71,6 @@ function App() {
   return (
     <Router>
       <AccessibilityImprovements />
-      <PerformanceMonitor />
       <ScrollToTop />
       <Routes>
         <Route path="/" element={<SEORoute seoKey="home"><Home /></SEORoute>} />

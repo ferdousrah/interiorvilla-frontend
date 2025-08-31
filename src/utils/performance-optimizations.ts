@@ -3,8 +3,7 @@
 // Critical resource preloader with priority hints
 export const preloadCriticalResources = () => {
   const criticalImages = [
-    { src: '/interior-villa-dark.png', priority: 'high' },
-    { src: '/image.png', priority: 'high' }
+    { src: '/interior-villa-dark.png', priority: 'high' }
   ];
 
   criticalImages.forEach(({ src, priority }) => {
@@ -17,12 +16,6 @@ export const preloadCriticalResources = () => {
     }
     document.head.appendChild(link);
   });
-  
-  // Preload critical CSS
-  const criticalCSS = document.querySelector('link[rel="stylesheet"]');
-  if (criticalCSS) {
-    criticalCSS.setAttribute('fetchpriority', 'high');
-  }
 };
 
 // Optimize GSAP for better performance
@@ -31,8 +24,7 @@ export const optimizeGSAP = () => {
     window.gsap.config({
       force3D: true,
       nullTargetWarn: false,
-      autoSleep: 60,
-      units: { left: "px", top: "px", rotation: "deg" },
+      trialWarn: false
     });
 
     // Set default ease for better performance
@@ -40,9 +32,6 @@ export const optimizeGSAP = () => {
       ease: "power2.out",
       duration: 0.6
     });
-    
-    // Enable hardware acceleration
-    window.gsap.set("*", { force3D: true });
   }
 };
 
@@ -216,47 +205,8 @@ export const checkPerformanceBudget = () => {
 // Initialize all performance optimizations
 export const initializePerformanceOptimizations = () => {
   // Run immediately
-  optimizeGSAP();
   preloadCriticalResources();
-  
-  // Register service worker for caching
-  if ('serviceWorker' in navigator && import.meta.env.PROD) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/sw.js', {
-        scope: '/',
-        updateViaCache: 'none' // Always check for SW updates
-      })
-      .then((registration) => {
-        console.log('SW registered successfully');
-        
-        // Check for updates every 24 hours
-        setInterval(() => {
-          registration.update();
-        }, 24 * 60 * 60 * 1000);
-      })
-      .catch((error) => {
-        console.log('SW registration failed:', error);
-      });
-    });
-
-    // Set default properties to reduce reflows
-    window.gsap.defaults({
-      ease: "power2.out",
-      duration: 0.6,
-      force3D: true
-    });
-
-    // Optimize ScrollTrigger for better performance
-    if (window.gsap.registerPlugin) {
-      const { ScrollTrigger } = window.gsap;
-      if (ScrollTrigger) {
-        ScrollTrigger.config({
-          autoRefreshEvents: "visibilitychange,DOMContentLoaded,load",
-          ignoreMobileResize: true
-        });
-      }
-    }
-  }
+  optimizeGSAP();
   
   // Run after DOM is ready
   if (document.readyState === 'loading') {
@@ -264,94 +214,15 @@ export const initializePerformanceOptimizations = () => {
       analyzeBundleSize();
       checkPerformanceBudget();
       monitorMemoryUsage();
-      optimizeImageCaching();
     });
   } else {
     analyzeBundleSize();
     checkPerformanceBudget();
     monitorMemoryUsage();
-    optimizeImageCaching();
   }
 
   // Run after page load
   window.addEventListener('load', () => {
     cleanupEventListeners();
-    
-    // Defer heavy operations
-    setTimeout(() => {
-      // Load non-critical resources
-      const nonCriticalImages = document.querySelectorAll('img[loading="lazy"]');
-      nonCriticalImages.forEach(img => {
-        if (img.getAttribute('data-src')) {
-          img.setAttribute('src', img.getAttribute('data-src') || '');
-        }
-      });
-    }, 1000);
-  });
-  
-  // Optimize for Core Web Vitals
-  if ('requestIdleCallback' in window) {
-    requestIdleCallback(() => {
-      // Run non-critical optimizations when browser is idle
-      analyzeBundleSize();
-      checkPerformanceBudget();
-    });
-  } else {
-    // Fallback for browsers without requestIdleCallback
-    setTimeout(() => {
-      analyzeBundleSize();
-      checkPerformanceBudget();
-    }, 2000);
-  }
-};
-
-// Optimize image caching with better headers
-export const optimizeImageCaching = () => {
-  const images = document.querySelectorAll('img[src]');
-  
-  images.forEach((img) => {
-    const imgElement = img as HTMLImageElement;
-    const src = imgElement.src;
-    
-    // Add cache optimization for CMS images
-    if (src.includes('cms.interiorvillabd.com') && !src.includes('v=')) {
-      const url = new URL(src);
-      const params = new URLSearchParams(url.search);
-      
-      // Add daily cache versioning
-      const today = new Date().toISOString().split('T')[0];
-      params.set('v', today);
-      
-      // Add format optimization if not present
-      if (!params.has('f') && src.match(/\.(jpg|jpeg|png)$/i)) {
-        params.set('f', 'webp');
-      }
-      
-      url.search = params.toString();
-      imgElement.src = url.toString();
-    }
-  });
-};
-
-// Add cache headers via meta tags for better browser caching
-export const addCacheHeaders = () => {
-  const meta = document.createElement('meta');
-  meta.httpEquiv = 'Cache-Control';
-  meta.content = 'public, max-age=31536000, immutable';
-  document.head.appendChild(meta);
-  
-  // Add cache control for different resource types
-  const resourceHints = [
-    { rel: 'preload', as: 'style', href: '/assets/css/index.css' },
-    { rel: 'preload', as: 'script', href: '/assets/js/index.js' },
-    { rel: 'prefetch', href: '/about' },
-    { rel: 'prefetch', href: '/portfolio' },
-    { rel: 'prefetch', href: '/contact' }
-  ];
-  
-  resourceHints.forEach(hint => {
-    const link = document.createElement('link');
-    Object.assign(link, hint);
-    document.head.appendChild(link);
   });
 };

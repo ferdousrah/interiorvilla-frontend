@@ -276,55 +276,34 @@ export const AboutSection = (): JSX.Element => {
   useEffect(() => {
     if (!sectionRef.current) return;
 
-    // Batch DOM measurements to avoid forced reflows
-    const batchMeasurements = () => {
-      const measurements = {};
-      if (imageContainerRef.current) {
-        measurements.imageContainer = {
-          offsetTop: imageContainerRef.current.offsetTop,
-          offsetHeight: imageContainerRef.current.offsetHeight
-        };
-      }
-      return measurements;
-    };
-
-    const measurements = batchMeasurements();
     if (imageContainerRef.current) {
       gsap.to(imageContainerRef.current, {
         yPercent: -10,
         ease: "none",
-        force3D: true,
         scrollTrigger: {
           trigger: imageContainerRef.current,
           start: "top bottom",
           end: "bottom top",
           scrub: 0.5,
           invalidateOnRefresh: true,
-          fastScrollEnd: true
         },
       });
     }
 
     if (experienceCircleRef.current) {
-      gsap.set(experienceCircleRef.current, { 
-        clearProps: "all",
-        force3D: true,
-        willChange: "transform"
-      });
+      gsap.set(experienceCircleRef.current, { clearProps: "all" });
     }
 
     if (featuresCardRef.current) {
       gsap.to(featuresCardRef.current, {
         yPercent: -8,
         ease: "none",
-        force3D: true,
         scrollTrigger: {
           trigger: sectionRef.current,
           start: "top bottom",
           end: "bottom top",
           scrub: 1,
           invalidateOnRefresh: true,
-          fastScrollEnd: true
         },
       });
     }

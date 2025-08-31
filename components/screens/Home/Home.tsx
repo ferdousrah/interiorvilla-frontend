@@ -19,7 +19,6 @@ import { SplitText } from "gsap/SplitText";
 import { GLBModelViewer } from "../../ui/glb-model-viewer";
 import { X, ChevronDown, Home as HomeIcon, User, Briefcase, FolderOpen, BookOpen, Mail } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { throttle } from "../../../src/utils/performance-optimizations";
 
 gsap.registerPlugin(ScrollTrigger, SplitText);
 
@@ -102,8 +101,7 @@ const Home = (): JSX.Element => {
   };
 
   useEffect(() => {
-    // Optimize scroll handler to reduce forced reflows
-    const handleScroll = throttle(() => {
+    const handleScroll = () => {
       const scrollPosition = window.scrollY;
       const scrollDirection = scrollPosition > lastScrollY ? 'down' : 'up';
       const shouldBeScrolled = scrollPosition > 100; // Minimum scroll distance
@@ -122,9 +120,9 @@ const Home = (): JSX.Element => {
       }
       
       setLastScrollY(scrollPosition);
-    }, 16); // Throttle to ~60fps
+    };
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, [isScrolled, lastScrollY]);
 
@@ -132,17 +130,9 @@ const Home = (): JSX.Element => {
   useEffect(() => {
     if (!headerRef.current || !logoRef.current || !menuContainerRef.current) return;
 
-    // Cache DOM elements and their computed styles to avoid repeated queries
     const header = headerRef.current;
     const logo = logoRef.current;
     const menuContainer = menuContainerRef.current;
-    
-    // Batch DOM reads to avoid forced reflows
-    const initialStyles = {
-      headerHeight: header.offsetHeight,
-      logoScale: 1,
-      menuHeight: menuContainer.offsetHeight
-    };
 
     // Create timeline for smooth transitions - only when scrolling up
     const tl = gsap.timeline({ paused: true });
@@ -154,16 +144,14 @@ const Home = (): JSX.Element => {
       backdropFilter: "blur(20px)",
       boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
       duration: 0.6,
-      ease: "power3.out",
-      force3D: true
+      ease: "power3.out"
     }, 0)
     
     // Logo scaling and positioning
     .to(logo, {
       scale: 0.8, // Slightly smaller in sticky mode
       duration: 0.6,
-      ease: "power3.out",
-      force3D: true
+      ease: "power3.out"
     }, 0)
     
     // Menu container adjustments
@@ -171,8 +159,7 @@ const Home = (): JSX.Element => {
       height: "50px", // Reduced height
       padding: "0 16px", // Adjust padding
       duration: 0.6,
-      ease: "power3.out",
-      force3D: true
+      ease: "power3.out"
     }, 0);
 
     // Play or reverse animation based on scroll state and direction

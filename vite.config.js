@@ -36,57 +36,6 @@ export default defineConfig({
   build: {
     target: 'es2015',
     minify: 'terser',
-    cssCodeSplit: true,
-    cssMinify: true,
-    // Add cache optimization
-    rollupOptions: {
-      output: {
-        // Optimize chunk splitting for better caching
-        manualChunks: {
-          // Vendor chunks (rarely change - long cache)
-          'react-vendor': ['react', 'react-dom'],
-          'react-router': ['react-router-dom'],
-          
-          // Animation libraries (stable - medium cache)
-          'animation': ['gsap', 'framer-motion'],
-          'gsap-plugins': ['gsap/ScrollTrigger', 'gsap/SplitText', 'gsap/ScrollToPlugin'],
-          
-          // 3D libraries (large but stable - long cache)
-          'three-vendor': ['three', 'three-stdlib'],
-          
-          // UI components (medium stability - medium cache)
-          'ui-components': [
-            'lucide-react', 
-            '@radix-ui/react-slot', 
-            '@radix-ui/react-separator',
-            '@radix-ui/react-tabs'
-          ],
-          
-          // Media libraries (stable - long cache)
-          'media': ['@fancyapps/ui', 'embla-carousel-react'],
-          
-          // Utilities (very stable - long cache)
-          'utils': ['class-variance-authority', 'clsx', 'tailwind-merge']
-        },
-        // Add cache-friendly file naming with shorter hashes
-        chunkFileNames: (chunkInfo) => {
-          const facadeModuleId = chunkInfo.facadeModuleId ? chunkInfo.facadeModuleId.split('/').pop() : 'chunk';
-          return `assets/js/[name]-[hash:8].js`;
-        },
-        entryFileNames: 'assets/js/[name]-[hash:8].js',
-        assetFileNames: (assetInfo) => {
-          const info = assetInfo.name.split('.');
-          const ext = info[info.length - 1];
-          if (/png|jpe?g|svg|gif|tiff|bmp|ico/i.test(ext)) {
-            return `assets/images/[name]-[hash:8].[ext]`;
-          }
-          if (/css/i.test(ext)) {
-            return `assets/css/[name]-[hash:8].[ext]`;
-          }
-          return `assets/[name]-[hash:8].[ext]`;
-        }
-      }
-    },
     terserOptions: {
       compress: {
         drop_console: true,
@@ -109,40 +58,70 @@ export default defineConfig({
         comments: false
       }
     },
+    cssCodeSplit: true,
     sourcemap: false,
     chunkSizeWarningLimit: 500,
-    assetsInlineLimit: 4096, // Inline small assets
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Core React chunks
+          'react-vendor': ['react', 'react-dom'],
+          'react-router': ['react-router-dom'],
+          
+          // Animation libraries
+          'animation': ['gsap', 'framer-motion'],
+          
+          // 3D and heavy libraries
+          'three-vendor': ['three', 'three-stdlib'],
+          
+          // UI components
+          'ui-components': [
+            'lucide-react', 
+            '@radix-ui/react-slot', 
+            '@radix-ui/react-separator',
+            '@radix-ui/react-tabs'
+          ],
+          
+          // Media and carousel
+          'media': ['@fancyapps/ui', 'embla-carousel-react'],
+          
+          // Utilities
+          'utils': ['class-variance-authority', 'clsx', 'tailwind-merge']
+        },
+        chunkFileNames: (chunkInfo) => {
+          const facadeModuleId = chunkInfo.facadeModuleId ? chunkInfo.facadeModuleId.split('/').pop() : 'chunk';
+          return `assets/js/[name]-[hash].js`;
+        },
+        entryFileNames: 'assets/js/[name]-[hash].js',
+        assetFileNames: (assetInfo) => {
+          const info = assetInfo.name.split('.');
+          const ext = info[info.length - 1];
+          if (/png|jpe?g|svg|gif|tiff|bmp|ico/i.test(ext)) {
+            return `assets/images/[name]-[hash].[ext]`;
+          }
+          if (/css/i.test(ext)) {
+            return `assets/css/[name]-[hash].[ext]`;
+          }
+          return `assets/[name]-[hash].[ext]`;
+        }
+      }
+    }
   },
-  // Optimize dependency pre-bundling
   optimizeDeps: {
     include: [
       'react', 
       'react-dom', 
       'react-router-dom',
-      'lucide-react',
-      'class-variance-authority',
-      'clsx',
-      'tailwind-merge'
+      'framer-motion',
+      'lucide-react'
     ],
     exclude: [
-      'framer-motion', // Load dynamically
       'gsap/SplitText',
       'gsap/ScrollTrigger', 
       'gsap/ScrollToPlugin',
       '@fancyapps/ui',
       'three',
-      'three-stdlib',
-      'vanilla-tilt'
+      'three-stdlib'
     ]
-  },
-  // Enable experimental features for better performance
-  experimental: {
-    renderBuiltUrl(filename, { hostType }) {
-      if (hostType === 'js') {
-        return { js: `/${filename}` };
-      } else {
-        return { relative: true };
-      }
-    }
   }
 })
