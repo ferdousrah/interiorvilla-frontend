@@ -99,19 +99,22 @@ const toYouTubeEmbed = (u: string) => {
   const id = getYouTubeId(u);
   if (!id) return null;
 
-  const base = `https://www.youtube-nocookie.com/embed/${id}`;
+  const base = `https://www.youtube.com/embed/${id}`;
   const qp = new URLSearchParams({
-    autoplay: "0",
+    autoplay: "1",
     rel: "0",
     controls: "1",
     modestbranding: "1",
     playsinline: "1",
-    mute: "1",
-    start: "0",
-    iv_load_policy: "3",
-    disablekb: "0",
-    fs: "1"
+    mute: "0",
+    start: "0"
   });
+
+  // Add JS API for better control
+  qp.set("enablejsapi", "1");
+  if (typeof window !== "undefined") {
+    qp.set("origin", window.location.origin);
+  }
 
   return `${base}?${qp.toString()}`;
 };
@@ -429,14 +432,9 @@ export const TestimonialSection = (): JSX.Element => {
       const embedSrc = toYouTubeEmbed(videoUrl);
       if (!embedSrc) return;
 
-      // Open YouTube video in new tab for better compatibility
-      const watchUrl = videoUrl.includes('watch?v=') ? videoUrl : `https://www.youtube.com/watch?v=${getYouTubeId(videoUrl)}`;
-      window.open(watchUrl, '_blank', 'noopener,noreferrer');
-      return;
-      
-      /* Alternative: Use Fancybox with better configuration
+      // Use Fancybox's built-in iframe support for YouTube
       Fancybox.show([{ 
-        src: watchUrl, 
+        src: embedSrc, 
         type: "iframe", 
         caption: title 
       }], {
@@ -446,14 +444,18 @@ export const TestimonialSection = (): JSX.Element => {
         dragToClose: false,
         Iframe: {
           preload: true,
-          css: { width: "100%", height: "100%" },
+          css: {
+            width: "100%",
+            height: "100%"
+          },
           attr: {
-            sandbox: "allow-same-origin allow-scripts allow-popups allow-presentation",
-            loading: "lazy"
+            allow: "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen",
+            allowfullscreen: "true",
+            referrerpolicy: "strict-origin-when-cross-origin"
           }
         }
       });
-      */
+      return;
     } else {
       const videoHtml = `
         <video controls autoplay muted style="width:100%;height:100%;max-width:1200px;max-height:675px;background:#000">
