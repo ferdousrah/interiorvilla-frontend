@@ -731,10 +731,6 @@ const Home = (): JSX.Element => {
                                     perspective: '300px'
                                   }}
                                   onClick={() => handleSubmenuNavigation(subItem.href)}
-                                  onClick={() => {
-                                    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-                                    navigate(subItem.href);
-                                  }}
                                 >
                                   <div className="w-2 h-2 rounded-full bg-gray-600 group-hover:bg-primary transition-colors duration-300 mr-4"></div>
                                   <span className="[font-family:'Fahkwang',Helvetica] font-normal text-sm">
