@@ -6,94 +6,139 @@ import { Fancybox } from "@fancyapps/ui";
 import "@fancyapps/ui/dist/fancybox/fancybox.css";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import "./project-gallery.css";
 import { useProject } from "../../ProjectContext";
-import { swapToWebp, toMediaUrl, toWebpCandidate, youtubeId } from "../../../../lib/media";
-import "./project-gallery.css"; // <-- our own CSS (replaces <style jsx global>)
 
 gsap.registerPlugin(ScrollTrigger);
 
+/* ---------------- helpers ---------------- */
 type PhotoItem = {
   id: string | number;
   type: "photo" | "plan";
   alt: string;
   full: string;
-  fullWebp: string;
   thumb: string;
-  thumbWebp: string;
 };
-
 type VideoItem = { id: string; videoUrl: string; title: string };
 
+const getYouTubeId = (u?: string) => {
+  if (!u) return "";
+  try {
+    const url = new URL(u);
+    if (url.hostname.includes("youtu.be")) return url.pathname.replace("/", "");
+    if (url.pathname.startsWith("/shorts/")) return url.pathname.split("/")[2] || "";
+    if (url.pathname.startsWith("/embed/")) return url.pathname.split("/")[2] || "";
+    return url.searchParams.get("v") || "";
+  } catch {
+    return "";
+  }
+};
+
+/* ---------------- component ---------------- */
 export const ProjectGallerySection = (): JSX.Element => {
-  const { project } = useProject();
+  const { gallery, title } = useProject();
 
   const [activeTab, setActiveTab] = useState<"photos" | "videos" | "plans">("photos");
   const [hovered, setHovered] = useState<string | number | null>(null);
 
   const sectionRef = useRef<HTMLElement>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
-  const descriptionRef = useRef<HTMLParagraphElement>(null);
-  const tabsRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
 
-  // ---------- Build data from API ----------
-  const photoItems: PhotoItem[] = useMemo(() => {
-    const arr = (project?.gallery?.photos as any[]) || [];
-    return arr.map((p, i) => {
-      const src = p?.image ?? p?.photo ?? p?.file ?? p;
-      const full = toMediaUrl(src, { width: 1920 });
-      const thumb = toMediaUrl(src, { width: 800 });
-      return {
-        id: p?.id ?? `photo-${i}`,
+  /* map from ProjectContext.gallery (already normalized) */
+  const photoItems: PhotoItem[] = useMemo(
+    () =>
+      gallery.photos.map((p, i) => ({
+        id: p.id ?? `photo-${i}`,
         type: "photo",
-        alt: p?.image?.alt || p?.alt || project?.title || "Photo",
-        full,
-        thumb,
-        fullWebp: toWebpCandidate(full),
-        thumbWebp: toWebpCandidate(thumb),
-      };
-    });
-  }, [project]);
+        alt: p.alt || title || "Photo",
+        full: p.src,
+        thumb: p.src,
+      })),
+    [gallery.photos, title]
+  );
 
-  const planItems: PhotoItem[] = useMemo(() => {
-    const arr = (project?.gallery?.plans as any[]) || [];
-    return arr.map((p, i) => {
-      const src = p?.image ?? p?.plan ?? p?.file ?? p;
-      const full = toMediaUrl(src, { width: 1920 });
-      const thumb = toMediaUrl(src, { width: 800 });
-      return {
-        id: p?.id ?? `plan-${i}`,
+  const planItems: PhotoItem[] = useMemo(
+    () =>
+      gallery.plans.map((p, i) => ({
+        id: p.id ?? `plan-${i}`,
         type: "plan",
-        alt: p?.image?.alt || p?.alt || "Plan",
-        full,
-        thumb,
-        fullWebp: toWebpCandidate(full),
-        thumbWebp: toWebpCandidate(thumb),
-      };
-    });
-  }, [project]);
+        alt: p.alt || "Plan",
+        full: p.src,
+        thumb: p.src,
+      })),
+    [gallery.plans]
+  );
 
-  const videoItems: VideoItem[] = useMemo(() => {
-    const arr = (project?.gallery?.videos as any[]) || [];
-    return arr.map((v, i) => ({
-      id: youtubeId(v?.videoUrl) || v?.id || `video-${i}`,
-      videoUrl: v?.videoUrl || "",
-      title: project?.title || "Video",
-    }));
-  }, [project]);
+  const videoItems: VideoItem[] = useMemo(
+    () =>
+      (gallery.videos || []).map((v, i) => {
+        const id = getYouTubeId(v.src);
+        return {
+          id: id || v.id || `video-${i}`,
+          videoUrl: v.src,
+          title: v.alt || title || "Video",
+        };
+      }),
+    [gallery.videos, title]
+  );
 
-  // ---------- Animations ----------
+  /* Fancybox bind (use watch URLs and let Fancybox handle embeds) */
+  useEffect(() => {
+    Fancybox.destroy();
+
+    const hasAny =
+      (activeTab === "photos" && photoItems.length) ||
+      (activeTab === "plans" && planItems.length) ||
+      (activeTab === "videos" && videoItems.length);
+
+    if (!hasAny) return;
+
+    const t = setTimeout(() => {
+      Fancybox.bind('[data-fancybox^="gallery-"]', {
+        animated: true,
+        showClass: "fancybox-fadeIn",
+        hideClass: "fancybox-fadeOut",
+        dragToClose: true,
+        Toolbar: {
+          display: {
+            left: [],
+            middle: [],
+            right: ["zoom", "slideshow", "thumbs", "download", "close"],
+          },
+        },
+        wheel: "slide",
+        touch: { vertical: true, momentum: true },
+        Iframe: {
+          preload: true,
+          attr: {
+            allow:
+              "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen",
+            allowfullscreen: "true",
+            referrerpolicy: "strict-origin-when-cross-origin",
+          },
+        },
+      });
+    }, 0);
+
+    return () => {
+      clearTimeout(t);
+      Fancybox.destroy();
+    };
+  }, [activeTab, photoItems.length, planItems.length, videoItems.length]);
+
+  /* entrance animations */
   useEffect(() => {
     if (!sectionRef.current) return;
 
     if (headingRef.current) {
       gsap.fromTo(
         headingRef.current,
-        { opacity: 0, y: 50 },
+        { opacity: 0, y: 40 },
         {
           opacity: 1,
           y: 0,
-          duration: 1,
+          duration: 0.8,
           ease: "power3.out",
           scrollTrigger: {
             trigger: headingRef.current,
@@ -104,58 +149,21 @@ export const ProjectGallerySection = (): JSX.Element => {
       );
     }
 
-    if (descriptionRef.current) {
-      gsap.fromTo(
-        descriptionRef.current,
-        { opacity: 0, y: 30 },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.8,
-          ease: "power2.out",
-          scrollTrigger: {
-            trigger: descriptionRef.current,
-            start: "top 85%",
-            toggleActions: "play none none none",
-          },
-        }
-      );
-    }
-
-    if (tabsRef.current) {
-      gsap.fromTo(
-        tabsRef.current,
-        { opacity: 0, y: 30 },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.8,
-          ease: "power2.out",
-          scrollTrigger: {
-            trigger: tabsRef.current,
-            start: "top 85%",
-            toggleActions: "play none none none",
-          },
-        }
-      );
-    }
-
     if (gridRef.current) {
-      const cards = gridRef.current.children;
       gsap.fromTo(
-        cards,
-        { opacity: 0, y: 80, scale: 0.9 },
+        gridRef.current.children,
+        { opacity: 0, y: 60, scale: 0.96 },
         {
           opacity: 1,
           y: 0,
           scale: 1,
-          duration: 1.0,
+          duration: 0.9,
           stagger: 0.12,
           ease: "power3.out",
           scrollTrigger: {
             trigger: gridRef.current,
             start: "top 85%",
-            toggleActions: "play none none none", // don't reverse -> prevent faded state
+            toggleActions: "play none none none",
           },
         }
       );
@@ -164,37 +172,8 @@ export const ProjectGallerySection = (): JSX.Element => {
     return () => {
       ScrollTrigger.getAll().forEach((t) => t.kill());
     };
-  }, []);
+  }, [activeTab]);
 
-  // ---------- Fancybox ----------
-  useEffect(() => {
-    Fancybox.destroy();
-    const timer = setTimeout(() => {
-      Fancybox.bind('[data-fancybox^="gallery-"]', {
-        animated: true,
-        showClass: "fancybox-fadeIn",
-        hideClass: "fancybox-fadeOut",
-        dragToClose: true,
-        Images: { zoom: true },
-        Image: { zoom: true, fit: "cover", preload: 1 },
-        Toolbar: {
-          display: {
-            left: [],
-            middle: [],
-            right: ["zoom", "slideshow", "thumbs", "download", "close"],
-          },
-        },
-        wheel: "slide",
-        touch: { vertical: true, momentum: true },
-      });
-    }, 120);
-    return () => {
-      clearTimeout(timer);
-      Fancybox.destroy();
-    };
-  }, [activeTab, photoItems.length, planItems.length, videoItems.length]);
-
-  // ---------- UI ----------
   const tabs = [
     { id: "photos" as const, label: `Photos (${photoItems.length})` },
     { id: "videos" as const, label: `Videos (${videoItems.length})` },
@@ -204,7 +183,7 @@ export const ProjectGallerySection = (): JSX.Element => {
   const renderThumb = (item: PhotoItem, idx: number) => (
     <a
       key={item.id}
-      href={item.full} // keep original for maximum compatibility
+      href={item.full}
       data-fancybox={`gallery-${activeTab}`}
       data-caption={`${item.alt} - ${item.type}`}
       className="block w-full cursor-pointer group"
@@ -212,31 +191,23 @@ export const ProjectGallerySection = (): JSX.Element => {
       onMouseLeave={() => setHovered(null)}
     >
       <div className="relative w-full aspect-[4/3] overflow-hidden rounded-xl shadow-lg group-hover:shadow-2xl transition-all duration-500">
-        <picture>
-          <source srcSet={item.thumbWebp} type="image/webp" />
-          <source srcSet={swapToWebp(item.thumb)} type="image/webp" />
-          <img
-            src={item.thumb}
-            alt={item.alt}
-            className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
-            loading={idx < 3 ? "eager" : "lazy"}
-            decoding="async"
-          />
-        </picture>
-
-        {/* Category pill */}
+        <img
+          src={item.thumb}
+          alt={item.alt}
+          className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+          loading={idx < 3 ? "eager" : "lazy"}
+          decoding="async"
+        />
         <div className="absolute top-3 left-3 z-20">
           <span className="px-3 py-1 bg-white/90 backdrop-blur-sm text-xs font-semibold text-gray-800 rounded-full shadow-sm">
             {item.type === "photo" ? "Photo" : "Plan"}
           </span>
         </div>
-
-        {/* Zoom icon on hover */}
         <div
           className="absolute inset-0 flex items-center justify-center transition-all duration-500 z-20"
           style={{
             opacity: hovered === item.id ? 1 : 0,
-            transform: hovered === item.id ? "scale(1) rotate(0deg)" : "scale(0.8) rotate(-10deg)",
+            transform: hovered === item.id ? "scale(1)" : "scale(0.9)",
           }}
         >
           <div className="w-14 h-14 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center shadow-xl border border-white/20">
@@ -245,8 +216,6 @@ export const ProjectGallerySection = (): JSX.Element => {
             </svg>
           </div>
         </div>
-
-        {/* Title overlay */}
         <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-20">
           <h4 className="text-white font-medium text-sm [font-family:'Fahkwang',Helvetica] truncate">
             {item.alt}
@@ -257,15 +226,16 @@ export const ProjectGallerySection = (): JSX.Element => {
   );
 
   const renderVideo = (v: VideoItem) => {
-    const id = v.id;
+    const id = v.id || getYouTubeId(v.videoUrl);
     const thumb = id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : "";
-    const href = id ? `https://www.youtube.com/watch?v=${id}` : v.videoUrl;
+    const watchUrl = id ? `https://www.youtube.com/watch?v=${id}` : v.videoUrl;
 
     return (
       <a
         key={v.id}
-        href={href}
+        href={watchUrl}
         data-fancybox={`gallery-${activeTab}`}
+        data-type="iframe"
         data-caption={v.title}
         className="block w-full cursor-pointer group"
       >
@@ -297,25 +267,20 @@ export const ProjectGallerySection = (): JSX.Element => {
   return (
     <section ref={sectionRef} className="py-16 md:py-24 bg-white">
       <div className="container mx-auto px-4 max-w-6xl">
-        {/* header */}
         <div className="text-center mb-12 md:mb-16">
           <h2
             ref={headingRef}
-            className="text-2xl md:text-3xl lg:text-4xl font-medium [font-family:'Fahkwang',Helvetica] text-[#01190c] mb-6"
+            className="text-2xl md:text-3xl lg:text-4xl font-medium [font-family:'Fahkwang',Helvetica] text-[#01190c] mb-2"
           >
             Project Gallery
           </h2>
-          <p
-            ref={descriptionRef}
-            className="text-base [font-family:'Fahkwang',Helvetica] text-[#626161] max-w-3xl mx-auto leading-relaxed"
-          >
-            Explore a curated collection of visuals that showcase the transformation of this
-            space into a harmonious blend of style and functionality.
-          </p>
+          {!!title && (
+            <p className="text-sm text-[#626161] [font-family:'Fahkwang',Helvetica]">{title}</p>
+          )}
         </div>
 
         {/* tabs */}
-        <div ref={tabsRef} className="flex justify-center mb-16">
+        <div className="flex justify-center mb-16">
           <div className="relative bg-white rounded-2xl p-2 shadow-lg border border-gray-100 inline-flex space-x-2">
             {tabs.map((t) => (
               <button
@@ -340,7 +305,7 @@ export const ProjectGallerySection = (): JSX.Element => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.4 }}
+            transition={{ duration: 0.35 }}
             ref={gridRef}
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
           >
@@ -349,6 +314,13 @@ export const ProjectGallerySection = (): JSX.Element => {
               : (current as PhotoItem[]).map((it, idx) => renderThumb(it, idx))}
           </motion.div>
         </AnimatePresence>
+
+        {activeTab !== "videos" && (current as PhotoItem[]).length === 0 && (
+          <div className="w-full py-16 text-center text-[#626161]">No items found.</div>
+        )}
+        {activeTab === "videos" && (current as VideoItem[]).length === 0 && (
+          <div className="w-full py-16 text-center text-[#626161]">No videos.</div>
+        )}
       </div>
     </section>
   );

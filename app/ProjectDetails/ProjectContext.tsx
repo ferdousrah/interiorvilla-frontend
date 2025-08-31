@@ -1,12 +1,6 @@
 'use client';
 
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 
 type GalleryKind = "photo" | "video" | "plan";
@@ -36,11 +30,16 @@ export const useProject = () => {
 
 const CMS_BASE = "https://cms.interiorvillabd.com";
 
-// ---------- helpers ----------
+/* ---------------- helpers ---------------- */
+
+const absolutize = (u?: string | null) =>
+  u ? (/^https?:\/\//i.test(u) ? u : `${CMS_BASE}${u}`) : "";
+
 function extractMediaUrl(raw: any): string | undefined {
   if (!raw) return;
-  if (typeof raw === "string") return raw.startsWith("http") ? raw : CMS_BASE + raw;
+  if (typeof raw === "string") return absolutize(raw);
 
+  // payload media object or nested shapes
   const candidate =
     raw.url ||
     raw.src ||
@@ -52,43 +51,18 @@ function extractMediaUrl(raw: any): string | undefined {
     raw.sizes?.preview?.url ||
     raw.sizes?.thumbnail?.url;
 
-  if (candidate) return candidate.startsWith("http") ? candidate : CMS_BASE + candidate;
+  if (candidate) return absolutize(candidate);
   if (raw.filename) return `${CMS_BASE}/api/media/file/${raw.filename}`;
   return;
 }
+
 const isVideoUrl = (u?: string) => !!u && /\.(mp4|webm|mov|m4v|avi|mkv)$/i.test(u);
 const looksLikePlan = (x: any) => {
   const t = (x?.type || x?.kind || x?.imageType || "").toString().toLowerCase();
   return t.includes("plan") || t.includes("floor");
 };
 
-function collectRawGallery(project: any): any[] {
-  const pools: any[] = [];
-  const pushArr = (arr: any) => Array.isArray(arr) && pools.push(...arr);
-
-  pushArr(project?.gallery);
-  pushArr(project?.galleries);
-  pushArr(project?.images);
-  pushArr(project?.media);
-  pushArr(project?.mediaGallery);
-  pushArr(project?.projectGallery);
-  pushArr(project?.photoGallery);
-  pushArr(project?.photos);
-  pushArr(project?.galleryImages);
-  pushArr(project?.floorPlans);
-  pushArr(project?.plans);
-
-  const single =
-    project?.gallery ||
-    project?.media ||
-    project?.featuredImage ||
-    project?.image;
-  if (single && !Array.isArray(single)) pools.push(single);
-
-  return pools;
-}
-
-function normalizeGalleryItem(raw: any, i: number): GalleryItem | undefined {
+function normalizeGalleryItem(raw: any, i: number, fallbackAlt = "media"): GalleryItem | undefined {
   const cand = raw?.image ?? raw?.media ?? raw;
   const url = extractMediaUrl(cand);
   if (!url) return;
@@ -100,57 +74,99 @@ function normalizeGalleryItem(raw: any, i: number): GalleryItem | undefined {
     cand?.name ||
     raw?.alt ||
     raw?.title ||
-    `media-${i + 1}`;
+    `${fallbackAlt}-${i + 1}`;
 
-  return { id: (cand?.id ?? raw?.id ?? `${i}`) + "", src: url, alt, type };
+  return { id: String(cand?.id ?? raw?.id ?? i), src: url, alt, type };
 }
 
-function buildGallery(project: any) {
-  const photos: GalleryItem[] = [];
-  const videos: GalleryItem[] = [];
-  const plans:  GalleryItem[] = [];
+/** Pull arrays from many possible places, including nested `gallery.{photos,plans,videos}` */
+function collectRawGallery(project: any): { photos: any[]; plans: any[]; videos: any[] } {
+  const photos: any[] = [];
+  const plans: any[] = [];
+  const videos: any[] = [];
 
-  const raw = collectRawGallery(project);
-  raw.forEach((r, i) => {
-    const it = normalizeGalleryItem(r, i);
-    if (!it) return;
-    if (it.type === "photo") photos.push(it);
-    else if (it.type === "video") videos.push(it);
-    else plans.push(it);
-  });
+  // New: explicitly read your actual API shape
+  if (Array.isArray(project?.gallery?.photos)) photos.push(...project.gallery.photos);
+  if (Array.isArray(project?.gallery?.plans)) plans.push(...project.gallery.plans);
+  if (Array.isArray(project?.gallery?.videos)) videos.push(...project.gallery.videos);
+
+  // Fall-backs (legacy shapes)
+  const pushArr = (arr?: any) => Array.isArray(arr) && photos.push(...arr);
+  pushArr(project?.photos);
+  pushArr(project?.galleryImages);
+  pushArr(project?.mediaGallery);
+  pushArr(project?.projectGallery);
+  pushArr(project?.images);
+
+  return { photos, plans, videos };
+}
+
+/** Build normalized gallery */
+function buildGallery(project: any) {
+  const { photos: rawPhotos, plans: rawPlans, videos: rawVideos } = collectRawGallery(project);
+
+  const photos: GalleryItem[] = rawPhotos
+    .map((r: any, i: number) => normalizeGalleryItem(r, i, "photo"))
+    .filter(Boolean) as GalleryItem[];
+
+  const plans: GalleryItem[] = rawPlans
+    .map((r: any, i: number) => normalizeGalleryItem(r, i, "plan"))
+    .filter(Boolean)
+    .map((it) => ({ ...it, type: "plan" as const }));
+
+  // Videos come as objects with videoUrl; normalize separately
+  const videos: GalleryItem[] = rawVideos
+    .map((v: any, i: number) => {
+      const url = v?.videoUrl || v?.url;
+      if (!url) return undefined;
+      return {
+        id: String(v?.id ?? i),
+        src: url,
+        alt: v?.title || project?.title || "video",
+        type: "video" as const,
+      };
+    })
+    .filter(Boolean) as GalleryItem[];
 
   return { photos, videos, plans };
 }
 
+/** Your API’s `beforeAfterImages` is a list of images.
+ *  If there are at least two, treat [0] as BEFORE and [1] as AFTER. */
 function buildBeforeAfter(project: any): BeforeAfterPair[] {
   const out: BeforeAfterPair[] = [];
 
   if (Array.isArray(project?.beforeAfterImages)) {
-    project.beforeAfterImages.forEach((row: any) => {
-      const before = extractMediaUrl(row?.before || row?.beforeImage || row?.before_photo);
-      const after  = extractMediaUrl(row?.after  || row?.afterImage  || row?.after_photo);
-      if (before || after) out.push({ before, after });
-    });
+    const imgs = project.beforeAfterImages
+      .map((row: any) => row?.image || row)
+      .map((img: any) => extractMediaUrl(img))
+      .filter(Boolean) as string[];
+
+    if (imgs.length >= 2) {
+      out.push({ before: imgs[0], after: imgs[1] });
+      return out;
+    }
   }
 
+  // single-image fallbacks
   const singleBefore = extractMediaUrl(project?.beforeImage || project?.before_photo);
-  const singleAfter  = extractMediaUrl(project?.afterImage  || project?.after_photo);
-  if (singleBefore || singleAfter) out.push({ before: singleBefore, after: singleAfter });
-
-  if (!out.length) {
-    const feat = extractMediaUrl(project?.featuredImage);
-    const firstGalleryItem = collectRawGallery(project)[0];
-    const gUrl =
-      extractMediaUrl(firstGalleryItem?.image) ||
-      extractMediaUrl(firstGalleryItem);
-    if (feat || gUrl) out.push({ before: feat, after: gUrl });
+  const singleAfter = extractMediaUrl(project?.afterImage || project?.after_photo);
+  if (singleBefore || singleAfter) {
+    out.push({ before: singleBefore, after: singleAfter });
+    return out;
   }
+
+  // last resort: featured + first gallery photo
+  const featured = extractMediaUrl(project?.featuredImage);
+  const firstGallery = collectRawGallery(project).photos?.[0];
+  const firstUrl = firstGallery ? extractMediaUrl(firstGallery?.image ?? firstGallery) : undefined;
+  if (featured || firstUrl) out.push({ before: featured, after: firstUrl });
 
   return out;
 }
 
+// Flatten Payload lexical JSON to plain text
 function lexicalToPlain(details: any): string {
-  // payload lexical-style -> plain text
   try {
     if (typeof details === "string") return details;
     const root = details?.root ?? details;
@@ -180,7 +196,8 @@ function metaPick(project: any, keys: string[]) {
   return "";
 }
 
-// ---------- provider ----------
+/* ---------------- provider ---------------- */
+
 export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { id } = useParams();
   const [loading, setLoading] = useState(true);
@@ -196,8 +213,11 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
       setLoading(true);
       setErr(null);
       try {
-        const res = await fetch(`${CMS_BASE}/api/projects/${id}`, { signal: ac.signal });
-        if (!res.ok) throw new Error(`Failed to load project ${id}`);
+        const res = await fetch(
+          `${CMS_BASE}/api/projects/${id}?depth=1&draft=false`,
+          { signal: ac.signal, cache: "no-store" }
+        );
+        if (!res.ok) throw new Error(`Failed to load project ${id} (HTTP ${res.status})`);
         const json = await res.json();
         if (!alive) return;
         setProj(json?.doc || json || null);
@@ -229,15 +249,8 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
       };
     }
 
-    const title =
-      proj?.title || proj?.name || proj?.heading || "Project";
-
-    const description =
-      lexicalToPlain(proj?.details) ||
-      proj?.shortDescription ||
-      proj?.description ||
-      "";
-
+    const title = proj?.title || proj?.name || proj?.heading || "Project";
+    const description = lexicalToPlain(proj?.details) || proj?.shortDescription || proj?.description || "";
     const beforeAfter = buildBeforeAfter(proj);
     const gallery = buildGallery(proj);
 
@@ -247,14 +260,7 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
       project: {
         ...proj,
         year: metaPick(proj, ["year", "Year", "projectYear"]),
-        squareFootage: metaPick(proj, [
-          "squareFootage",
-          "square_footage",
-          "squareFeet",
-          "sqft",
-          "area",
-          "area_sqft",
-        ]),
+        squareFootage: metaPick(proj, ["squareFootage", "square_footage", "squareFeet", "sqft", "area", "area_sqft", "size"]),
         location: metaPick(proj, ["location", "address", "city", "district"]),
         client: metaPick(proj, ["client", "owner", "customer"]),
       },
