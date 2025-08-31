@@ -238,7 +238,10 @@ export const TestimonialSection = (): JSX.Element => {
 
   /* ----------------- Hover heading animation (fonts gated) ----------------- */
   useLayoutEffect(() => {
-    if (!fontsReady) return;
+    if (!fontsReady) {
+      console.warn('SplitText called before fonts loaded');
+      return;
+    }
     if (!sectionRef.current || !headingRef.current || !headingWrapperRef.current) return;
 
     let split: SplitText | undefined;

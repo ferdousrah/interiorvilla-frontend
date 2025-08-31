@@ -77,14 +77,16 @@ export const AccessibilityImprovements: React.FC = () => {
     // Improve heading hierarchy
     const improveHeadingHierarchy = () => {
       const headings = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
-      let currentLevel = 0;
+      let currentLevel = 1; // Start from h1 level
       
       headings.forEach((heading) => {
         const level = parseInt(heading.tagName.charAt(1));
-        if (level > currentLevel + 1) {
+        if (level > currentLevel + 1 && currentLevel > 0) {
           console.warn(`Heading hierarchy issue: ${heading.tagName} follows h${currentLevel}`);
         }
-        currentLevel = level;
+        if (level > 0) {
+          currentLevel = level;
+        }
       });
     };
 

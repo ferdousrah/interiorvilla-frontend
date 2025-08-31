@@ -3,9 +3,7 @@
 // Critical resource preloader with priority hints
 export const preloadCriticalResources = () => {
   const criticalImages = [
-    { src: '/interior-villa-dark.png', priority: 'high' },
-    { src: '/image.png', priority: 'high' },
-    { src: '/create-an-image-for-interior-design-about-us-section.png', priority: 'low' }
+    { src: '/interior-villa-dark.png', priority: 'high' }
   ];
 
   criticalImages.forEach(({ src, priority }) => {

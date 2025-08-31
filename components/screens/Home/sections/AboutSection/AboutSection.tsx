@@ -151,6 +151,8 @@ export const AboutSection = (): JSX.Element => {
 
   /* ---------- Heading GSAP ---------- */
   useEffect(() => {
+    if (!data?.sectionTitle) return; // Wait for data to load
+    
     if (!headingRef.current) return;
 
     const split = new SplitText(headingRef.current, {
@@ -220,6 +222,8 @@ export const AboutSection = (): JSX.Element => {
 
   /* ---------- Feature headings hover ---------- */
   useEffect(() => {
+    if (!data?.highlights || features.length === 0) return; // Wait for data to load
+    
     const cleanups: Array<() => void> = [];
 
     featureHeadingRefs.current.forEach((heading, index) => {
