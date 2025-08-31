@@ -43,6 +43,28 @@ app.get('/api/team-members', (req, res) => {
     });
 });
 
+// Projects API endpoint
+app.get('/api/projects', (req, res) => {
+  // Build query string from request parameters
+  const queryParams = new URLSearchParams();
+  
+  // Forward all query parameters
+  Object.keys(req.query).forEach(key => {
+    queryParams.append(key, req.query[key]);
+  });
+  
+  const url = `https://cms.interiorvillabd.com/api/projects${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+  
+  // Proxy request to Payload CMS
+  fetch(url)
+    .then(response => response.json())
+    .then(data => res.json(data))
+    .catch(error => {
+      console.error('Error fetching projects:', error);
+      res.status(500).json({ error: 'Failed to fetch projects' });
+    });
+});
+
 // Serve static files from dist directory (for production)
 app.use(express.static(path.join(__dirname, 'dist')));
 

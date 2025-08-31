@@ -287,6 +287,22 @@ const ModelViewerInner: React.FC<GLBModelViewerProps> = ({
 
     initializeViewer();
 
+    // Handle resize function - defined in useEffect scope
+    const handleResize = () => {
+      if (!mountRef.current || !mounted) return;
+      
+      const camera = cameraRef.current;
+      const renderer = rendererRef.current;
+      
+      if (camera && renderer) {
+        camera.aspect = mountRef.current.clientWidth / mountRef.current.clientHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(mountRef.current.clientWidth, mountRef.current.clientHeight);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+
     // Cleanup
     return () => {
       mounted = false;
