@@ -24,31 +24,6 @@ export const preloadCriticalResources = () => {
     criticalCSS.setAttribute('fetchpriority', 'high');
   }
 };
-// Add throttle utility for better performance
-export const throttle = <T extends (...args: any[]) => any>(
-  func: T,
-  limit: number
-): ((...args: Parameters<T>) => void) => {
-  let inThrottle: boolean;
-  let lastFunc: NodeJS.Timeout;
-  let lastRan: number;
-  
-  return (...args: Parameters<T>) => {
-    if (!inThrottle) {
-      func(...args);
-      lastRan = Date.now();
-      inThrottle = true;
-    } else {
-      clearTimeout(lastFunc);
-      lastFunc = setTimeout(() => {
-        if ((Date.now() - lastRan) >= limit) {
-          func(...args);
-          lastRan = Date.now();
-        }
-      }, limit - (Date.now() - lastRan));
-    }
-  };
-};
 
 // Optimize GSAP for better performance
 export const optimizeGSAP = () => {
@@ -56,7 +31,9 @@ export const optimizeGSAP = () => {
     window.gsap.config({
       force3D: true,
       nullTargetWarn: false,
-      trialWarn: false,
+      nullTargetWarn: false,
+      autoSleep: 60,
+      units: { left: "px", top: "px", rotation: "deg" },
       autoSleep: 60 // Auto-sleep animations after 60 seconds
     });
 
@@ -263,6 +240,24 @@ export const initializePerformanceOptimizations = () => {
         console.log('SW registration failed:', error);
       });
     });
+
+    // Set default properties to reduce reflows
+    window.gsap.defaults({
+      ease: "power2.out",
+      duration: 0.6,
+      force3D: true
+    });
+
+    // Optimize ScrollTrigger for better performance
+    if (window.gsap.registerPlugin) {
+      const { ScrollTrigger } = window.gsap;
+      if (ScrollTrigger) {
+        ScrollTrigger.config({
+          autoRefreshEvents: "visibilitychange,DOMContentLoaded,load",
+          ignoreMobileResize: true
+        });
+      }
+    }
   }
   
   // Run after DOM is ready
