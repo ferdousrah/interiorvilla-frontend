@@ -31,10 +31,8 @@ export const optimizeGSAP = () => {
     window.gsap.config({
       force3D: true,
       nullTargetWarn: false,
-      nullTargetWarn: false,
       autoSleep: 60,
       units: { left: "px", top: "px", rotation: "deg" },
-      autoSleep: 60 // Auto-sleep animations after 60 seconds
     });
 
     // Set default ease for better performance
