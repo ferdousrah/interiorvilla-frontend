@@ -50,10 +50,14 @@ app.get('/api/projects', (req, res) => {
   
   // Forward all query parameters
   Object.keys(req.query).forEach(key => {
-    queryParams.append(key, req.query[key]);
+    if (req.query[key]) {
+      queryParams.append(key, req.query[key]);
+    }
   });
   
   const url = `https://cms.interiorvillabd.com/api/projects${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+  
+  console.log('Proxying request to:', url);
   
   // Proxy request to Payload CMS
   fetch(url)
@@ -61,7 +65,8 @@ app.get('/api/projects', (req, res) => {
     .then(data => res.json(data))
     .catch(error => {
       console.error('Error fetching projects:', error);
-      res.status(500).json({ error: 'Failed to fetch projects' });
+      // Return empty docs array instead of error to prevent crashes
+      res.json({ docs: [], totalDocs: 0, totalPages: 0, page: 1, limit: 10 });
     });
 });
 

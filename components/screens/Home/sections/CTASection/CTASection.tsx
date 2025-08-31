@@ -16,6 +16,24 @@ export const CTASection = (): JSX.Element => {
   const contentRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
+  // Wait for fonts to load before using SplitText
+  const [fontsReady, setFontsReady] = useState(false);
+  
+  useEffect(() => {
+    const checkFonts = async () => {
+      try {
+        if (document.fonts && document.fonts.ready) {
+          await document.fonts.ready;
+        }
+        setFontsReady(true);
+      } catch (error) {
+        // Fallback if fonts API not available
+        setTimeout(() => setFontsReady(true), 1000);
+      }
+    };
+    checkFonts();
+  }, []);
+
   useEffect(() => {
     if (!sectionRef.current || !contentRef.current) return;
 
@@ -97,7 +115,7 @@ export const CTASection = (): JSX.Element => {
 
   // Add hover animation for main heading
   useEffect(() => {
-    if (!headingRef.current) return;
+    if (!headingRef.current || !fontsReady) return;
 
     // Split text into characters
     const splitText = new SplitText(headingRef.current, { 
@@ -151,7 +169,7 @@ export const CTASection = (): JSX.Element => {
         headingWrapperRef.current.removeEventListener('mouseleave', () => {});
       }
     };
-  }, []);
+  }, [fontsReady]);
 
   const handleAppointmentClick = () => {
     navigate('/book-appointment');

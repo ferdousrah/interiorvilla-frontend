@@ -22,9 +22,27 @@ export const FooterSection = (): JSX.Element => {
   const bottomSectionRef = useRef<HTMLDivElement>(null);
   const backgroundElementsRef = useRef<HTMLDivElement>(null);
 
+  // Wait for fonts to load before using SplitText
+  const [fontsReady, setFontsReady] = useState(false);
+  
+  useEffect(() => {
+    const checkFonts = async () => {
+      try {
+        if (document.fonts && document.fonts.ready) {
+          await document.fonts.ready;
+        }
+        setFontsReady(true);
+      } catch (error) {
+        // Fallback if fonts API not available
+        setTimeout(() => setFontsReady(true), 1000);
+      }
+    };
+    checkFonts();
+  }, []);
+
   // Add hover animation for footer heading
   useEffect(() => {
-    if (!footerHeadingRef.current) return;
+    if (!footerHeadingRef.current || !fontsReady) return;
 
     // Split text into characters
     const splitText = new SplitText(footerHeadingRef.current, { 
@@ -78,7 +96,7 @@ export const FooterSection = (): JSX.Element => {
         footerHeadingWrapperRef.current.removeEventListener('mouseleave', () => {});
       }
     };
-  }, []);
+  }, [fontsReady]);
 
   useEffect(() => {
     if (!sectionRef.current) return;
@@ -89,27 +107,29 @@ export const FooterSection = (): JSX.Element => {
       // Skip the h2 (first child) and animate the rest
       const elementsToAnimate = Array.from(children).slice(1);
       
-      gsap.fromTo(elementsToAnimate,
-        {
-          opacity: 0,
-          y: 60,
-          scale: 0.95
-        },
-        {
-          opacity: 1,
-          y: 0,
-          scale: 1,
-          duration: 1.2,
-          stagger: 0.2,
-          ease: "power3.out",
-          scrollTrigger: {
-            trigger: leftContentRef.current,
-            start: "top 85%",
-            end: "top 55%",
-            toggleActions: "play none none reverse"
+      if (elementsToAnimate.length > 0) {
+        gsap.fromTo(elementsToAnimate,
+          {
+            opacity: 0,
+            y: 60,
+            scale: 0.95
+          },
+          {
+            opacity: 1,
+            y: 0,
+            scale: 1,
+            duration: 1.2,
+            stagger: 0.2,
+            ease: "power3.out",
+            scrollTrigger: {
+              trigger: leftContentRef.current,
+              start: "top 85%",
+              end: "top 55%",
+              toggleActions: "play none none reverse"
+            }
           }
-        }
-      );
+        );
+      }
 
       // Parallax for left content
       gsap.to(leftContentRef.current, {

@@ -20,7 +20,7 @@ interface PerformanceImageProps {
   blurDataURL?: string;
 }
 
-export const PerformanceImage: React.FC<PerformanceImageProps> = ({
+export const PerformanceImage = React.forwardRef<HTMLImageElement, PerformanceImageProps>(({
   src,
   alt,
   className = '',
@@ -37,7 +37,7 @@ export const PerformanceImage: React.FC<PerformanceImageProps> = ({
   placeholder = 'blur',
   blurDataURL,
   ...props
-}) => {
+}, ref) => {
   const [imageSrc, setImageSrc] = useState(priority ? src : '');
   const [isLoaded, setIsLoaded] = useState(false);
   const [isInView, setIsInView] = useState(priority);
@@ -228,4 +228,6 @@ export const PerformanceImage: React.FC<PerformanceImageProps> = ({
       )}
     </div>
   );
-};
+});
+
+PerformanceImage.displayName = 'PerformanceImage';

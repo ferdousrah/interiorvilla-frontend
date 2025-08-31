@@ -82,9 +82,27 @@ export const ServicesSection = (): JSX.Element => {
   const [hoveredCard, setHoveredCard] = useState<number | null>(null);
   const [activeVideo, setActiveVideo] = useState<HTMLVideoElement | null>(null);
 
+  // Wait for fonts to load before using SplitText
+  const [fontsReady, setFontsReady] = useState(false);
+  
+  useEffect(() => {
+    const checkFonts = async () => {
+      try {
+        if (document.fonts && document.fonts.ready) {
+          await document.fonts.ready;
+        }
+        setFontsReady(true);
+      } catch (error) {
+        // Fallback if fonts API not available
+        setTimeout(() => setFontsReady(true), 1000);
+      }
+    };
+    checkFonts();
+  }, []);
+
   // Add hover animation for main heading
   useEffect(() => {
-    if (!headingRef.current) return;
+    if (!headingRef.current || !fontsReady) return;
 
     // Split text into characters
     const splitText = new SplitText(headingRef.current, { 
@@ -138,7 +156,7 @@ export const ServicesSection = (): JSX.Element => {
         headingWrapperRef.current.removeEventListener('mouseleave', () => {});
       }
     };
-  }, []);
+  }, [fontsReady]);
 
   useEffect(() => {
     if (!sectionRef.current) return;

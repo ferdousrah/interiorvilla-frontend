@@ -32,6 +32,24 @@ export const BlogSection = (): JSX.Element => {
 
   const navigate = useNavigate();
 
+  // Wait for fonts to load before using SplitText
+  const [fontsReady, setFontsReady] = useState(false);
+  
+  useEffect(() => {
+    const checkFonts = async () => {
+      try {
+        if (document.fonts && document.fonts.ready) {
+          await document.fonts.ready;
+        }
+        setFontsReady(true);
+      } catch (error) {
+        // Fallback if fonts API not available
+        setTimeout(() => setFontsReady(true), 1000);
+      }
+    };
+    checkFonts();
+  }, []);
+
   useEffect(() => {
     if (imageRef.current) {
       VanillaTilt.init(imageRef.current, {
@@ -49,7 +67,7 @@ export const BlogSection = (): JSX.Element => {
 
   // Add hover animation for main heading
   useEffect(() => {
-    if (!headingRef.current) return;
+    if (!headingRef.current || !fontsReady) return;
 
     // Split text into characters
     const splitText = new SplitText(headingRef.current, { 
@@ -103,7 +121,7 @@ export const BlogSection = (): JSX.Element => {
         headingWrapperRef.current.removeEventListener('mouseleave', () => {});
       }
     };
-  }, []);
+  }, [fontsReady]);
 
   // Parallax and animation effects
   useEffect(() => {
@@ -111,6 +129,8 @@ export const BlogSection = (): JSX.Element => {
 
     // Split text animation for heading
     if (headingRef.current) {
+      if (!fontsReady) return;
+      
       const splitText = new SplitText(headingRef.current, { 
         type: "words,chars",
         charsClass: "char",
@@ -428,7 +448,7 @@ export const BlogSection = (): JSX.Element => {
     return () => {
       ScrollTrigger.getAll().forEach(trigger => trigger.kill());
     };
-  }, []);
+  }, [fontsReady]);
 
   // Blog post data for mapping
   const blogPosts = [

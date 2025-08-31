@@ -11,9 +11,27 @@ export const FeaturedWorksHeaderSection = (): JSX.Element => {
   const headingWrapperRef = useRef<HTMLDivElement>(null);
   const subtitleRef = useRef<HTMLParagraphElement>(null);
 
+  // Wait for fonts to load before using SplitText
+  const [fontsReady, setFontsReady] = useState(false);
+  
+  useEffect(() => {
+    const checkFonts = async () => {
+      try {
+        if (document.fonts && document.fonts.ready) {
+          await document.fonts.ready;
+        }
+        setFontsReady(true);
+      } catch (error) {
+        // Fallback if fonts API not available
+        setTimeout(() => setFontsReady(true), 1000);
+      }
+    };
+    checkFonts();
+  }, []);
+
   // Add hover animation for heading
   useEffect(() => {
-    if (!headingRef.current) return;
+    if (!headingRef.current || !fontsReady) return;
 
     // Split text into characters
     const splitText = new SplitText(headingRef.current, { 
@@ -67,11 +85,11 @@ export const FeaturedWorksHeaderSection = (): JSX.Element => {
         headingWrapperRef.current.removeEventListener('mouseleave', () => {});
       }
     };
-  }, []);
+  }, [fontsReady]);
 
   // Entrance animations
   useEffect(() => {
-    if (!sectionRef.current) return;
+    if (!sectionRef.current || !fontsReady) return;
 
     // Heading animation
     if (headingRef.current) {
@@ -127,7 +145,7 @@ export const FeaturedWorksHeaderSection = (): JSX.Element => {
     return () => {
       ScrollTrigger.getAll().forEach(trigger => trigger.kill());
     };
-  }, []);
+  }, [fontsReady]);
 
   return (
     <section 

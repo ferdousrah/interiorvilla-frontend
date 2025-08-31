@@ -310,14 +310,20 @@ const ModelViewerInner: React.FC<GLBModelViewerProps> = ({
         cancelAnimationFrame(animationIdRef.current);
       }
       
-      window.removeEventListener('resize', handleResize);
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('resize', handleResize);
+      }
       
-      if (mountRef.current && renderer.domElement && mountRef.current.contains(renderer.domElement)) {
+      const renderer = rendererRef.current;
+      const scene = sceneRef.current;
+      const controls = controlsRef.current;
+      
+      if (mountRef.current && renderer?.domElement && mountRef.current.contains(renderer.domElement)) {
         mountRef.current.removeChild(renderer.domElement);
       }
       
       // Dispose of Three.js resources
-      scene?.traverse((object) => {
+      scene?.traverse?.((object) => {
         if (object instanceof THREE.Mesh) {
           object.geometry?.dispose();
           if (Array.isArray(object.material)) {
@@ -329,7 +335,7 @@ const ModelViewerInner: React.FC<GLBModelViewerProps> = ({
       });
       
       renderer?.dispose();
-      controls?.dispose();
+      controls?.dispose?.();
     };
   }, [modelPath]);
 

@@ -46,11 +46,29 @@ export const OurProcessSection: React.FC = () => {
     typeof window !== 'undefined' &&
     window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
 
+  // Wait for fonts to load before using SplitText
+  const [fontsReady, setFontsReady] = useState(false);
+  
+  useEffect(() => {
+    const checkFonts = async () => {
+      try {
+        if (document.fonts && document.fonts.ready) {
+          await document.fonts.ready;
+        }
+        setFontsReady(true);
+      } catch (error) {
+        // Fallback if fonts API not available
+        setTimeout(() => setFontsReady(true), 1000);
+      }
+    };
+    checkFonts();
+  }, []);
+
   // ---- Heading hover (SplitText loaded dynamically to keep bundle small)
   useEffect(() => {
     const headingEl = headingRef.current;
     const wrapperEl = headingWrapperRef.current;
-    if (!headingEl || !wrapperEl) return;
+    if (!headingEl || !wrapperEl || !fontsReady) return;
     if (prefersReducedMotion) return;
 
     let split: any | null = null;
@@ -105,7 +123,7 @@ export const OurProcessSection: React.FC = () => {
     })();
 
     return () => cleanup();
-  }, [prefersReducedMotion]);
+  }, [prefersReducedMotion, fontsReady]);
 
   // ---- Entrance animations (scoped)
   useLayoutEffect(() => {
