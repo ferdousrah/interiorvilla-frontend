@@ -393,7 +393,7 @@ const Home = (): JSX.Element => {
       
       <div ref={heroContainerRef} className="w-full relative overflow-hidden">
         <section className="w-full h-[800px] bg-gradient-to-br from-black via-gray-900 to-black">
-          <GLBModelViewer className="w-full h-full" modelPath="/intro.glb" />
+          <GLBModelViewer className="w-full h-full" modelPath="https://assets.interiorvillabd.com/intro.glb" />
         </section>
 
         <header 
