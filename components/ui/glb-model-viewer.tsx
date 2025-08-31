@@ -167,7 +167,6 @@ const ModelViewerInner: React.FC<GLBModelViewerProps> = ({
     setupLighting();
 
     // Load GLB model
-        const loader = new GLTFLoader.GLTFLoader();
         const loader = new gltfModule.GLTFLoader();
     
     // Loading manager for progress tracking
