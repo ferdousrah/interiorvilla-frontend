@@ -447,53 +447,6 @@ export const TestimonialSection = (): JSX.Element => {
         return;
       }
 
-<<<<<<< HEAD
-      // Use Fancybox's built-in iframe support for YouTube
-      Fancybox.show([{ 
-        src: embedSrc, 
-        type: "iframe", 
-        caption: title 
-=======
-      // Use Fancybox to show YouTube video
-      const embedUrl = `https://www.youtube.com/embed/${youtubeId}?autoplay=1&rel=0&modestbranding=1`;
-      
-      Fancybox.show([{
-        src: embedUrl,
-        type: "iframe",
-        caption: title
->>>>>>> 6f23a914c21dcb02c17345bde42642ab4b9fe941
-      }], {
-        animated: true,
-        showClass: "fancybox-fadeIn",
-        hideClass: "fancybox-fadeOut",
-        dragToClose: false,
-        closeButton: "top",
-        Iframe: {
-          preload: true,
-          css: {
-            width: "100%",
-            height: "100%"
-          },
-          attr: {
-            allow: "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen",
-            allowfullscreen: "true",
-<<<<<<< HEAD
-            referrerpolicy: "strict-origin-when-cross-origin"
-          }
-        }
-      });
-      return;
-=======
-            frameborder: "0"
-          }
-        },
-        on: {
-          reveal: (fancybox, slide) => {
-            console.log('YouTube video opened in Fancybox');
-          }
-        }
-      });
->>>>>>> 6f23a914c21dcb02c17345bde42642ab4b9fe941
       // Use Fancybox to show YouTube video
       const embedUrl = `https://www.youtube.com/embed/${youtubeId}?autoplay=1&rel=0&modestbranding=1`;
       
