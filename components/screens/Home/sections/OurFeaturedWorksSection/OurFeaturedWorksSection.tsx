@@ -7,6 +7,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ScrollToPlugin } from "gsap/ScrollToPlugin";
 import { ArrowRight } from "lucide-react";
+import { OptimizedImage } from "../../../../ui/image-optimizer";
 
 gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
 
@@ -361,14 +362,14 @@ export const OurFeaturedWorksSection = (): JSX.Element => {
                   <div className="w-full lg:w-3/5 relative overflow-hidden flex-1 pointer-events-none">
                     <div className="absolute inset-0 w-full h-full p-4 sm:p-6 md:p-8 lg:p-10">
                       <div className="w-full h-full rounded-1xl sm:rounded-2xl overflow-hidden">
-                        <img
+                        <OptimizedImage
                           src={project.image}          // ← sized URL
                           alt={project.imageAlt}       // ← real alt
                           className="w-full h-full object-cover"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src =
-                              "/create-an-image-for-interior-design-about-us-section.png";
-                          }}
+                          fallbackSrc="/create-an-image-for-interior-design-about-us-section.png"
+                          loading={index === 0 ? "eager" : "lazy"}
+                          priority={index === 0}
+                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 600px, 1200px"
                         />
                       </div>
                     </div>

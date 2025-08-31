@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Badge } from "../../../../ui/badge";
 import { Button } from "../../../../ui/button";
 import { Card, CardContent } from "../../../../ui/card";
+import { OptimizedImage } from "../../../../ui/image-optimizer";
 import VanillaTilt from 'vanilla-tilt';
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -545,11 +546,13 @@ export const BlogSection = (): JSX.Element => {
                 transform: 'translate3d(0, 0, 0)'
               }}
             >
-              <img
+              <OptimizedImage
                 ref={imageRef}
                 className="w-full h-auto object-cover rounded-lg transition-transform duration-500 ease-out hover:scale-110 will-change-transform"
                 alt="Interior design blog post"
                 src="/create-an-image-for-a-residential-interior-design-blog-post.svg"
+                loading="lazy"
+                sizes="(max-width: 768px) 100vw, 50vw"
                 style={{
                   transformStyle: 'preserve-3d',
                   backfaceVisibility: 'hidden',

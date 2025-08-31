@@ -2,6 +2,7 @@ import { ArrowRightIcon } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { Button } from "../../../../ui/button";
 import { Card, CardContent, CardFooter } from "../../../../ui/card";
+import { OptimizedImage } from "../../../../ui/image-optimizer";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { SplitText } from "gsap/SplitText";
@@ -474,10 +475,12 @@ export const ServicesSection = (): JSX.Element => {
                           backdropFilter: isHovered ? 'blur(8px)' : 'none' // Reduced blur from 10px to 8px
                         }}
                       >
-                        <img
+                        <OptimizedImage
                           className="w-11 h-[37px] object-cover"
                           alt={`${service.title} icon`}
                           src={service.icon}
+                          loading="eager"
+                          priority={index === 0}
                           style={{
                             filter: isHovered ? 'brightness(0) invert(1)' : 'none',
                             transition: 'filter 1.2s cubic-bezier(0.4, 0, 0.2, 1)'

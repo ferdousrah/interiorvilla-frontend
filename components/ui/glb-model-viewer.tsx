@@ -1,17 +1,44 @@
 'use client'
 
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, Suspense } from 'react';
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { ZoomIn, ZoomOut, RotateCcw, RotateCw, Maximize2, Minimize2 } from 'lucide-react';
+
+// Lazy load Three.js components
+const GLTFLoader = React.lazy(() => 
+  import('three/examples/jsm/loaders/GLTFLoader.js').then(module => ({ default: module.GLTFLoader }))
+);
+
+const OrbitControls = React.lazy(() => 
+  import('three/examples/jsm/controls/OrbitControls.js').then(module => ({ default: module.OrbitControls }))
+);
 
 interface GLBModelViewerProps {
   className?: string;
   modelPath?: string;
 }
 
+const ModelViewerFallback = () => (
+  <div className="w-full h-full bg-gradient-to-br from-gray-900 via-black to-gray-800 flex items-center justify-center">
+    <div className="text-center">
+      <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+      <div className="text-white text-lg font-medium [font-family:'Fahkwang',Helvetica]">Loading 3D Experience</div>
+    </div>
+  </div>
+);
+
 export const GLBModelViewer: React.FC<GLBModelViewerProps> = ({ 
+  className = "",
+  modelPath = "/intro.glb"
+}) => {
+  return (
+    <Suspense fallback={<ModelViewerFallback />}>
+      <ModelViewerInner className={className} modelPath={modelPath} />
+    </Suspense>
+  );
+};
+
+const ModelViewerInner: React.FC<GLBModelViewerProps> = ({ 
   className = "",
   modelPath = "/intro.glb"
 }) => {
@@ -31,7 +58,18 @@ export const GLBModelViewer: React.FC<GLBModelViewerProps> = ({
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
+    let mounted = true;
     if (!mountRef.current) return;
+
+    const initializeViewer = async () => {
+      try {
+        // Dynamically import Three.js components
+        const [{ GLTFLoader }, { OrbitControls }] = await Promise.all([
+          import('three/examples/jsm/loaders/GLTFLoader.js'),
+          import('three/examples/jsm/controls/OrbitControls.js')
+        ]);
+
+        if (!mounted) return;
 
     // Scene setup
     const scene = new THREE.Scene();
@@ -52,7 +90,9 @@ export const GLBModelViewer: React.FC<GLBModelViewerProps> = ({
     const renderer = new THREE.WebGLRenderer({ 
       antialias: true,
       alpha: true,
-      powerPreference: "high-performance"
+        powerPreference: "high-performance",
+        stencil: false,
+        depth: true
     });
     renderer.setSize(mountRef.current.clientWidth, mountRef.current.clientHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -66,7 +106,7 @@ export const GLBModelViewer: React.FC<GLBModelViewerProps> = ({
     mountRef.current.appendChild(renderer.domElement);
 
     // Controls setup
-    const controls = new OrbitControls(camera, renderer.domElement);
+        const controls = new OrbitControls.OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.08;
     controls.enableZoom = false; // Disable mouse scroll zoom
@@ -123,7 +163,7 @@ export const GLBModelViewer: React.FC<GLBModelViewerProps> = ({
     setupLighting();
 
     // Load GLB model
-    const loader = new GLTFLoader();
+        const loader = new GLTFLoader.GLTFLoader();
     
     // Loading manager for progress tracking
     const loadingManager = new THREE.LoadingManager();
@@ -137,6 +177,7 @@ export const GLBModelViewer: React.FC<GLBModelViewerProps> = ({
     loader.load(
       modelPath,
       (gltf) => {
+        if (!mounted) return;
         const model = gltf.scene;
         modelRef.current = model;
 
@@ -203,13 +244,16 @@ export const GLBModelViewer: React.FC<GLBModelViewerProps> = ({
       },
       (error) => {
         console.error('Error loading GLB model:', error);
-        setError('Failed to load intro.glb. Please ensure the file is placed in the public folder.');
+        if (mounted) {
+          setError('Failed to load intro.glb. Please ensure the file is placed in the public folder.');
+        }
         setIsLoading(false);
       }
     );
 
     // Animation loop
     const animate = () => {
+      if (!mounted) return;
       animationIdRef.current = requestAnimationFrame(animate);
       
       if (controls) {
@@ -221,7 +265,7 @@ export const GLBModelViewer: React.FC<GLBModelViewerProps> = ({
 
     // Handle resize
     const handleResize = () => {
-      if (!mountRef.current) return;
+      if (!mountRef.current || !mounted) return;
       
       camera.aspect = mountRef.current.clientWidth / mountRef.current.clientHeight;
       camera.updateProjectionMatrix();
@@ -232,32 +276,43 @@ export const GLBModelViewer: React.FC<GLBModelViewerProps> = ({
 
     // Start animation
     animate();
+      } catch (error) {
+        console.error('Failed to initialize 3D viewer:', error);
+        if (mounted) {
+          setError('Failed to initialize 3D viewer');
+          setIsLoading(false);
+        }
+      }
+    };
+
+    initializeViewer();
 
     // Cleanup
     return () => {
+      mounted = false;
       if (animationIdRef.current) {
         cancelAnimationFrame(animationIdRef.current);
       }
       
       window.removeEventListener('resize', handleResize);
       
-      if (mountRef.current && renderer.domElement) {
+      if (mountRef.current && renderer.domElement && mountRef.current.contains(renderer.domElement)) {
         mountRef.current.removeChild(renderer.domElement);
       }
       
       // Dispose of Three.js resources
-      scene.traverse((object) => {
+      scene?.traverse((object) => {
         if (object instanceof THREE.Mesh) {
-          object.geometry.dispose();
+          object.geometry?.dispose();
           if (Array.isArray(object.material)) {
-            object.material.forEach(material => material.dispose());
+            object.material.forEach(material => material?.dispose());
           } else {
-            object.material.dispose();
+            object.material?.dispose();
           }
         }
       });
       
-      renderer.dispose();
+      renderer?.dispose();
       controls?.dispose();
     };
   }, [modelPath]);
@@ -367,6 +422,8 @@ export const GLBModelViewer: React.FC<GLBModelViewerProps> = ({
         ref={mountRef} 
         className="w-full h-full cursor-grab active:cursor-grabbing bg-gradient-to-br from-gray-900 via-black to-gray-800"
         style={{ minHeight: '600px' }}
+        role="img"
+        aria-label="3D model viewer showing interior design"
       />
       
       {/* Loading indicator */}
@@ -383,6 +440,10 @@ export const GLBModelViewer: React.FC<GLBModelViewerProps> = ({
               <div 
                 className="h-full bg-gradient-to-r from-primary to-secondary transition-all duration-300 ease-out"
                 style={{ width: `${loadingProgress}%` }}
+                role="progressbar"
+                aria-valuenow={loadingProgress}
+                aria-valuemin={0}
+                aria-valuemax={100}
               />
             </div>
             <div className="text-gray-400 text-sm mt-3 [font-family:'Fahkwang',Helvetica]">{Math.round(loadingProgress)}% Complete</div>
@@ -428,6 +489,7 @@ export const GLBModelViewer: React.FC<GLBModelViewerProps> = ({
                 onClick={zoomIn}
                 className="w-10 h-10 bg-gray-700/60 hover:bg-primary/70 rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-lg hover:shadow-primary/30 border border-gray-600/30"
                 title="Zoom In"
+                aria-label="Zoom in on 3D model"
               >
                 <ZoomIn className="w-5 h-5" />
               </button>
@@ -436,6 +498,7 @@ export const GLBModelViewer: React.FC<GLBModelViewerProps> = ({
                 onClick={zoomOut}
                 className="w-10 h-10 bg-gray-700/60 hover:bg-primary/70 rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-lg hover:shadow-primary/30 border border-gray-600/30"
                 title="Zoom Out"
+                aria-label="Zoom out on 3D model"
               >
                 <ZoomOut className="w-5 h-5" />
               </button>
@@ -444,6 +507,7 @@ export const GLBModelViewer: React.FC<GLBModelViewerProps> = ({
                 onClick={resetView}
                 className="w-10 h-10 bg-gray-700/60 hover:bg-secondary/70 rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-lg hover:shadow-secondary/30 border border-gray-600/30"
                 title="Reset View"
+                aria-label="Reset 3D model view"
               >
                 <RotateCcw className="w-5 h-5" />
               </button>
@@ -456,6 +520,7 @@ export const GLBModelViewer: React.FC<GLBModelViewerProps> = ({
                     : 'bg-gray-700/60 hover:bg-primary/70 hover:shadow-lg hover:shadow-primary/30'
                 }`}
                 title={isAutoRotating ? "Stop Auto Rotate" : "Start Auto Rotate"}
+                aria-label={isAutoRotating ? "Stop auto rotation" : "Start auto rotation"}
               >
                 <RotateCw className={`w-5 h-5 ${isAutoRotating ? 'animate-spin' : ''}`} style={{ animationDuration: '3s' }} />
               </button>
@@ -466,6 +531,7 @@ export const GLBModelViewer: React.FC<GLBModelViewerProps> = ({
                 onClick={toggleFullscreen}
                 className="w-full h-10 bg-gray-700/60 hover:bg-secondary/70 rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-secondary/30 border border-gray-600/30 mb-3"
                 title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+                aria-label={isFullscreen ? "Exit fullscreen mode" : "Enter fullscreen mode"}
               >
                 {isFullscreen ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
               </button>
@@ -493,6 +559,7 @@ export const GLBModelViewer: React.FC<GLBModelViewerProps> = ({
            }}
            className="group flex flex-col items-center space-y-2 bg-black/80 backdrop-blur-md text-white px-4 py-3 rounded-2xl border border-gray-600/50 shadow-xl hover:bg-black/90 transition-all duration-300 hover:scale-105"
            title="Scroll to next section"
+           aria-label="Scroll to next section"
          >
            
            <div className="relative">
@@ -503,6 +570,7 @@ export const GLBModelViewer: React.FC<GLBModelViewerProps> = ({
                  stroke="currentColor" 
                  viewBox="0 0 24 24"
                  style={{ animationDuration: '2s' }}
+                 aria-hidden="true"
                >
                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
                </svg>
