@@ -110,7 +110,6 @@ const ModelViewerInner: React.FC<GLBModelViewerProps> = ({
     mountRef.current.appendChild(renderer.domElement);
 
     // Controls setup
-        const controls = new OrbitControls(camera, renderer.domElement);
         const controls = new orbitModule.OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.08;
