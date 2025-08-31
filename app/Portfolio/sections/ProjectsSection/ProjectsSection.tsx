@@ -71,10 +71,10 @@ const filterOptions = [
 type Filter = typeof filterOptions[number];
 
 const API_BY_FILTER: Record<Filter, string> = {
-  All: `${CMS_ORIGIN}/api/projects`,
-  "Residential Interior": `${CMS_ORIGIN}/api/projects?where[category][equals]=1`,
-  "Commercial Interior": `${CMS_ORIGIN}/api/projects?where[category][equals]=2`,
-  "Architectural Consultancy": `${CMS_ORIGIN}/api/projects?where[category][equals]=3`,
+  All: `/api/projects`,
+  "Residential Interior": `/api/projects?where[category][equals]=1`,
+  "Commercial Interior": `/api/projects?where[category][equals]=2`,
+  "Architectural Consultancy": `/api/projects?where[category][equals]=3`,
 };
 
 const PAGE_SIZE = 4;

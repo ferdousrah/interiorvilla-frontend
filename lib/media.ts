@@ -1,7 +1,7 @@
 // lib/media.ts
 
 const CMS_BASE =
-  import.meta.env.VITE_CMS_BASE_URL || "https://cms.interiorvillabd.com";
+  import.meta.env.VITE_CMS_BASE_URL || "";
 
 /**
  * Turn whatever the API gives you (string or object) into an absolute URL.

@@ -214,7 +214,7 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
       setErr(null);
       try {
         const res = await fetch(
-          `${CMS_BASE}/api/projects/${id}?depth=1&draft=false`,
+          `/api/projects/${id}?depth=1&draft=false`,
           { signal: ac.signal, cache: "no-store" }
         );
         if (!res.ok) throw new Error(`Failed to load project ${id} (HTTP ${res.status})`);

@@ -106,7 +106,7 @@ const ModelViewerInner: React.FC<GLBModelViewerProps> = ({
     mountRef.current.appendChild(renderer.domElement);
 
     // Controls setup
-        const controls = new OrbitControls.OrbitControls(camera, renderer.domElement);
+        const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.08;
     controls.enableZoom = false; // Disable mouse scroll zoom

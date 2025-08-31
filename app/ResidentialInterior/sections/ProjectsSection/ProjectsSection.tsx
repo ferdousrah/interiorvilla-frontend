@@ -77,7 +77,7 @@ export const ProjectsSection = (): JSX.Element => {
     (async () => {
       try {
         const res = await fetch(
-          `${CMS_ORIGIN}/api/projects?where[category][equals]=1&limit=5`,
+          `/api/projects?where[category][equals]=1&limit=5`,
           { cache: "no-store" }
         );
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
