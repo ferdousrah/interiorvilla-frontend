@@ -193,7 +193,11 @@ export const TestimonialSection = (): JSX.Element => {
   /* ----------------- Fancybox bootstrap ----------------- */
   useEffect(() => {
     Fancybox.destroy();
-    Fancybox.bind("[data-fancybox]", {
+    
+    // Only bind if we have items
+    if (items.length === 0) return;
+    
+    Fancybox.bind("[data-fancybox='testimonial-videos']", {
       animated: true,
       showClass: "fancybox-fadeIn",
       hideClass: "fancybox-fadeOut",
@@ -207,21 +211,27 @@ export const TestimonialSection = (): JSX.Element => {
       },
       Iframe: {
         preload: true,
-        css: {
-          width: "100%",
-          height: "100%"
-        },
         attr: {
           allow: "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen",
           allowfullscreen: "true",
-          referrerpolicy: "strict-origin-when-cross-origin"
+          referrerpolicy: "strict-origin-when-cross-origin",
+          sandbox: "allow-same-origin allow-scripts allow-popups allow-presentation"
+        }
+      },
+      on: {
+        reveal: (fancybox, slide) => {
+          console.log('Fancybox opened:', slide.src);
+        },
+        destroy: () => {
+          console.log('Fancybox destroyed');
         }
       }
     });
+    
     return () => {
       Fancybox.destroy();
     };
-  }, []);
+  }, [items.length]);
 
   /* ----------------- Hover heading animation (fonts gated) ----------------- */
   useLayoutEffect(() => {
@@ -423,47 +433,70 @@ export const TestimonialSection = (): JSX.Element => {
     title: string
   ) => {
     e.preventDefault();
+    e.stopPropagation();
+    
     if (!videoUrl) return;
 
     if (isYouTubeUrl(videoUrl)) {
-      const embedSrc = toYouTubeEmbed(videoUrl);
-      if (!embedSrc) return;
+      const youtubeId = getYouTubeId(videoUrl);
+      if (!youtubeId) {
+        console.error('Could not extract YouTube ID from:', videoUrl);
+        return;
+      }
 
-      // Open YouTube video in new tab for better compatibility
-      const watchUrl = videoUrl.includes('watch?v=') ? videoUrl : `https://www.youtube.com/watch?v=${getYouTubeId(videoUrl)}`;
-      window.open(watchUrl, '_blank', 'noopener,noreferrer');
-      return;
+      // Use Fancybox to show YouTube video
+      const embedUrl = `https://www.youtube.com/embed/${youtubeId}?autoplay=1&rel=0&modestbranding=1`;
       
-      /* Alternative: Use Fancybox with better configuration
-      Fancybox.show([{ 
-        src: watchUrl, 
-        type: "iframe", 
-        caption: title 
+      Fancybox.show([{
+        src: embedUrl,
+        type: "iframe",
+        caption: title
       }], {
         animated: true,
         showClass: "fancybox-fadeIn",
         hideClass: "fancybox-fadeOut",
         dragToClose: false,
+        closeButton: "top",
         Iframe: {
           preload: true,
-          css: { width: "100%", height: "100%" },
+          css: {
+            width: "100%",
+            height: "100%"
+          },
           attr: {
-            sandbox: "allow-same-origin allow-scripts allow-popups allow-presentation",
-            loading: "lazy"
+            allow: "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen",
+            allowfullscreen: "true",
+            frameborder: "0"
+          }
+        },
+        on: {
+          reveal: (fancybox, slide) => {
+            console.log('YouTube video opened in Fancybox');
           }
         }
       });
-      */
     } else {
+      // Handle non-YouTube videos
       const videoHtml = `
-        <video controls autoplay muted style="width:100%;height:100%;max-width:1200px;max-height:675px;background:#000">
+        <video 
+          controls 
+          autoplay 
+          muted 
+          style="width:100%;height:100%;max-width:1200px;max-height:675px;background:#000"
+        >
           <source src="${videoUrl}" type="video/mp4" />
           Your browser does not support the video tag.
         </video>`;
-      Fancybox.show([{ src: videoHtml, type: "html", caption: title }], {
+        
+      Fancybox.show([{
+        src: videoHtml,
+        type: "html",
+        caption: title
+      }], {
         animated: true,
         showClass: "fancybox-fadeIn",
         hideClass: "fancybox-fadeOut",
+        dragToClose: false,
         on: {
           reveal: (fancybox, slide) => {
             const video = slide.$content?.querySelector("video");
@@ -577,9 +610,6 @@ export const TestimonialSection = (): JSX.Element => {
                       transformStyle: "preserve-3d",
                     }}
                     onClick={(e) => handleVideoClick(e, t.video, t.title)}
-                    data-fancybox="testimonial-videos"
-                    data-src={t.video}
-                    data-caption={t.title}
                   >
                     <CardContent className="flex items-center justify-center h-full p-0 relative">
                       {/* Actual image so alt is applied */}
