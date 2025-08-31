@@ -1,5 +1,6 @@
 import { CopyrightIcon } from "lucide-react";
 import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Button } from "../../../../ui/button";
 import { Card, CardContent } from "../../../../ui/card";
 import { Input } from "../../../../ui/input";
