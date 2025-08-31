@@ -123,6 +123,19 @@
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
+
+  /* Ensure scroll to top behavior works consistently */
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  html.scroll-instant {
+    scroll-behavior: auto !important;
+  }
+  
+  body.scroll-instant {
+    scroll-behavior: auto !important;
+  }
 }
 
 /* Custom scrollbar for better UX */

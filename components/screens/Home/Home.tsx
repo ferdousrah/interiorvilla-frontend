@@ -380,6 +380,8 @@ const Home = (): JSX.Element => {
   };
 
   const handleSubmenuNavigation = (href: string) => {
+    // Ensure scroll to top before navigation
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
     navigate(href);
     setIsMobileMenuOpen(false);
   };
@@ -487,6 +489,9 @@ const Home = (): JSX.Element => {
                             style={{
                              height: (isScrolled && isScrollingUp) ? "36px" : "38px",
                              fontSize: (isScrolled && isScrollingUp) ? "13px" : "14px"
+                            }}
+                            onClick={() => {
+                              window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
                             }}
                           >
                             <span className="[font-family:'Fahkwang',Helvetica] font-medium text-center transition-all duration-300">
@@ -725,6 +730,10 @@ const Home = (): JSX.Element => {
                                     perspective: '300px'
                                   }}
                                   onClick={() => handleSubmenuNavigation(subItem.href)}
+                                  onClick={() => {
+                                    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+                                    navigate(subItem.href);
+                                  }}
                                 >
                                   <div className="w-2 h-2 rounded-full bg-gray-600 group-hover:bg-primary transition-colors duration-300 mr-4"></div>
                                   <span className="[font-family:'Fahkwang',Helvetica] font-normal text-sm">

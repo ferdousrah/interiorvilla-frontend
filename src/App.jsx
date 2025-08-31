@@ -27,8 +27,20 @@ const ScrollToTop = () => {
   const { pathname } = useLocation();
 
   useLayoutEffect(() => {
-    // Scroll to top immediately when route changes
+    // Add instant scroll classes
+    document.documentElement.classList.add('scroll-instant');
+    document.body.classList.add('scroll-instant');
+    
+    // Scroll to top immediately
     window.scrollTo(0, 0);
+    
+    // Remove instant scroll classes after scrolling
+    const timer = setTimeout(() => {
+      document.documentElement.classList.remove('scroll-instant');
+      document.body.classList.remove('scroll-instant');
+    }, 50);
+    
+    return () => clearTimeout(timer);
   }, [pathname]);
 
   return null;
