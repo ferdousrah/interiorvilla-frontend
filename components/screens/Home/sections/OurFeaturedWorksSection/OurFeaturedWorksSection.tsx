@@ -121,10 +121,7 @@ export const OurFeaturedWorksSection = (): JSX.Element => {
       try {
         const res = await fetch(
           `${CMS_ORIGIN}/api/projects?where[featuredOnHome][equals]=true`,
-          { 
-            cache: "no-store",
-            mode: "cors"
-          }
+          { cache: "no-store" }
         );
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data: ProjectsApiResponse = await res.json();

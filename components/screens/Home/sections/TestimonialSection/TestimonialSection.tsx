@@ -158,10 +158,7 @@ export const TestimonialSection = (): JSX.Element => {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch("https://cms.interiorvillabd.com/api/testimonials", { 
-          cache: "no-store",
-          mode: "cors"
-        });
+        const res = await fetch("https://cms.interiorvillabd.com/api/testimonials", { cache: "no-store" });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         const docs = Array.isArray(data?.docs) ? data.docs : Array.isArray(data) ? data : [];
@@ -190,7 +187,6 @@ export const TestimonialSection = (): JSX.Element => {
         if (!cancelled) setItems(mapped);
       } catch (e) {
         console.error("Failed to fetch testimonials:", e);
-        // Fallback to empty array to prevent UI breaking
         if (!cancelled) setItems([]);
       }
     })();
