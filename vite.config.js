@@ -36,6 +36,8 @@ export default defineConfig({
   build: {
     target: 'es2015',
     minify: 'terser',
+    cssCodeSplit: true,
+    cssMinify: true,
     terserOptions: {
       compress: {
         drop_console: true,
@@ -58,18 +60,21 @@ export default defineConfig({
         comments: false
       }
     },
-    cssCodeSplit: true,
     sourcemap: false,
     chunkSizeWarningLimit: 500,
+    assetsInlineLimit: 4096, // Inline small assets
     rollupOptions: {
+      external: [],
       output: {
+        // Optimize chunk splitting for better caching
         manualChunks: {
           // Core React chunks
           'react-vendor': ['react', 'react-dom'],
           'react-router': ['react-router-dom'],
           
-          // Animation libraries
+          // Animation libraries - split for better loading
           'animation': ['gsap', 'framer-motion'],
+          'gsap-plugins': ['gsap/ScrollTrigger', 'gsap/SplitText', 'gsap/ScrollToPlugin'],
           
           // 3D and heavy libraries
           'three-vendor': ['three', 'three-stdlib'],
@@ -88,40 +93,55 @@ export default defineConfig({
           // Utilities
           'utils': ['class-variance-authority', 'clsx', 'tailwind-merge']
         },
+        // Optimize file naming for better caching
         chunkFileNames: (chunkInfo) => {
-          const facadeModuleId = chunkInfo.facadeModuleId ? chunkInfo.facadeModuleId.split('/').pop() : 'chunk';
-          return `assets/js/[name]-[hash].js`;
+          return `assets/js/[name]-[hash:8].js`;
         },
-        entryFileNames: 'assets/js/[name]-[hash].js',
+        entryFileNames: 'assets/js/[name]-[hash:8].js',
         assetFileNames: (assetInfo) => {
           const info = assetInfo.name.split('.');
           const ext = info[info.length - 1];
           if (/png|jpe?g|svg|gif|tiff|bmp|ico/i.test(ext)) {
-            return `assets/images/[name]-[hash].[ext]`;
+            return `assets/images/[name]-[hash:8].[ext]`;
           }
           if (/css/i.test(ext)) {
-            return `assets/css/[name]-[hash].[ext]`;
+            return `assets/css/[name]-[hash:8].[ext]`;
           }
-          return `assets/[name]-[hash].[ext]`;
+          return `assets/[name]-[hash:8].[ext]`;
         }
       }
     }
   },
+  // Optimize dependency pre-bundling
   optimizeDeps: {
     include: [
       'react', 
       'react-dom', 
       'react-router-dom',
-      'framer-motion',
-      'lucide-react'
+      'lucide-react',
+      'class-variance-authority',
+      'clsx',
+      'tailwind-merge'
     ],
     exclude: [
+      'framer-motion', // Load dynamically
       'gsap/SplitText',
       'gsap/ScrollTrigger', 
       'gsap/ScrollToPlugin',
       '@fancyapps/ui',
       'three',
-      'three-stdlib'
+      'three-stdlib',
+      'vanilla-tilt'
     ]
+  },
+  // Enable experimental features for better performance
+  experimental: {
+    renderBuiltUrl(filename, { hostType }) {
+      if (hostType === 'js') {
+        return { js: `/${filename}` };
+      } else {
+        return { relative: true };
+      }
+    }
   }
 })

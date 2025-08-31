@@ -3,7 +3,8 @@
 // Critical resource preloader with priority hints
 export const preloadCriticalResources = () => {
   const criticalImages = [
-    { src: '/interior-villa-dark.png', priority: 'high' }
+    { src: '/interior-villa-dark.png', priority: 'high' },
+    { src: '/image.png', priority: 'high' }
   ];
 
   criticalImages.forEach(({ src, priority }) => {
@@ -16,6 +17,12 @@ export const preloadCriticalResources = () => {
     }
     document.head.appendChild(link);
   });
+  
+  // Preload critical CSS
+  const criticalCSS = document.querySelector('link[rel="stylesheet"]');
+  if (criticalCSS) {
+    criticalCSS.setAttribute('fetchpriority', 'high');
+  }
 };
 
 // Optimize GSAP for better performance
@@ -24,7 +31,8 @@ export const optimizeGSAP = () => {
     window.gsap.config({
       force3D: true,
       nullTargetWarn: false,
-      trialWarn: false
+      trialWarn: false,
+      autoSleep: 60 // Auto-sleep animations after 60 seconds
     });
 
     // Set default ease for better performance
@@ -32,6 +40,9 @@ export const optimizeGSAP = () => {
       ease: "power2.out",
       duration: 0.6
     });
+    
+    // Enable hardware acceleration
+    window.gsap.set("*", { force3D: true });
   }
 };
 
@@ -205,8 +216,8 @@ export const checkPerformanceBudget = () => {
 // Initialize all performance optimizations
 export const initializePerformanceOptimizations = () => {
   // Run immediately
-  preloadCriticalResources();
   optimizeGSAP();
+  preloadCriticalResources();
   
   // Run after DOM is ready
   if (document.readyState === 'loading') {
@@ -224,5 +235,31 @@ export const initializePerformanceOptimizations = () => {
   // Run after page load
   window.addEventListener('load', () => {
     cleanupEventListeners();
+    
+    // Defer heavy operations
+    setTimeout(() => {
+      // Load non-critical resources
+      const nonCriticalImages = document.querySelectorAll('img[loading="lazy"]');
+      nonCriticalImages.forEach(img => {
+        if (img.getAttribute('data-src')) {
+          img.setAttribute('src', img.getAttribute('data-src') || '');
+        }
+      });
+    }, 1000);
   });
+  
+  // Optimize for Core Web Vitals
+  if ('requestIdleCallback' in window) {
+    requestIdleCallback(() => {
+      // Run non-critical optimizations when browser is idle
+      analyzeBundleSize();
+      checkPerformanceBudget();
+    });
+  } else {
+    // Fallback for browsers without requestIdleCallback
+    setTimeout(() => {
+      analyzeBundleSize();
+      checkPerformanceBudget();
+    }, 2000);
+  }
 };
