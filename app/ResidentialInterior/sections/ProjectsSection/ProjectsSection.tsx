@@ -23,7 +23,7 @@ const convertToWebp = (url: string) =>
   url.replace(/\.jpe?g(\?[^#]*)?$/i, ".webp$1");
 
 const getFeaturedImageUrl = (fi: any): string => {
-  const placeholder = "/create-an-image-for-interior-design-about-us-section.png";
+  const placeholder = "/placeholder.webp";
   if (!fi) return placeholder;
 
   if (typeof fi === "string") return convertToWebp(absolutize(fi));
@@ -77,7 +77,7 @@ export const ProjectsSection = (): JSX.Element => {
     (async () => {
       try {
         const res = await fetch(
-          `/api/projects?where[category][equals]=1&limit=5`,
+          `https://cms.interiorvillabd.com/api/projects?where[category][equals]=1&limit=5`,
           { cache: "no-store" }
         );
         if (!res.ok) throw new Error(`HTTP ${res.status}`);

@@ -214,7 +214,7 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
       setErr(null);
       try {
         const res = await fetch(
-          `/api/projects/${id}?depth=1&draft=false`,
+          `https://cms.interiorvillabd.com/api/projects/${id}?depth=1&draft=false`,
           { signal: ac.signal, cache: "no-store" }
         );
         if (!res.ok) throw new Error(`Failed to load project ${id} (HTTP ${res.status})`);

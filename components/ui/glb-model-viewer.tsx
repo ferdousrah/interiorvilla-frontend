@@ -29,7 +29,7 @@ const ModelViewerFallback = () => (
 
 export const GLBModelViewer: React.FC<GLBModelViewerProps> = ({ 
   className = "",
-  modelPath = "/intro.glb"
+  modelPath = "https://assets.interiorvillabd.com/intro.glb"
 }) => {
   return (
     <Suspense fallback={<ModelViewerFallback />}>

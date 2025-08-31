@@ -38,7 +38,7 @@ interface ProjectsApiResponse {
 /** If your CMS is reverse-proxied through the site domain, keep this.
  *  If not, switch to: https://cms.interiorvillabd.com
  */
-const CMS_ORIGIN = "";
+const CMS_ORIGIN = "https://cms.interiorvillabd.com";
 
 // Build absolute URLs when API returns "/api/media/file/..."
 const absolutize = (u: string) =>
