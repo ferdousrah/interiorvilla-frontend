@@ -34,6 +34,25 @@ export function toMediaUrl(
   const params = new URLSearchParams();
   if (opts.width) params.set("width", String(opts.width));
   if (opts.height) params.set("height", String(opts.height));
+  
+  // Add cache optimization for CMS images
+  if (base.includes('cms.interiorvillabd.com')) {
+    // Add format optimization
+    if (!params.has('f') && base.match(/\.(jpg|jpeg|png)$/i)) {
+      params.set('f', 'webp');
+    }
+    
+    // Add quality optimization
+    if (!params.has('q')) {
+      params.set('q', '80');
+    }
+    
+    // Add cache versioning for better cache control
+    if (!params.has('v')) {
+      const today = new Date().toISOString().split('T')[0];
+      params.set('v', today);
+    }
+  }
 
   return `${base}${base.includes("?") ? "&" : "?"}${params.toString()}`;
 }

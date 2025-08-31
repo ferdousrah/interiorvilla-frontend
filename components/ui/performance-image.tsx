@@ -67,6 +67,13 @@ export const PerformanceImage = React.forwardRef<HTMLImageElement, PerformanceIm
     if (!params.has('f') && originalSrc.match(/\.(jpg|jpeg|png)$/i)) {
       params.set('f', 'webp');
     }
+    
+    // Add cache busting for CMS images that don't have proper cache headers
+    if (originalSrc.includes('cms.interiorvillabd.com') && !params.has('v')) {
+      // Use a daily cache bust for CMS images
+      const today = new Date().toISOString().split('T')[0];
+      params.set('v', today);
+    }
 
     url.search = params.toString();
     return url.toString();
