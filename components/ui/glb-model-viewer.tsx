@@ -248,16 +248,8 @@ const ModelViewerInner: React.FC<GLBModelViewerProps> = ({
       },
       (error) => {
         console.error('Error loading GLB model:', error);
-        // Check if the error is due to missing file (HTML response instead of GLB)
-        if (error.message && error.message.includes('Unexpected token')) {
-          const missingFileError = new Error(`GLB model file not found at ${modelPath}. Please ensure the file exists in the public directory.`);
-          if (mounted) {
-            setError(missingFileError.message);
-          }
-        } else {
-          if (mounted) {
-            setError('Failed to load intro.glb. Please ensure the file is placed in the public folder.');
-          }
+        if (mounted) {
+          setError(`Failed to load 3D model from ${modelPath}. Please check if the file is accessible.`);
         }
         setIsLoading(false);
       }
@@ -496,9 +488,6 @@ const ModelViewerInner: React.FC<GLBModelViewerProps> = ({
             </div>
             <div className="text-white text-xl font-medium mb-3 [font-family:'Fahkwang',Helvetica]">Failed to Load 3D Model</div>
             <div className="text-gray-400 text-base mb-4 [font-family:'Fahkwang',Helvetica]">{error}</div>
-            <div className="text-gray-500 text-sm mb-6 [font-family:'Fahkwang',Helvetica]">
-              Make sure intro.glb is placed in the public folder
-            </div>
             <button 
               onClick={() => window.location.reload()}
               className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-hover transition-all duration-300 hover:scale-105 [font-family:'Fahkwang',Helvetica] font-medium"
