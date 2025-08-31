@@ -248,8 +248,16 @@ const ModelViewerInner: React.FC<GLBModelViewerProps> = ({
       },
       (error) => {
         console.error('Error loading GLB model:', error);
-        if (mounted) {
-          setError('Failed to load intro.glb. Please ensure the file is placed in the public folder.');
+        // Check if the error is due to missing file (HTML response instead of GLB)
+        if (error.message && error.message.includes('Unexpected token')) {
+          const missingFileError = new Error(`GLB model file not found at ${modelPath}. Please ensure the file exists in the public directory.`);
+          if (mounted) {
+            setError(missingFileError.message);
+          }
+        } else {
+          if (mounted) {
+            setError('Failed to load intro.glb. Please ensure the file is placed in the public folder.');
+          }
         }
         setIsLoading(false);
       }
