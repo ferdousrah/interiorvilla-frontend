@@ -95,11 +95,8 @@
     <!-- Preload critical resources -->
     <link rel="preload" href="/interior-villa-dark.png" as="image" fetchpriority="high" />
     
-    <!-- Preload critical fonts -->
+    <!-- Preload critical fonts with better performance -->
     <link rel="preload" href="https://fonts.gstatic.com/s/fahkwang/v16/k3kSo8kMI4pglOEVLlVOJbQNqGs.woff2" as="font" type="font/woff2" crossorigin="anonymous">
-    
-    <!-- Load fonts with optimal performance -->
-    <link href="https://fonts.googleapis.com/css2?family=Fahkwang:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Resource hints -->
     <link rel="dns-prefetch" href="//fonts.googleapis.com" />
@@ -161,6 +158,24 @@
     
     <!-- Defer non-critical scripts -->
     <script type="module" src="/src/main.jsx"></script>
+    
+    <!-- Load fonts asynchronously to prevent render blocking -->
+    <script>
+      // Load Google Fonts asynchronously
+      const fontLink = document.createElement('link');
+      fontLink.href = 'https://fonts.googleapis.com/css2?family=Fahkwang:wght@300;400;500;600;700&display=swap';
+      fontLink.rel = 'stylesheet';
+      fontLink.media = 'print';
+      fontLink.onload = function() { this.media = 'all'; };
+      document.head.appendChild(fontLink);
+      
+      // Fallback for browsers that don't support onload
+      setTimeout(function() {
+        if (fontLink.media === 'print') {
+          fontLink.media = 'all';
+        }
+      }, 100);
+    </script>
     
     <!-- Remove loading screen after app loads -->
     <script>
