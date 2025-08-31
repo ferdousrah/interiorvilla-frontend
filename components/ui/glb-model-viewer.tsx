@@ -40,7 +40,7 @@ export const GLBModelViewer: React.FC<GLBModelViewerProps> = ({
 
 const ModelViewerInner: React.FC<GLBModelViewerProps> = ({ 
   className = "",
-  modelPath = "/intro.glb"
+  modelPath = "https://assets.interiorvillabd.com/intro.glb"
 }) => {
   const mountRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene>();
