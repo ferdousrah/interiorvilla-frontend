@@ -101,7 +101,8 @@ const Home = (): JSX.Element => {
   };
 
   useEffect(() => {
-    const handleScroll = () => {
+    // Optimize scroll handler to reduce forced reflows
+    const handleScroll = throttle(() => {
       const scrollPosition = window.scrollY;
       const scrollDirection = scrollPosition > lastScrollY ? 'down' : 'up';
       const shouldBeScrolled = scrollPosition > 100; // Minimum scroll distance
@@ -120,9 +121,9 @@ const Home = (): JSX.Element => {
       }
       
       setLastScrollY(scrollPosition);
-    };
+    }, 16); // Throttle to ~60fps
 
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, [isScrolled, lastScrollY]);
 

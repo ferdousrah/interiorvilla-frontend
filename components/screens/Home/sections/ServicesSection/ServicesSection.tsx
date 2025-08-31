@@ -217,6 +217,11 @@ export const ServicesSection = (): JSX.Element => {
     cardRefs.current.forEach((card, index) => {
       if (!card) return;
 
+      // Cache card dimensions to avoid repeated DOM queries
+      const cardMetrics = {
+        offsetTop: card.offsetTop,
+        offsetHeight: card.offsetHeight
+      };
       // Initial entrance animation
       gsap.fromTo(card,
         {
@@ -233,11 +238,13 @@ export const ServicesSection = (): JSX.Element => {
           duration: 1,
           ease: "power3.out",
           delay: index * 0.2,
+          force3D: true,
           scrollTrigger: {
             trigger: card,
             start: "top 90%",
             end: "top 60%",
-            toggleActions: "play none none reverse"
+            toggleActions: "play none none reverse",
+            fastScrollEnd: true
           }
         }
       );
@@ -246,12 +253,14 @@ export const ServicesSection = (): JSX.Element => {
       gsap.to(card, {
         yPercent: -5 - (index * 3), // Different speeds for depth
         ease: "none",
+        force3D: true,
         scrollTrigger: {
           trigger: sectionRef.current,
           start: "top bottom",
           end: "bottom top",
           scrub: 1 + (index * 0.2), // Different scrub speeds
-          invalidateOnRefresh: true
+          invalidateOnRefresh: true,
+          fastScrollEnd: true
         }
       });
 

@@ -71,6 +71,7 @@ function App() {
   return (
     <Router>
       <AccessibilityImprovements />
+      <PerformanceMonitor />
       <ScrollToTop />
       <Routes>
         <Route path="/" element={<SEORoute seoKey="home"><Home /></SEORoute>} />
