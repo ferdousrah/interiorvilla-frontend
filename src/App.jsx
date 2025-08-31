@@ -117,7 +117,13 @@ function App() {
           </SEORoute>
         } />
         <Route path="/services" element={<div className="min-h-screen flex items-center justify-center">Services Page Coming Soon</div>} />
-        <Route path="*" element={<SEORoute seoKey="notFound"><NotFound /></SEORoute>} />
+        <Route path="*" element={
+          <SEORoute seoKey="notFound">
+            <LazyComponent fallback={<PageLoadingFallback />}>
+              <NotFound />
+            </LazyComponent>
+          </SEORoute>
+        } />
       </Routes>
     </Router>
   )
