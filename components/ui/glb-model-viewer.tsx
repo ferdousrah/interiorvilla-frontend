@@ -68,6 +68,10 @@ const ModelViewerInner: React.FC<GLBModelViewerProps> = ({
           import('three/examples/jsm/loaders/GLTFLoader.js'),
           import('three/examples/jsm/controls/OrbitControls.js')
         ]);
+        const [gltfModule, orbitModule] = await Promise.all([
+          import('three/examples/jsm/loaders/GLTFLoader.js'),
+          import('three/examples/jsm/controls/OrbitControls.js')
+        ]);
 
         if (!mounted) return;
 
@@ -107,6 +111,7 @@ const ModelViewerInner: React.FC<GLBModelViewerProps> = ({
 
     // Controls setup
         const controls = new OrbitControls(camera, renderer.domElement);
+        const controls = new orbitModule.OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.08;
     controls.enableZoom = false; // Disable mouse scroll zoom
@@ -164,6 +169,7 @@ const ModelViewerInner: React.FC<GLBModelViewerProps> = ({
 
     // Load GLB model
         const loader = new GLTFLoader.GLTFLoader();
+        const loader = new gltfModule.GLTFLoader();
     
     // Loading manager for progress tracking
     const loadingManager = new THREE.LoadingManager();

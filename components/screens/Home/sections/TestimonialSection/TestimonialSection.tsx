@@ -494,6 +494,45 @@ export const TestimonialSection = (): JSX.Element => {
         }
       });
 >>>>>>> 6f23a914c21dcb02c17345bde42642ab4b9fe941
+      // Use Fancybox to show YouTube video
+      const embedUrl = `https://www.youtube.com/embed/${youtubeId}?autoplay=1&rel=0&modestbranding=1`;
+      
+      Fancybox.show([{
+        src: embedUrl,
+        type: "iframe",
+        caption: title
+      }], {
+        animated: true,
+        showClass: "fancybox-fadeIn",
+        hideClass: "fancybox-fadeOut",
+        dragToClose: false,
+        closeButton: "top",
+        Toolbar: { 
+          display: { 
+            left: [], 
+            middle: [], 
+            right: ["zoom", "slideshow", "thumbs", "download", "close"] 
+          } 
+        },
+        Iframe: {
+          preload: true,
+          css: {
+            width: "100%",
+            height: "100%"
+          },
+          attr: {
+            allow: "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen",
+            allowfullscreen: "true",
+            referrerpolicy: "strict-origin-when-cross-origin",
+            frameborder: "0"
+          }
+        },
+        on: {
+          reveal: (fancybox, slide) => {
+            console.log('YouTube video opened in Fancybox');
+          }
+        }
+      });
     } else {
       // Handle non-YouTube videos
       const videoHtml = `
