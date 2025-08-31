@@ -4,16 +4,62 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     
+    <!-- Preconnect to external domains -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cms.interiorvillabd.com" crossorigin>
+    
     <!-- Critical CSS inlined -->
     <style>
       /* Critical above-the-fold styles */
-      body { margin: 0; font-family: system-ui, -apple-system, sans-serif; }
-      .loading-screen { position: fixed; inset: 0; background: #fff; display: flex; align-items: center; justify-content: center; z-index: 9999; }
-      .loading-spinner { width: 40px; height: 40px; border: 3px solid #f3f3f3; border-top: 3px solid #75BF44; border-radius: 50%; animation: spin 1s linear infinite; }
-      @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+      body { 
+        margin: 0; 
+        font-family: system-ui, -apple-system, sans-serif;
+        font-display: swap;
+      }
+      .loading-screen { 
+        position: fixed; 
+        inset: 0; 
+        background: #fff; 
+        display: flex; 
+        align-items: center; 
+        justify-content: center; 
+        z-index: 9999; 
+      }
+      .loading-spinner { 
+        width: 40px; 
+        height: 40px; 
+        border: 3px solid #f3f3f3; 
+        border-top: 3px solid #75BF44; 
+        border-radius: 50%; 
+        animation: spin 1s linear infinite; 
+      }
+      @keyframes spin { 
+        0% { transform: rotate(0deg); } 
+        100% { transform: rotate(360deg); } 
+      }
       /* Prevent layout shift */
-      img { max-width: 100%; height: auto; }
-      .hero-container { min-height: 60vh; }
+      img { 
+        max-width: 100%; 
+        height: auto; 
+        font-size: 0;
+      }
+      .hero-container { 
+        min-height: 60vh; 
+        contain: layout style paint;
+      }
+      /* Critical font loading */
+      @font-face {
+        font-family: 'Fahkwang';
+        font-style: normal;
+        font-weight: 400;
+        font-display: swap;
+        src: url('https://fonts.gstatic.com/s/fahkwang/v16/k3kSo8kMI4pglOEVLlVOJbQNqGs.woff2') format('woff2');
+        unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+      }
+      /* Reduce CLS */
+      .aspect-ratio-16-9 { aspect-ratio: 16/9; }
+      .aspect-ratio-4-3 { aspect-ratio: 4/3; }
     </style>
     
     <title>Interior Villa - Premium Interior Design Services in Bangladesh</title>
@@ -47,19 +93,21 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
     
     <!-- Preload critical resources -->
-    <link rel="preload" href="/interior-villa-dark.png" as="image" type="image/png" />
+    <link rel="preload" href="/interior-villa-dark.png" as="image" type="image/png" fetchpriority="high" />
     <link rel="preload" href="/image.png" as="image" type="image/png" />
     
-    <!-- DNS prefetch for external domains -->
+    <!-- Preload critical fonts -->
+    <link rel="preload" href="https://fonts.gstatic.com/s/fahkwang/v16/k3kSo8kMI4pglOEVLlVOJbQNqGs.woff2" as="font" type="font/woff2" crossorigin>
+    
+    <!-- Load fonts with optimal performance -->
+    <link href="https://fonts.googleapis.com/css2?family=Fahkwang:wght@300;400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Fahkwang:wght@300;400;500;600;700&display=swap" rel="stylesheet"></noscript>
+    
+    <!-- Resource hints -->
     <link rel="dns-prefetch" href="//fonts.googleapis.com" />
     <link rel="dns-prefetch" href="//fonts.gstatic.com" />
     <link rel="dns-prefetch" href="//cms.interiorvillabd.com" />
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <!-- Load fonts with font-display: swap for better performance -->
-    <link href="https://fonts.googleapis.com/css2?family=Fahkwang:wght@300;400;500;600;700&family=Shadows+Into+Light&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <noscript><link href="https://fonts.googleapis.com/css2?family=Fahkwang:wght@300;400;500;600;700&family=Shadows+Into+Light&display=swap" rel="stylesheet"></noscript>
+    <link rel="dns-prefetch" href="//interiorvillabd.com" />
     
     <!-- Structured Data -->
     <script type="application/ld+json">
@@ -100,23 +148,43 @@
     </script>
   </head>
   <body>
+    <!-- Skip link for accessibility -->
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-primary text-white px-4 py-2 rounded-md z-50">
+      Skip to main content
+    </a>
+    
     <!-- Loading screen to prevent layout shift -->
     <div id="loading-screen" class="loading-screen">
       <div class="loading-spinner"></div>
     </div>
     
     <div id="root"></div>
+    
+    <!-- Defer non-critical scripts -->
     <script type="module" src="/src/main.jsx"></script>
     
     <!-- Remove loading screen after app loads -->
     <script>
-      window.addEventListener('load', () => {
+      // Optimize loading screen removal
+      const removeLoadingScreen = () => {
         const loadingScreen = document.getElementById('loading-screen');
         if (loadingScreen) {
           loadingScreen.style.opacity = '0';
-          setTimeout(() => loadingScreen.remove(), 300);
+          loadingScreen.style.transition = 'opacity 0.3s ease-out';
+          setTimeout(() => {
+            loadingScreen.remove();
+            // Trigger layout recalculation
+            document.body.offsetHeight;
+          }, 300);
         }
-      });
+      };
+
+      // Remove loading screen when DOM is ready
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', removeLoadingScreen);
+      } else {
+        removeLoadingScreen();
+      }
     </script>
   </body>
 </html>
