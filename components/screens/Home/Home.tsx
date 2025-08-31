@@ -496,6 +496,11 @@ const Home = (): JSX.Element => {
                           >
                             <span className="[font-family:'Fahkwang',Helvetica] font-medium text-center transition-all duration-300">
                               {item.name}
+                            </span>
+                            {item.subItems && (
+                              <motion.span
+                                className="ml-1 text-xs transition-all duration-300"
+                                animate={{ rotate: hoveredMenu === item.name ? 180 : 0 }}
                               >
                                 +
                               </motion.span>
