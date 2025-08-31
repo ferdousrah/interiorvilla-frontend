@@ -19,6 +19,7 @@ import { SplitText } from "gsap/SplitText";
 import { GLBModelViewer } from "../../ui/glb-model-viewer";
 import { X, ChevronDown, Home as HomeIcon, User, Briefcase, FolderOpen, BookOpen, Mail } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import { throttle } from "../../../src/utils/performance-optimizations";
 
 gsap.registerPlugin(ScrollTrigger, SplitText);
 
