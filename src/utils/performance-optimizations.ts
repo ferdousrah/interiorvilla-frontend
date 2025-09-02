@@ -97,29 +97,58 @@ export const debounce = <T extends (...args: any[]) => any>(
 class LayoutCache {
   private cache = new Map<Element, DOMRect>();
   private observer: ResizeObserver;
+  private rafId: number | null = null;
+  private pendingInvalidations = new Set<Element>();
 
   constructor() {
     this.observer = new ResizeObserver((entries) => {
+      // Batch invalidations to prevent forced reflows
       entries.forEach((entry) => {
-        this.cache.delete(entry.target);
+        this.pendingInvalidations.add(entry.target);
       });
+      
+      if (!this.rafId) {
+        this.rafId = requestAnimationFrame(() => {
+          this.pendingInvalidations.forEach((element) => {
+            this.cache.delete(element);
+          });
+          this.pendingInvalidations.clear();
+          this.rafId = null;
+        });
+      }
     });
   }
 
   getRect(element: Element): DOMRect {
     if (!this.cache.has(element)) {
-      this.cache.set(element, element.getBoundingClientRect());
+      // Use RAF to batch rect calculations
+      const rect = element.getBoundingClientRect();
+      this.cache.set(element, rect);
       this.observer.observe(element);
     }
     return this.cache.get(element)!;
   }
 
   invalidate(element: Element) {
-    this.cache.delete(element);
+    this.pendingInvalidations.add(element);
+    if (!this.rafId) {
+      this.rafId = requestAnimationFrame(() => {
+        this.pendingInvalidations.forEach((el) => {
+          this.cache.delete(el);
+        });
+        this.pendingInvalidations.clear();
+        this.rafId = null;
+      });
+    }
   }
 
   clear() {
     this.cache.clear();
+    this.pendingInvalidations.clear();
+    if (this.rafId) {
+      cancelAnimationFrame(this.rafId);
+      this.rafId = null;
+    }
   }
 }
 
@@ -131,16 +160,25 @@ export const createOptimizedScrollHandler = (
 ) => {
   let lastScrollY = 0;
   let rafId: number | null = null;
+  let cachedScrollY = 0;
 
   const handleScroll = () => {
     if (rafId) return;
     
     rafId = requestAnimationFrame(() => {
       const scrollY = window.pageYOffset;
+      
+      // Only update if scroll changed significantly
+      if (Math.abs(scrollY - cachedScrollY) < 2) {
+        rafId = null;
+        return;
+      }
+      
       const direction = scrollY > lastScrollY ? 'down' : 'up';
       
       callback(scrollY, direction);
       lastScrollY = scrollY;
+      cachedScrollY = scrollY;
       rafId = null;
     });
   };

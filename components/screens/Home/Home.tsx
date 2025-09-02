@@ -61,7 +61,9 @@ const Home = (): JSX.Element => {
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const submenuItemRefs = useRef<{ [key: string]: (HTMLButtonElement | null)[] }>({});
   const lastScrollY = useRef(0);
-  const ticking = useRef(false);
+  const rafId = useRef<number | null>(null);
+  const cachedScrollY = useRef(0);
+  const cachedHeaderRect = useRef<DOMRect | null>(null);
 
   const navItems = [
     { 
@@ -126,94 +128,118 @@ const Home = (): JSX.Element => {
   };
 
   useEffect(() => {
-    const handleScroll = throttle(() => {
+    const handleScroll = () => {
+      if (rafId.current) return;
+      
+      rafId.current = requestAnimationFrame(() => {
       const scrollPosition = window.scrollY;
-      const scrollDirection = scrollPosition > lastScrollY.current ? 'down' : 'up';
-      const shouldBeScrolled = scrollPosition > 100; // Minimum scroll distance
-      const shouldShowSticky = shouldBeScrolled && scrollDirection === 'up';
       
-      // Update scroll direction state
-      if (scrollDirection === 'up' && scrollPosition > 100) {
-        setIsScrollingUp(true);
-      } else if (scrollDirection === 'down') {
-        setIsScrollingUp(false);
-      }
+        // Only update if scroll changed significantly
+        if (Math.abs(scrollPosition - cachedScrollY.current) < 5) {
+          rafId.current = null;
+          return;
+        }
+        
+        const scrollDirection = scrollPosition > lastScrollY.current ? 'down' : 'up';
+        const shouldBeScrolled = scrollPosition > 100;
+        
+        // Batch state updates
+        if (scrollDirection === 'up' && scrollPosition > 100) {
+          setIsScrollingUp(true);
+        } else if (scrollDirection === 'down') {
+          setIsScrollingUp(false);
+        }
+        
+        if (shouldBeScrolled !== isScrolled) {
+          setIsScrolled(shouldBeScrolled);
+        }
+        
+        lastScrollY.current = scrollPosition;
+        cachedScrollY.current = scrollPosition;
+        rafId.current = null;
+      });
+    };
       
-      // Update scrolled state
-      if (shouldBeScrolled !== isScrolled) {
-        setIsScrolled(shouldBeScrolled);
-      }
-      
-      lastScrollY.current = scrollPosition;
-    }, 16);
-
     window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (rafId.current) {
+        cancelAnimationFrame(rafId.current);
+      }
+    };
   }, [isScrolled]);
 
   // Enhanced header animations
   useEffect(() => {
     if (!headerRef.current || !logoRef.current || !menuContainerRef.current) return;
 
-    // Use CSS classes instead of direct style manipulation to avoid forced reflows
     const header = headerRef.current;
     const logo = logoRef.current;
     const menuContainer = menuContainerRef.current;
 
-    // Batch DOM updates to prevent forced reflows
-    requestAnimationFrame(() => {
-      if (isScrolled && isScrollingUp) {
-        header.classList.add('header-scrolled');
-        logo.classList.add('logo-scrolled');
-        menuContainer.classList.add('menu-scrolled');
-      } else {
-        header.classList.remove('header-scrolled');
-        logo.classList.remove('logo-scrolled');
-        menuContainer.classList.remove('menu-scrolled');
-      }
-    });
+    // Use CSS custom properties to avoid forced reflows
+    const updateHeaderStyles = () => {
+      const shouldTransform = isScrolled && isScrollingUp;
+      
+      // Batch all style updates in a single RAF
+      requestAnimationFrame(() => {
+        header.style.setProperty('--header-height', shouldTransform ? '60px' : '90px');
+        header.style.setProperty('--header-bg', shouldTransform ? 'rgba(27, 27, 27, 0.95)' : 'transparent');
+        header.style.setProperty('--header-backdrop', shouldTransform ? 'blur(20px)' : 'none');
+        header.style.setProperty('--header-shadow', shouldTransform ? '0 8px 32px rgba(0, 0, 0, 0.1)' : 'none');
+        header.style.setProperty('--header-transform', shouldTransform ? 'translateY(0)' : isScrolled ? 'translateY(-100%)' : 'translateY(0)');
+        
+        logo.style.setProperty('--logo-scale', shouldTransform ? '0.8' : '1');
+        
+        menuContainer.style.setProperty('--menu-height', shouldTransform ? '50px' : '60px');
+        menuContainer.style.setProperty('--menu-padding', shouldTransform ? '0 16px' : '0 16px');
+      });
+    };
+    
+    updateHeaderStyles();
   }, [isScrolled, isScrollingUp]);
 
   useEffect(() => {
     if (!heroImageRef.current || !heroContainerRef.current) return;
 
-    // Optimized parallax with RAF and cached values
     const heroImage = heroImageRef.current;
     const heroContainer = heroContainerRef.current;
-    let cachedScrollY = 0;
     let cachedRect: DOMRect | null = null;
-    let rafId: number | null = null;
+    let parallaxRafId: number | null = null;
 
     const updateParallax = () => {
       const scrolled = window.pageYOffset;
       
       // Only update if scroll position changed significantly
-      if (Math.abs(scrolled - cachedScrollY) < 1) {
-        rafId = requestAnimationFrame(updateParallax);
+      if (Math.abs(scrolled - cachedScrollY.current) < 2) {
+        parallaxRafId = requestAnimationFrame(updateParallax);
         return;
       }
       
-      cachedScrollY = scrolled;
+      cachedScrollY.current = scrolled;
       
-      // Cache rect calculation and only update when needed
-      if (!cachedRect || Math.abs(scrolled - cachedScrollY) > 50) {
+      // Cache rect calculation and only update when needed  
+      if (!cachedRect || Math.abs(scrolled - cachedScrollY.current) > 50) {
         cachedRect = heroContainer.getBoundingClientRect();
       }
       
       if (cachedRect.bottom >= 0 && cachedRect.top <= window.innerHeight) {
-        const rate = scrolled * -0.3; // Reduced parallax intensity
-        const scale = 1.05 - scrolled * 0.00005; // Reduced scale effect
-        heroImage.style.transform = `translate3d(0, ${rate}px, 0) scale(${scale})`;
+        const rate = scrolled * -0.2; // Further reduced parallax intensity
+        const scale = Math.max(1, 1.03 - scrolled * 0.00003); // Reduced scale effect
+        
+        // Use CSS custom properties to avoid forced reflows
+        heroImage.style.setProperty('--parallax-y', `${rate}px`);
+        heroImage.style.setProperty('--parallax-scale', scale.toString());
       }
       
-      rafId = requestAnimationFrame(updateParallax);
+      parallaxRafId = requestAnimationFrame(updateParallax);
     };
 
-    rafId = requestAnimationFrame(updateParallax);
+    parallaxRafId = requestAnimationFrame(updateParallax);
     
     return () => {
-      if (rafId) {
-        cancelAnimationFrame(rafId);
+      if (parallaxRafId) {
+        cancelAnimationFrame(parallaxRafId);
       }
     };
   }, []);
@@ -400,25 +426,18 @@ const Home = (): JSX.Element => {
             <Link to="/" aria-label="Interior Villa Home">
               <img
                 ref={logoRef}
-                className="w-52 h-[41px] object-cover z-10 transition-transform duration-700 ease-out cursor-pointer"
+                className="w-52 h-[41px] object-cover z-10 cursor-pointer logo-container"
                 alt="Interior villa dark"
                 src="/interior-villa-dark.png"
-                style={{
-                  transform: (isScrolled && isScrollingUp) ? "scale(0.8)" : "scale(1)"
-                }}
               />
             </Link>
             
             <div 
               ref={menuContainerRef}
-              className={`flex items-center transition-all duration-700 ease-out ${
+              className={`flex items-center menu-container ${
                 !(isScrolled && isScrollingUp) && 'bg-white-fade rounded-[50px] backdrop-blur-[5px] px-4'
               }`}
-              style={{
-                height: (isScrolled && isScrollingUp) ? "50px" : "60px",
-                padding: (isScrolled && isScrollingUp) ? "0 16px" : !(isScrolled && isScrollingUp) ? "0 16px" : "0",
-                minWidth: "fit-content"
-              }}
+              style={{ minWidth: "fit-content" }}
             >
               <div className="flex items-center justify-end h-full">
                 <button 
@@ -609,10 +628,6 @@ const Home = (): JSX.Element => {
                               ? "bg-primary text-white shadow-lg"
                               : "text-gray-300 hover:bg-gray-800/50 hover:text-white"
                           }`}
-                          onClick={() => {
-                            if (item.subItems) {
-                              handleSubmenuToggle(item.name);
-                            } else {
                               setIsMobileMenuOpen(false);
                             }
                           }}
@@ -713,24 +728,30 @@ const Home = (): JSX.Element => {
       <FooterSection />
       
       <style jsx>{`
-        /* CSS classes for header animations to avoid forced reflows */
-        .header-scrolled {
-          height: 60px !important;
-          background-color: rgba(27, 27, 27, 0.95) !important;
-          backdrop-filter: blur(20px) !important;
-          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
-          transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        /* CSS custom properties for header animations to avoid forced reflows */
+        header {
+          height: var(--header-height, 90px);
+          background-color: var(--header-bg, transparent);
+          backdrop-filter: var(--header-backdrop, none);
+          box-shadow: var(--header-shadow, none);
+          transform: var(--header-transform, translateY(0));
+          transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
         }
         
-        .logo-scrolled {
-          transform: scale(0.8) !important;
-          transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        .logo-container {
+          transform: scale(var(--logo-scale, 1));
+          transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
         }
         
-        .menu-scrolled {
-          height: 50px !important;
-          padding: 0 16px !important;
-          transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        .menu-container {
+          height: var(--menu-height, 60px);
+          padding: var(--menu-padding, 0 16px);
+          transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .hero-image {
+          transform: translate3d(0, var(--parallax-y, 0), 0) scale(var(--parallax-scale, 1));
+          will-change: transform;
         }
         
         /* Enhanced smooth scrolling */
