@@ -34,6 +34,18 @@ const loadGSAP = async () => {
   return { gsap: gsap.default, ScrollTrigger: ScrollTrigger.ScrollTrigger, SplitText: SplitText.SplitText };
 };
 
+// Throttle function for performance
+const throttle = (func: Function, limit: number) => {
+  let inThrottle: boolean;
+  return function(this: any, ...args: any[]) {
+    if (!inThrottle) {
+      func.apply(this, args);
+      inThrottle = true;
+      setTimeout(() => inThrottle = false, limit);
+    }
+  };
+};
+
 const Home = (): JSX.Element => {
   const navigate = useNavigate();
   const [hoveredMenu, setHoveredMenu] = useState<string | null>(null);
@@ -657,7 +669,7 @@ const Home = (): JSX.Element => {
                                   initial={{ x: -20, opacity: 0 }}
                                   animate={{ x: 0, opacity: 1 }}
                                   transition={{ delay: subIndex * 0.1 }}
-                                  }}
+                                  className="flex items-center p-3 rounded-lg text-gray-300 hover:text-white hover:bg-gray-800/30 transition-all duration-300 cursor-pointer group"
                                   onClick={() => handleSubmenuNavigation(subItem.href)}
                                 >
                                   <div className="w-2 h-2 rounded-full bg-gray-600 group-hover:bg-primary transition-colors duration-300 mr-4"></div>
