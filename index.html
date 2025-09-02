@@ -16,7 +16,70 @@
         margin: 0; 
         font-family: system-ui, -apple-system, sans-serif;
         font-display: swap;
+        background: white;
+        color: #1a1a1a;
       }
+      
+      /* Critical Tailwind base styles */
+      *, ::before, ::after {
+        box-sizing: border-box;
+        border-width: 0;
+        border-style: solid;
+        border-color: #e5e7eb;
+      }
+      
+      /* Critical utility classes */
+      .flex { display: flex; }
+      .items-center { align-items: center; }
+      .justify-center { justify-content: center; }
+      .justify-between { justify-content: space-between; }
+      .w-full { width: 100%; }
+      .h-full { height: 100%; }
+      .relative { position: relative; }
+      .absolute { position: absolute; }
+      .fixed { position: fixed; }
+      .inset-0 { top: 0; right: 0; bottom: 0; left: 0; }
+      .z-10 { z-index: 10; }
+      .z-50 { z-index: 50; }
+      .bg-white { background-color: #ffffff; }
+      .bg-black { background-color: #000000; }
+      .text-white { color: #ffffff; }
+      .text-black { color: #000000; }
+      .rounded-lg { border-radius: 0.5rem; }
+      .rounded-full { border-radius: 9999px; }
+      .px-4 { padding-left: 1rem; padding-right: 1rem; }
+      .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+      .mb-4 { margin-bottom: 1rem; }
+      .transition-all { transition-property: all; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 150ms; }
+      .duration-300 { transition-duration: 300ms; }
+      .ease-out { transition-timing-function: cubic-bezier(0, 0, 0.2, 1); }
+      .hover\:scale-105:hover { transform: scale(1.05); }
+      .hover\:bg-primary:hover { background-color: #75BF44; }
+      .cursor-pointer { cursor: pointer; }
+      .overflow-hidden { overflow: hidden; }
+      .object-cover { object-fit: cover; }
+      .container { width: 100%; margin-left: auto; margin-right: auto; padding-left: 1rem; padding-right: 1rem; }
+      
+      /* Header critical styles */
+      .header-scrolled {
+        height: 60px !important;
+        background-color: rgba(27, 27, 27, 0.95) !important;
+        backdrop-filter: blur(20px) !important;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
+        transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1) !important;
+      }
+      
+      .logo-scrolled {
+        transform: scale(0.8) !important;
+        transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1) !important;
+      }
+      
+      .menu-scrolled {
+        height: 50px !important;
+        padding: 0 16px !important;
+        transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1) !important;
+      }
+      
       .loading-screen { 
         position: fixed; 
         inset: 0; 
@@ -47,7 +110,9 @@
       .hero-container { 
         min-height: 60vh; 
         contain: layout style paint;
+        background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
       }
+      
       /* Critical font loading */
       @font-face {
         font-family: 'Fahkwang';
@@ -60,6 +125,14 @@
       /* Reduce CLS */
       .aspect-ratio-16-9 { aspect-ratio: 16/9; }
       .aspect-ratio-4-3 { aspect-ratio: 4/3; }
+      
+      /* Primary colors */
+      :root {
+        --primary: #75BF44;
+        --secondary: #EE5428;
+        --primary-hover: #68AB3C;
+        --secondary-hover: #D64C24;
+      }
     </style>
     
     <title>Interior Villa - Premium Interior Design Services in Bangladesh</title>
@@ -161,20 +234,27 @@
     
     <!-- Load fonts asynchronously to prevent render blocking -->
     <script>
-      // Load Google Fonts asynchronously
-      const fontLink = document.createElement('link');
-      fontLink.href = 'https://fonts.googleapis.com/css2?family=Fahkwang:wght@300;400;500;600;700&display=swap';
-      fontLink.rel = 'stylesheet';
-      fontLink.media = 'print';
-      fontLink.onload = function() { this.media = 'all'; };
-      document.head.appendChild(fontLink);
+      // Defer CSS loading to prevent render blocking
+      function loadCSS(href) {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = href;
+        link.media = 'print';
+        link.onload = function() { this.media = 'all'; };
+        document.head.appendChild(link);
+        
+        // Fallback
+        setTimeout(function() {
+          if (link.media === 'print') {
+            link.media = 'all';
+          }
+        }, 100);
+      }
       
-      // Fallback for browsers that don't support onload
-      setTimeout(function() {
-        if (fontLink.media === 'print') {
-          fontLink.media = 'all';
-        }
-      }, 100);
+      // Load fonts and main CSS after critical render
+      requestAnimationFrame(function() {
+        loadCSS('https://fonts.googleapis.com/css2?family=Fahkwang:wght@300;400;500;600;700&display=swap');
+      });
     </script>
     
     <!-- Remove loading screen after app loads -->
