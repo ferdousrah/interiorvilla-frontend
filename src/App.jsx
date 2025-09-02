@@ -5,14 +5,14 @@ import { useLocation } from 'react-router-dom'
 import { updateSEO, seoData } from './utils/seo'
 import { AccessibilityImprovements } from '../components/ui/accessibility-improvements'
 import { LazyComponent } from '../components/ui/lazy-component'
-import { Home } from '../components/screens/Home/Home'
-import { About } from '../components/screens/About/About'
-import { Contact } from '../components/screens/Contact/Contact'
-import { Blog } from '../components/screens/Blog/Blog'
-import { BlogDetails } from '../components/screens/BlogDetails/BlogDetails'
-import '../app/globals.css'
 
-// Lazy load non-critical pages
+// Lazy load ALL components to reduce initial bundle size
+const Home = React.lazy(() => import('../components/screens/Home/Home').then(m => ({ default: m.Home })));
+const About = React.lazy(() => import('../components/screens/About/About').then(m => ({ default: m.About })));
+const Contact = React.lazy(() => import('../components/screens/Contact/Contact').then(m => ({ default: m.Contact })));
+const Blog = React.lazy(() => import('../components/screens/Blog/Blog').then(m => ({ default: m.Blog })));
+const BlogDetails = React.lazy(() => import('../components/screens/BlogDetails/BlogDetails').then(m => ({ default: m.BlogDetails })));
+
 const Portfolio = React.lazy(() => import('../app/Portfolio').then(m => ({ default: m.Portfolio })));
 const ProjectDetails = React.lazy(() => import('../app/ProjectDetails').then(m => ({ default: m.ProjectDetails })));
 const ResidentialInterior = React.lazy(() => import('../app/ResidentialInterior').then(m => ({ default: m.ResidentialInterior })));
@@ -70,15 +70,50 @@ const PageLoadingFallback = () => (
 function App() {
   return (
     <Router>
-      <AccessibilityImprovements />
       <ScrollToTop />
       <Routes>
-        <Route path="/" element={<SEORoute seoKey="home"><Home /></SEORoute>} />
-        <Route path="/about" element={<SEORoute seoKey="about"><About /></SEORoute>} />
-        <Route path="/contact" element={<SEORoute seoKey="contact"><Contact /></SEORoute>} />
-        <Route path="/blog" element={<SEORoute seoKey="blog"><Blog /></SEORoute>} />
-        <Route path="/blog/:id" element={<SEORoute seoKey="blog"><BlogDetails /></SEORoute>} />
-        <Route path="/blog-details" element={<SEORoute seoKey="blog"><BlogDetails /></SEORoute>} />
+        <Route path="/" element={
+          <SEORoute seoKey="home">
+            <LazyComponent fallback={<PageLoadingFallback />}>
+              <Home />
+            </LazyComponent>
+          </SEORoute>
+        } />
+        <Route path="/about" element={
+          <SEORoute seoKey="about">
+            <LazyComponent fallback={<PageLoadingFallback />}>
+              <About />
+            </LazyComponent>
+          </SEORoute>
+        } />
+        <Route path="/contact" element={
+          <SEORoute seoKey="contact">
+            <LazyComponent fallback={<PageLoadingFallback />}>
+              <Contact />
+            </LazyComponent>
+          </SEORoute>
+        } />
+        <Route path="/blog" element={
+          <SEORoute seoKey="blog">
+            <LazyComponent fallback={<PageLoadingFallback />}>
+              <Blog />
+            </LazyComponent>
+          </SEORoute>
+        } />
+        <Route path="/blog/:id" element={
+          <SEORoute seoKey="blog">
+            <LazyComponent fallback={<PageLoadingFallback />}>
+              <BlogDetails />
+            </LazyComponent>
+          </SEORoute>
+        } />
+        <Route path="/blog-details" element={
+          <SEORoute seoKey="blog">
+            <LazyComponent fallback={<PageLoadingFallback />}>
+              <BlogDetails />
+            </LazyComponent>
+          </SEORoute>
+        } />
         <Route path="/portfolio" element={
           <SEORoute seoKey="portfolio">
             <LazyComponent fallback={<PageLoadingFallback />}>
@@ -137,6 +172,7 @@ function App() {
           </SEORoute>
         } />
       </Routes>
+      <AccessibilityImprovements />
     </Router>
   )
 }
