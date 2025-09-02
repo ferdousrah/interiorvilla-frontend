@@ -15,24 +15,6 @@ import { CustomCursor } from "../../ui/cursor";
 import { CTASection } from "./sections/CTASection/CTASection";
 import { X, ChevronDown, Home as HomeIcon, User, Briefcase, FolderOpen, BookOpen, Mail } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { LazyComponent } from "../../ui/lazy-component";
-
-// Lazy load heavy components
-const GLBModelViewer = React.lazy(() => 
-  import("../../ui/glb-model-viewer").then(m => ({ default: m.GLBModelViewer }))
-);
-
-// Lazy load GSAP only when needed
-const loadGSAP = async () => {
-  const [gsap, ScrollTrigger, SplitText] = await Promise.all([
-    import("gsap"),
-    import("gsap/ScrollTrigger"),
-    import("gsap/SplitText")
-  ]);
-  
-  gsap.default.registerPlugin(ScrollTrigger.ScrollTrigger, SplitText.SplitText);
-  return { gsap: gsap.default, ScrollTrigger: ScrollTrigger.ScrollTrigger, SplitText: SplitText.SplitText };
-};
 
 // Throttle function for performance
 const throttle = (func: Function, limit: number) => {
@@ -45,6 +27,78 @@ const throttle = (func: Function, limit: number) => {
     }
   };
 };
+
+// Lazy load all heavy sections
+const LazyOurFeaturedWorksSection = React.lazy(() => 
+  import("./sections/OurFeaturedWorksSection/OurFeaturedWorksSection").then(m => ({ default: m.OurFeaturedWorksSection }))
+);
+
+const LazyAboutSection = React.lazy(() => 
+  import("./sections/AboutSection/AboutSection").then(m => ({ default: m.AboutSection }))
+);
+
+const LazyServicesSection = React.lazy(() => 
+  import("./sections/ServicesSection/ServicesSection").then(m => ({ default: m.ServicesSection }))
+);
+
+const LazyOurProcessSection = React.lazy(() => 
+  import("./sections/OurProcessSection/OurProcessSection").then(m => ({ default: m.OurProcessSection }))
+);
+
+const LazyTestimonialSection = React.lazy(() => 
+  import("./sections/TestimonialSection/TestimonialSection").then(m => ({ default: m.TestimonialSection }))
+);
+
+const LazyBlogSection = React.lazy(() => 
+  import("./sections/BlogSection/BlogSection").then(m => ({ default: m.BlogSection }))
+);
+
+const LazyCTASection = React.lazy(() => 
+  import("./sections/CTASection/CTASection").then(m => ({ default: m.CTASection }))
+);
+
+// Simple hero content without 3D model
+const HeroContent = () => (
+  <div className="w-full h-full bg-gradient-to-br from-gray-900 via-black to-gray-800 flex items-center justify-center relative overflow-hidden">
+    {/* Background Image */}
+    <div className="absolute inset-0">
+      <img
+        src="/image.png"
+        alt="Interior Design Hero"
+        className="w-full h-full object-cover opacity-60"
+        loading="eager"
+        fetchPriority="high"
+      />
+      <div className="absolute inset-0 bg-black/40"></div>
+    </div>
+    
+    {/* Hero Content */}
+    <div className="relative z-10 text-center text-white max-w-4xl mx-auto px-4">
+      <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold [font-family:'Fahkwang',Helvetica] mb-6 leading-tight">
+        Transform Your Space with 
+        <span className="text-primary block mt-2">Interior Villa</span>
+      </h1>
+      <p className="text-lg md:text-xl [font-family:'Fahkwang',Helvetica] text-gray-200 mb-8 leading-relaxed">
+        Premium interior design services in Bangladesh. Creating beautiful, functional spaces that reflect your unique style.
+      </p>
+      <div className="flex flex-col sm:flex-row gap-4 justify-center">
+        <Button 
+          onClick={() => window.location.href = '/portfolio'}
+          className="bg-primary hover:bg-primary-hover text-white px-8 py-4 rounded-full [font-family:'Fahkwang',Helvetica] font-medium text-lg transition-all duration-300 hover:scale-105"
+        >
+          View Our Work
+        </Button>
+        <Button 
+          onClick={() => window.location.href = '/contact'}
+          variant="outline"
+          className="border-2 border-white text-white hover:bg-white hover:text-black px-8 py-4 rounded-full [font-family:'Fahkwang',Helvetica] font-medium text-lg transition-all duration-300 hover:scale-105"
+        >
+          Get Started
+        </Button>
+      </div>
+    </div>
+  </div>
+);
 
 const Home = (): JSX.Element => {
   const navigate = useNavigate();
@@ -375,16 +429,7 @@ const Home = (): JSX.Element => {
       
       <div ref={heroContainerRef} className="w-full relative overflow-hidden">
         <section className="w-full h-[800px] bg-gradient-to-br from-black via-gray-900 to-black">
-          <LazyComponent fallback={
-            <div className="w-full h-full bg-gradient-to-br from-gray-900 via-black to-gray-800 flex items-center justify-center">
-              <div className="text-center">
-                <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                <div className="text-white text-lg font-medium [font-family:'Fahkwang',Helvetica]">Loading 3D Experience</div>
-              </div>
-            </div>
-          }>
-            <GLBModelViewer className="w-full h-full" modelPath="https://assets.interiorvillabd.com/intro.glb" />
-          </LazyComponent>
+          <HeroContent />
         </section>
 
         <header 
@@ -707,15 +752,27 @@ const Home = (): JSX.Element => {
         </AnimatePresence>
       </div>
       <FeaturedWorksHeaderSection />
-      <OurFeaturedWorksSection />
-      <AboutSection />
-      
-      <ServicesSection />
-      <OurProcessSection />
-      
-      <TestimonialSection />
-      <BlogSection />
-      <CTASection />
+      <React.Suspense fallback={<div className="w-full py-20 bg-white text-center">Loading...</div>}>
+        <LazyOurFeaturedWorksSection />
+      </React.Suspense>
+      <React.Suspense fallback={<div className="w-full py-20 bg-[#f7f9fb] text-center">Loading...</div>}>
+        <LazyAboutSection />
+      </React.Suspense>
+      <React.Suspense fallback={<div className="w-full py-20 bg-white text-center">Loading...</div>}>
+        <LazyServicesSection />
+      </React.Suspense>
+      <React.Suspense fallback={<div className="w-full py-20 bg-[#f7f9fb] text-center">Loading...</div>}>
+        <LazyOurProcessSection />
+      </React.Suspense>
+      <React.Suspense fallback={<div className="w-full py-20 bg-white text-center">Loading...</div>}>
+        <LazyTestimonialSection />
+      </React.Suspense>
+      <React.Suspense fallback={<div className="w-full py-20 bg-[#f7f9fb] text-center">Loading...</div>}>
+        <LazyBlogSection />
+      </React.Suspense>
+      <React.Suspense fallback={<div className="w-full py-20 bg-white text-center">Loading...</div>}>
+        <LazyCTASection />
+      </React.Suspense>
       <FooterSection />
       
       <style jsx>{`

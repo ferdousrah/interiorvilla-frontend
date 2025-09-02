@@ -66,9 +66,10 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          // Only essential chunks - defer heavy libraries
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'ui-essentials': ['lucide-react', 'clsx', 'tailwind-merge']
+          // Minimal essential chunks only
+          'react-core': ['react', 'react-dom'],
+          'router': ['react-router-dom'],
+          'icons': ['lucide-react']
         },
         chunkFileNames: (chunkInfo) => {
           const facadeModuleId = chunkInfo.facadeModuleId ? chunkInfo.facadeModuleId.split('/').pop() : 'chunk';
