@@ -60,7 +60,6 @@ export default defineConfig({
         comments: false
       }
     },
-    cssCodeSplit: true,
     sourcemap: false,
     chunkSizeWarningLimit: 500,
     rollupOptions: {
