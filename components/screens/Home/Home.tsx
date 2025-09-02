@@ -628,6 +628,12 @@ const Home = (): JSX.Element => {
                               ? "bg-primary text-white shadow-lg"
                               : "text-gray-300 hover:bg-gray-800/50 hover:text-white"
                           }`}
+                          onClick={() => {
+                            if (item.subItems) {
+                              handleSubmenuToggle(item.name);
+                            } else {
+                              window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+                              navigate(item.href);
                               setIsMobileMenuOpen(false);
                             }
                           }}
