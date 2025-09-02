@@ -1,24 +1,61 @@
-// Advanced performance optimization utilities
+// Advanced performance optimization utilities with forced reflow prevention
 
-// Critical resource preloader with priority hints
-export const preloadCriticalResources = () => {
-  const criticalImages = [
-    { src: '/interior-villa-dark.png', priority: 'high' }
-  ];
+// Batch DOM reads to prevent forced reflows
+class DOMBatcher {
+  private readQueue: Array<() => void> = [];
+  private writeQueue: Array<() => void> = [];
+  private scheduled = false;
 
-  criticalImages.forEach(({ src, priority }) => {
-    const link = document.createElement('link');
-    link.rel = 'preload';
-    link.as = 'image';
-    link.href = src;
-    if (priority === 'high') {
-      link.setAttribute('fetchpriority', 'high');
+  read(fn: () => void) {
+    this.readQueue.push(fn);
+    this.schedule();
+  }
+
+  write(fn: () => void) {
+    this.writeQueue.push(fn);
+    this.schedule();
+  }
+
+  private schedule() {
+    if (this.scheduled) return;
+    this.scheduled = true;
+    
+    requestAnimationFrame(() => {
+      // Execute all reads first
+      this.readQueue.forEach(fn => fn());
+      this.readQueue = [];
+      
+      // Then execute all writes
+      this.writeQueue.forEach(fn => fn());
+      this.writeQueue = [];
+      
+      this.scheduled = false;
+    });
+  }
+}
+
+export const domBatcher = new DOMBatcher();
+
+// Optimized throttle that uses RAF for smooth animations
+export const throttleRAF = <T extends (...args: any[]) => any>(
+  func: T
+): ((...args: Parameters<T>) => void) => {
+  let rafId: number | null = null;
+  let lastArgs: Parameters<T>;
+
+  return (...args: Parameters<T>) => {
+    lastArgs = args;
+    
+    if (rafId === null) {
+      rafId = requestAnimationFrame(() => {
+        func(...lastArgs);
+        rafId = null;
+      });
     }
-    document.head.appendChild(link);
-  });
+  };
 };
 
-// Lightweight throttle utility for scroll events
+// Lightweight throttle for scroll events
 export const throttle = <T extends (...args: any[]) => any>(
   func: T,
   limit: number
@@ -56,6 +93,68 @@ export const debounce = <T extends (...args: any[]) => any>(
   };
 };
 
+// Prevent forced reflows by caching layout properties
+class LayoutCache {
+  private cache = new Map<Element, DOMRect>();
+  private observer: ResizeObserver;
+
+  constructor() {
+    this.observer = new ResizeObserver((entries) => {
+      entries.forEach((entry) => {
+        this.cache.delete(entry.target);
+      });
+    });
+  }
+
+  getRect(element: Element): DOMRect {
+    if (!this.cache.has(element)) {
+      this.cache.set(element, element.getBoundingClientRect());
+      this.observer.observe(element);
+    }
+    return this.cache.get(element)!;
+  }
+
+  invalidate(element: Element) {
+    this.cache.delete(element);
+  }
+
+  clear() {
+    this.cache.clear();
+  }
+}
+
+export const layoutCache = new LayoutCache();
+
+// Optimized scroll handler that prevents forced reflows
+export const createOptimizedScrollHandler = (
+  callback: (scrollY: number, direction: 'up' | 'down') => void
+) => {
+  let lastScrollY = 0;
+  let rafId: number | null = null;
+
+  const handleScroll = () => {
+    if (rafId) return;
+    
+    rafId = requestAnimationFrame(() => {
+      const scrollY = window.pageYOffset;
+      const direction = scrollY > lastScrollY ? 'down' : 'up';
+      
+      callback(scrollY, direction);
+      lastScrollY = scrollY;
+      rafId = null;
+    });
+  };
+
+  return {
+    handler: handleScroll,
+    cleanup: () => {
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+      }
+    }
+  };
+};
+
 // Intersection Observer with performance optimizations
 export const createOptimizedObserver = (
   callback: (entries: IntersectionObserverEntry[]) => void,
@@ -83,7 +182,7 @@ export const addResourceHint = (href: string, rel: 'preload' | 'prefetch' | 'dns
 };
 
 // Critical resource preloader
-export const preloadCriticalResourcesOptimized = () => {
+export const preloadCriticalResources = () => {
   const criticalImages = [
     '/interior-villa-dark.png',
     '/image.png'
@@ -104,6 +203,34 @@ export const preloadCriticalResourcesOptimized = () => {
   });
 };
 
+// Optimize element queries to prevent forced reflows
+export const optimizeElementQueries = () => {
+  // Cache frequently accessed elements
+  const elementCache = new Map<string, Element>();
+  
+  const getCachedElement = (selector: string): Element | null => {
+    if (!elementCache.has(selector)) {
+      const element = document.querySelector(selector);
+      if (element) {
+        elementCache.set(selector, element);
+      }
+    }
+    return elementCache.get(selector) || null;
+  };
+
+  // Clear cache when DOM changes significantly
+  const observer = new MutationObserver(() => {
+    elementCache.clear();
+  });
+
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true
+  });
+
+  return { getCachedElement, clearCache: () => elementCache.clear() };
+};
+
 // Initialize all performance optimizations
 export const initializePerformanceOptimizations = () => {
   // Run immediately
@@ -112,9 +239,9 @@ export const initializePerformanceOptimizations = () => {
   // Run after DOM is ready
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
-      preloadCriticalResourcesOptimized();
+      optimizeElementQueries();
     });
   } else {
-    preloadCriticalResourcesOptimized();
+    optimizeElementQueries();
   }
 };
