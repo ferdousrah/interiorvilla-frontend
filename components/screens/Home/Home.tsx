@@ -140,129 +140,75 @@ const Home = (): JSX.Element => {
 
   // Enhanced header animations
   useEffect(() => {
-    let gsapLoaded = false;
-    
-    const initAnimations = async () => {
-      if (gsapLoaded) return;
-      
-      try {
-        const { gsap, ScrollTrigger } = await loadGSAP();
-        gsapLoaded = true;
-        
     if (!headerRef.current || !logoRef.current || !menuContainerRef.current) return;
 
     const header = headerRef.current;
     const logo = logoRef.current;
     const menuContainer = menuContainerRef.current;
 
-    // Create timeline for smooth transitions - only when scrolling up
-    const tl = gsap.timeline({ paused: true });
-
-    // Header transformation
-    tl.to(header, {
-      height: "60px", // Reduced from 90px
-      backgroundColor: "rgba(27, 27, 27, 0.95)",
-      backdropFilter: "blur(20px)",
-      boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
-      duration: 0.6,
-      ease: "power3.out"
-    }, 0)
-    
-    // Logo scaling and positioning
-    .to(logo, {
-      scale: 0.8, // Slightly smaller in sticky mode
-      duration: 0.6,
-      ease: "power3.out"
-    }, 0)
-    
-    // Menu container adjustments
-    .to(menuContainer, {
-      height: "50px", // Reduced height
-      padding: "0 16px", // Adjust padding
-      duration: 0.6,
-      ease: "power3.out"
-    }, 0);
-
-    // Play or reverse animation based on scroll state and direction
-    if (isScrolled && isScrollingUp) {
-      tl.play();
-    } else {
-      tl.reverse();
-    }
-
-    return () => {
-      tl.kill();
-    };
-      } catch (error) {
-        console.error('Failed to load GSAP:', error);
+    // Use CSS transitions instead of GSAP for better performance
+    const applyStyles = () => {
+      if (isScrolled && isScrollingUp) {
+        header.style.cssText = `
+          height: 60px;
+          background-color: rgba(27, 27, 27, 0.95);
+          backdrop-filter: blur(20px);
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+          transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        `;
+        logo.style.cssText = `
+          transform: scale(0.8);
+          transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        `;
+        menuContainer.style.cssText = `
+          height: 50px;
+          padding: 0 16px;
+          transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        `;
+      } else {
+        header.style.cssText = `
+          height: 90px;
+          background-color: transparent;
+          backdrop-filter: none;
+          box-shadow: none;
+          transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        `;
+        logo.style.cssText = `
+          transform: scale(1);
+          transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        `;
+        menuContainer.style.cssText = `
+          height: 60px;
+          padding: 0 16px;
+          transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        `;
       }
     };
-    
-    // Only load GSAP when scrolling starts
-    const handleFirstScroll = () => {
-      initAnimations();
-      window.removeEventListener('scroll', handleFirstScroll);
-    };
-    
-    window.addEventListener('scroll', handleFirstScroll);
-    
-    return () => {
-      window.removeEventListener('scroll', handleFirstScroll);
-    };
+
+    applyStyles();
   }, [isScrolled, isScrollingUp]);
 
   useEffect(() => {
-    const initParallax = async () => {
-      try {
-        const { gsap, ScrollTrigger } = await loadGSAP();
-        
     if (!heroImageRef.current || !heroContainerRef.current) return;
 
-    // Create parallax effect for hero image
-    gsap.to(heroImageRef.current, {
-      yPercent: -50,
-      ease: "none",
-      scrollTrigger: {
-        trigger: heroContainerRef.current,
-        start: "top bottom",
-        end: "bottom top",
-        scrub: true,
-        invalidateOnRefresh: true
-      }
-    });
+    // Use CSS-based parallax with Intersection Observer for better performance
+    const heroImage = heroImageRef.current;
+    const heroContainer = heroContainerRef.current;
 
-    // Add subtle scale effect on scroll
-    gsap.fromTo(heroImageRef.current, 
-      {
-        scale: 1.1,
-      },
-      {
-        scale: 1,
-        ease: "none",
-        scrollTrigger: {
-          trigger: heroContainerRef.current,
-          start: "top bottom",
-          end: "bottom top",
-          scrub: true,
-          invalidateOnRefresh: true
-        }
+    const handleScroll = throttle(() => {
+      const rect = heroContainer.getBoundingClientRect();
+      const scrolled = window.pageYOffset;
+      const rate = scrolled * -0.5;
+      
+      if (rect.bottom >= 0 && rect.top <= window.innerHeight) {
+        heroImage.style.transform = `translate3d(0, ${rate}px, 0) scale(${1.1 - scrolled * 0.0001})`;
       }
-    );
+    }, 16); // 60fps throttling
 
-    // Cleanup function
-    return () => {
-      ScrollTrigger.getAll().forEach(trigger => trigger.kill());
-    };
-      } catch (error) {
-        console.error('Failed to load GSAP for parallax:', error);
-      }
-    };
-    
-    // Delay parallax initialization
-    const timer = setTimeout(initParallax, 1000);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     
     return () => {
-      clearTimeout(timer);
+      window.removeEventListener('scroll', handleScroll);
     };
   }, []);
 
@@ -290,73 +236,37 @@ const Home = (): JSX.Element => {
 
   // Add hover animation for submenu items
   useEffect(() => {
-    // Initialize submenu item animations for each service
-    navItems.forEach((item) => {
-      if (item.subItems) {
-        item.subItems.forEach((subItem, subIndex) => {
-          const key = `${item.name}-${subIndex}`;
-          // Animation will be applied when submenu items are rendered
-        });
-      }
-    });
+    // Defer submenu animations to reduce initial load
+    const timer = setTimeout(() => {
+      navItems.forEach((item) => {
+        if (item.subItems) {
+          item.subItems.forEach((subItem, subIndex) => {
+            const key = `${item.name}-${subIndex}`;
+            // Animation will be applied when submenu items are rendered
+          });
+        }
+      });
+    }, 2000);
+
+    return () => clearTimeout(timer);
   }, []);
 
   // Function to add hover animation to submenu item
-          const addSubmenuItemAnimation = async (element: HTMLButtonElement, key: string) => {
-    if (!element) return;
+  const addSubmenuItemAnimation = (element: HTMLButtonElement, key: string) => {
+    if (!element || element.dataset.animationKey) return;
 
-    try {
-      const { SplitText } = await loadGSAP();
-      
-    // Split text into characters
-      const splitText = new SplitText(element.querySelector('span'), { 
-      type: "chars,words",
-      charsClass: "char",
-      wordsClass: "word"
-    });
-
-      const { gsap } = await loadGSAP();
-      
-    // Add hover animation
-    element.addEventListener('mousemove', (e) => {
-      const rect = element.getBoundingClientRect();
-      const x = (e.clientX - rect.left) / rect.width;
-      const y = (e.clientY - rect.top) / rect.height;
-      
-      gsap.to(splitText.chars, {
-        duration: 0.3,
-        y: (i, target) => (y - 0.5) * 8 * Math.sin((i + 1) * 0.5),
-        x: (i, target) => (x - 0.5) * 8 * Math.cos((i + 1) * 0.5),
-        rotationY: (x - 0.5) * 10,
-        rotationX: (y - 0.5) * -10,
-        ease: "power2.out",
-        stagger: {
-          amount: 0.2,
-          from: "center"
-        }
-      });
+    // Use simple CSS transforms instead of GSAP for better performance
+    element.addEventListener('mouseenter', () => {
+      element.style.transform = 'translateX(4px) scale(1.02)';
+      element.style.transition = 'transform 0.2s ease-out';
     });
 
     element.addEventListener('mouseleave', () => {
-      gsap.to(splitText.chars, {
-        duration: 0.8,
-        y: 0,
-        x: 0,
-        rotationY: 0,
-        rotationX: 0,
-        ease: "elastic.out(1, 0.3)",
-        stagger: {
-          amount: 0.2,
-          from: "center"
-        }
-      });
+      element.style.transform = 'translateX(0) scale(1)';
+      element.style.transition = 'transform 0.2s ease-out';
     });
 
-    // Store cleanup function
     element.dataset.animationKey = key;
-    } catch (error) {
-      console.error('Failed to load GSAP for submenu animation:', error);
-    }
   };
 
   const submenuVariants = {
@@ -743,61 +653,10 @@ const Home = (): JSX.Element => {
                                   key={subIndex}
                                   ref={(el) => {
                                     const key = `mobile-${item.name}-${subIndex}`;
-                                    if (el) {
-                                      const button = el.querySelector('span');
-                                      if (button && !el.dataset.animationKey) {
-                                        // Add animation to mobile submenu items
-                                        const splitText = new SplitText(button, { 
-                                          type: "chars,words",
-                                          charsClass: "char",
-                                          wordsClass: "word"
-                                        });
-
-                                        el.addEventListener('mousemove', (e) => {
-                                          const rect = el.getBoundingClientRect();
-                                          const x = (e.clientX - rect.left) / rect.width;
-                                          const y = (e.clientY - rect.top) / rect.height;
-                                          
-                                          gsap.to(splitText.chars, {
-                                            duration: 0.3,
-                                            y: (i, target) => (y - 0.5) * 6 * Math.sin((i + 1) * 0.5),
-                                            x: (i, target) => (x - 0.5) * 6 * Math.cos((i + 1) * 0.5),
-                                            rotationY: (x - 0.5) * 8,
-                                            rotationX: (y - 0.5) * -8,
-                                            ease: "power2.out",
-                                            stagger: {
-                                              amount: 0.15,
-                                              from: "center"
-                                            }
-                                          });
-                                        });
-
-                                        el.addEventListener('mouseleave', () => {
-                                          gsap.to(splitText.chars, {
-                                            duration: 0.6,
-                                            y: 0,
-                                            x: 0,
-                                            rotationY: 0,
-                                            rotationX: 0,
-                                            ease: "elastic.out(1, 0.3)",
-                                            stagger: {
-                                              amount: 0.15,
-                                              from: "center"
-                                            }
-                                          });
-                                        });
-
-                                        el.dataset.animationKey = key;
-                                      }
-                                    }
                                   }}
                                   initial={{ x: -20, opacity: 0 }}
                                   animate={{ x: 0, opacity: 1 }}
                                   transition={{ delay: subIndex * 0.1 }}
-                                  className="flex items-center p-3 rounded-lg text-gray-400 hover:text-primary hover:bg-gray-800/30 transition-all duration-300 cursor-pointer group"
-                                  style={{ 
-                                    transformStyle: 'preserve-3d',
-                                    perspective: '300px'
                                   }}
                                   onClick={() => handleSubmenuNavigation(subItem.href)}
                                 >

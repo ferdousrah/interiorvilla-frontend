@@ -107,5 +107,16 @@ export default defineConfig({
       'embla-carousel-react',
       'vanilla-tilt'
     ]
+  },
+  esbuild: {
+    // Optimize for smaller bundle size and faster execution
+    target: 'es2020',
+    minifyIdentifiers: true,
+    minifySyntax: true,
+    minifyWhitespace: true,
+    treeShaking: true,
+    // Remove unused code more aggressively
+    drop: ['console', 'debugger'],
+    pure: ['console.log', 'console.info', 'console.warn']
   }
 })
