@@ -51,7 +51,6 @@ const Home = (): JSX.Element => {
   const [hoveredMenu, setHoveredMenu] = useState<string | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isScrollingUp, setIsScrollingUp] = useState(false);
-  const [lastScrollY, setLastScrollY] = useState(0);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [expandedSubmenu, setExpandedSubmenu] = useState<string | null>(null);
   const heroImageRef = useRef<HTMLImageElement>(null);
