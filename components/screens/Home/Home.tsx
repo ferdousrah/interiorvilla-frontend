@@ -13,14 +13,27 @@ import { motion, AnimatePresence } from "framer-motion";
 import { BlogSection } from "./sections/BlogSection/BlogSection";
 import { CustomCursor } from "../../ui/cursor";
 import { CTASection } from "./sections/CTASection/CTASection";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { SplitText } from "gsap/SplitText";
-import { GLBModelViewer } from "../../ui/glb-model-viewer";
 import { X, ChevronDown, Home as HomeIcon, User, Briefcase, FolderOpen, BookOpen, Mail } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import { LazyComponent } from "../../ui/lazy-component";
+import React from "react";
 
-gsap.registerPlugin(ScrollTrigger, SplitText);
+// Lazy load heavy components
+const GLBModelViewer = React.lazy(() => 
+  import("../../ui/glb-model-viewer").then(m => ({ default: m.GLBModelViewer }))
+);
+
+// Lazy load GSAP only when needed
+const loadGSAP = async () => {
+  const [gsap, ScrollTrigger, SplitText] = await Promise.all([
+    import("gsap"),
+    import("gsap/ScrollTrigger"),
+    import("gsap/SplitText")
+  ]);
+  
+  gsap.default.registerPlugin(ScrollTrigger.ScrollTrigger, SplitText.SplitText);
+  return { gsap: gsap.default, ScrollTrigger: ScrollTrigger.ScrollTrigger, SplitText: SplitText.SplitText };
+};
 
 const Home = (): JSX.Element => {
   const navigate = useNavigate();
@@ -128,6 +141,15 @@ const Home = (): JSX.Element => {
 
   // Enhanced header animations
   useEffect(() => {
+    let gsapLoaded = false;
+    
+    const initAnimations = async () => {
+      if (gsapLoaded) return;
+      
+      try {
+        const { gsap, ScrollTrigger } = await loadGSAP();
+        gsapLoaded = true;
+        
     if (!headerRef.current || !logoRef.current || !menuContainerRef.current) return;
 
     const header = headerRef.current;
@@ -172,9 +194,29 @@ const Home = (): JSX.Element => {
     return () => {
       tl.kill();
     };
+      } catch (error) {
+        console.error('Failed to load GSAP:', error);
+      }
+    };
+    
+    // Only load GSAP when scrolling starts
+    const handleFirstScroll = () => {
+      initAnimations();
+      window.removeEventListener('scroll', handleFirstScroll);
+    };
+    
+    window.addEventListener('scroll', handleFirstScroll);
+    
+    return () => {
+      window.removeEventListener('scroll', handleFirstScroll);
+    };
   }, [isScrolled, isScrollingUp]);
 
   useEffect(() => {
+    const initParallax = async () => {
+      try {
+        const { gsap, ScrollTrigger } = await loadGSAP();
+        
     if (!heroImageRef.current || !heroContainerRef.current) return;
 
     // Create parallax effect for hero image
@@ -211,6 +253,17 @@ const Home = (): JSX.Element => {
     // Cleanup function
     return () => {
       ScrollTrigger.getAll().forEach(trigger => trigger.kill());
+    };
+      } catch (error) {
+        console.error('Failed to load GSAP for parallax:', error);
+      }
+    };
+    
+    // Delay parallax initialization
+    const timer = setTimeout(initParallax, 1000);
+    
+    return () => {
+      clearTimeout(timer);
     };
   }, []);
 
@@ -250,16 +303,21 @@ const Home = (): JSX.Element => {
   }, []);
 
   // Function to add hover animation to submenu item
-  const addSubmenuItemAnimation = (element: HTMLButtonElement, key: string) => {
+          const addSubmenuItemAnimation = async (element: HTMLButtonElement, key: string) => {
     if (!element) return;
 
+    try {
+      const { SplitText } = await loadGSAP();
+      
     // Split text into characters
-    const splitText = new SplitText(element.querySelector('span'), { 
+      const splitText = new SplitText(element.querySelector('span'), { 
       type: "chars,words",
       charsClass: "char",
       wordsClass: "word"
     });
 
+      const { gsap } = await loadGSAP();
+      
     // Add hover animation
     element.addEventListener('mousemove', (e) => {
       const rect = element.getBoundingClientRect();
@@ -297,6 +355,9 @@ const Home = (): JSX.Element => {
 
     // Store cleanup function
     element.dataset.animationKey = key;
+    } catch (error) {
+      console.error('Failed to load GSAP for submenu animation:', error);
+    }
   };
 
   const submenuVariants = {
@@ -393,7 +454,16 @@ const Home = (): JSX.Element => {
       
       <div ref={heroContainerRef} className="w-full relative overflow-hidden">
         <section className="w-full h-[800px] bg-gradient-to-br from-black via-gray-900 to-black">
-          <GLBModelViewer className="w-full h-full" modelPath="https://assets.interiorvillabd.com/intro.glb" />
+          <LazyComponent fallback={
+            <div className="w-full h-full bg-gradient-to-br from-gray-900 via-black to-gray-800 flex items-center justify-center">
+              <div className="text-center">
+                <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                <div className="text-white text-lg font-medium [font-family:'Fahkwang',Helvetica]">Loading 3D Experience</div>
+              </div>
+            </div>
+          }>
+            <GLBModelViewer className="w-full h-full" modelPath="https://assets.interiorvillabd.com/intro.glb" />
+          </LazyComponent>
         </section>
 
         <header 

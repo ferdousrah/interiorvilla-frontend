@@ -66,29 +66,9 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          // Core React chunks
-          'react-vendor': ['react', 'react-dom'],
-          'react-router': ['react-router-dom'],
-          
-          // Animation libraries
-          'animation': ['gsap', 'framer-motion'],
-          
-          // 3D and heavy libraries
-          'three-vendor': ['three', 'three-stdlib'],
-          
-          // UI components
-          'ui-components': [
-            'lucide-react', 
-            '@radix-ui/react-slot', 
-            '@radix-ui/react-separator',
-            '@radix-ui/react-tabs'
-          ],
-          
-          // Media and carousel
-          'media': ['@fancyapps/ui', 'embla-carousel-react'],
-          
-          // Utilities
-          'utils': ['class-variance-authority', 'clsx', 'tailwind-merge']
+          // Only essential chunks - defer heavy libraries
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'ui-essentials': ['lucide-react', 'clsx', 'tailwind-merge']
         },
         chunkFileNames: (chunkInfo) => {
           const facadeModuleId = chunkInfo.facadeModuleId ? chunkInfo.facadeModuleId.split('/').pop() : 'chunk';
@@ -114,16 +94,18 @@ export default defineConfig({
       'react', 
       'react-dom', 
       'react-router-dom',
-      'framer-motion',
       'lucide-react'
     ],
     exclude: [
+      'framer-motion',
       'gsap/SplitText',
       'gsap/ScrollTrigger', 
       'gsap/ScrollToPlugin',
       '@fancyapps/ui',
       'three',
-      'three-stdlib'
+      'three-stdlib',
+      'embla-carousel-react',
+      'vanilla-tilt'
     ]
   }
 })

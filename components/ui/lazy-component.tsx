@@ -30,3 +30,19 @@ export const LazyBeforeAfterSlider = lazy(() =>
 export const LazyFancybox = lazy(() => 
   import('@fancyapps/ui').then(module => ({ default: module.Fancybox }))
 );
+
+export const LazyFramerMotion = lazy(() => 
+  import('framer-motion').then(module => ({ default: module.motion }))
+);
+
+export const LazyGSAP = lazy(() => 
+  import('gsap').then(module => ({ default: module.default }))
+);
+
+export const LazyEmblaCarousel = lazy(() => 
+  import('embla-carousel-react').then(module => ({ default: module.default }))
+);
+
+export const LazyVanillaTilt = lazy(() => 
+  import('vanilla-tilt').then(module => ({ default: module.default }))
+);
