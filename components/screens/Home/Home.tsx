@@ -16,7 +16,6 @@ import { CTASection } from "./sections/CTASection/CTASection";
 import { X, ChevronDown, Home as HomeIcon, User, Briefcase, FolderOpen, BookOpen, Mail } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { LazyComponent } from "../../ui/lazy-component";
-import React from "react";
 
 // Lazy load heavy components
 const GLBModelViewer = React.lazy(() => 
