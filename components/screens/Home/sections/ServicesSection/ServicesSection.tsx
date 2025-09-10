@@ -17,7 +17,7 @@ const services = [
     description:
       "Sustainable living. Luxurious design. We specialize in creating intelligent, eco-friendly homes, from single-family residences to multi-housing solutions.",
     iconBg: "#f5fdfd",
-    video: "/videos/residential.mp4",
+    video: "https://assets.interiorvillabd.com/residential.mp4",
     colorTheme: {
       primary: "#4F46E5", // Indigo
       secondary: "#6366F1",
@@ -36,7 +36,7 @@ const services = [
     description:
       "Experience the difference. Our minimalist designs transform your workplace into an inspiring and productive environment, whether it's a factory or a corporate office.",
     iconBg: "#f5fdfd",
-    video: "/videos/commercial.mp4",
+    video: "https://assets.interiorvillabd.com/commercial.mp4",
     colorTheme: {
       primary: "#059669", // Emerald
       secondary: "#10B981",

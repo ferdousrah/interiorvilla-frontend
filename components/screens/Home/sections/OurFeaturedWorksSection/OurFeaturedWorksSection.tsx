@@ -120,7 +120,7 @@ export const OurFeaturedWorksSection = (): JSX.Element => {
     (async () => {
       try {
         const res = await fetch(
-          `${CMS_ORIGIN}/api/projects?where[featuredOnHome][equals]=true`,
+          `${CMS_ORIGIN}/api/projects?where[featuredOnHome][equals]=true&sort=position`,
           { cache: "no-store" }
         );
         if (!res.ok) throw new Error(`HTTP ${res.status}`);

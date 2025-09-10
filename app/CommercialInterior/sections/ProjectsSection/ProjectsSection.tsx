@@ -78,7 +78,7 @@ export const ProjectsSection = (): JSX.Element => {
     (async () => {
       try {
         const res = await fetch(
-          `https://cms.interiorvillabd.com/api/projects?where[category][equals]=2&limit=5`,
+          `https://cms.interiorvillabd.com/api/projects?where[category][equals]=2&limit=5&sort=position`,
           { cache: "no-store" }
         );
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
