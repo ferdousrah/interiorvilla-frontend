@@ -438,6 +438,7 @@ export const HeroSection = (): JSX.Element => {
                                   variants={itemVariants}
                                   transition={{ delay: subIndex * 0.1 }}
                                   className="w-full px-4 py-3 text-left text-sm text-white hover:text-primary transition-colors duration-300 [font-family:'Fahkwang',Helvetica] relative group overflow-hidden"
+                                >
                                   <span className="relative z-10">{subItem.name}</span>
                                 </motion.button>
                               ))}
@@ -521,6 +522,8 @@ export const HeroSection = (): JSX.Element => {
                           } else {
                             navigate(item.href);
                             setIsMobileMenuOpen(false);
+                          }
+                        }}
                       >
                         <Link to={item.href} className="flex items-center space-x-4" onClick={(e) => {
                           if (item.subItems) {
