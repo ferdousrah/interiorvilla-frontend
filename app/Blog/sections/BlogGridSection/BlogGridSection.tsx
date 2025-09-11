@@ -21,6 +21,8 @@ interface BlogPost {
 
 export const BlogGridSection = (): JSX.Element => {
   const [hoveredPost, setHoveredPost] = useState<number | null>(null);
+  const [visiblePosts, setVisiblePosts] = useState(6); // Start with 6 posts
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const sectionRef = useRef<HTMLElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
@@ -107,7 +109,8 @@ export const BlogGridSection = (): JSX.Element => {
     };
   }, []);
 
-  const blogPosts: BlogPost[] = [
+  // Extended blog posts array for infinite scroll simulation
+  const allBlogPosts: BlogPost[] = [
     {
       id: 1,
       title: "Unforgettable Experience: Finding Hidden Gems in Bromo Mountain, East Java",
@@ -120,55 +123,109 @@ export const BlogGridSection = (): JSX.Element => {
     },
     {
       id: 2,
-      title: "Unforgettable Experience: Finding Hidden Gems in Bromo Mountain, East Java",
-      excerpt: "Discover the breathtaking beauty and hidden treasures of Bromo Mountain in East Java, Indonesia.",
+      title: "Small Space, Big Impact: Interior Design Hacks for Compact Living",
+      excerpt: "Learn clever design strategies to maximize your small space and create a home that feels spacious and organized.",
       author: "Admin",
       readTime: "5 min",
-      date: "Dec 15, 2024",
+      date: "Dec 14, 2024",
       image: "/create-an-image-where-a-beautiful-girl-shows-her-bedroom-interio.png",
       category: "Home Decor"
     },
     {
       id: 3,
-      title: "Unforgettable Experience: Finding Hidden Gems in Bromo Mountain, East Java",
-      excerpt: "Discover the breathtaking beauty and hidden treasures of Bromo Mountain in East Java, Indonesia.",
+      title: "Sustainable Chic: Eco-Friendly Interior Design Ideas You'll Love",
+      excerpt: "Explore how to create beautiful, environmentally conscious interiors using sustainable materials.",
       author: "Admin",
-      readTime: "5 min",
-      date: "Dec 15, 2024",
+      readTime: "7 min",
+      date: "Dec 13, 2024",
       image: "/a-office-interior-image.png",
-      category: "Commercial Design"
+      category: "Sustainability"
     },
     {
       id: 4,
-      title: "Unforgettable Experience: Finding Hidden Gems in Bromo Mountain, East Java",
-      excerpt: "Discover the breathtaking beauty and hidden treasures of Bromo Mountain in East Java, Indonesia.",
+      title: "The Psychology of Color in Interior Design",
+      excerpt: "Understand how different colors affect mood and atmosphere in your home design choices.",
       author: "Admin",
-      readTime: "5 min",
-      date: "Dec 15, 2024",
+      readTime: "6 min",
+      date: "Dec 12, 2024",
       image: "/dining-interior.png",
-      category: "Kitchen Design"
+      category: "Color Theory"
     },
     {
       id: 5,
-      title: "Unforgettable Experience: Finding Hidden Gems in Bromo Mountain, East Java",
-      excerpt: "Discover the breathtaking beauty and hidden treasures of Bromo Mountain in East Java, Indonesia.",
+      title: "Modern Kitchen Design Trends for 2025",
+      excerpt: "Stay ahead of the curve with the latest kitchen design trends that combine functionality with style.",
       author: "Admin",
-      readTime: "5 min",
-      date: "Dec 15, 2024",
+      readTime: "8 min",
+      date: "Dec 11, 2024",
       image: "/rectangle-8.png",
-      category: "Modern Living"
+      category: "Kitchen Design"
     },
     {
       id: 6,
-      title: "Unforgettable Experience: Finding Hidden Gems in Bromo Mountain, East Java",
-      excerpt: "Discover the breathtaking beauty and hidden treasures of Bromo Mountain in East Java, Indonesia.",
+      title: "Creating the Perfect Home Office: Design Tips for Productivity",
+      excerpt: "Transform your workspace into a productive and inspiring environment with these design tips.",
+      author: "Admin",
+      readTime: "6 min",
+      date: "Dec 10, 2024",
+      image: "/rectangle-9.png",
+      category: "Workspace Design"
+    },
+    {
+      id: 7,
+      title: "Luxury Living: High-End Interior Design Elements",
+      excerpt: "Discover the key elements that define luxury interior design and how to incorporate them into your home.",
+      author: "Admin",
+      readTime: "9 min",
+      date: "Dec 9, 2024",
+      image: "/a-residential-interior-image.png",
+      category: "Luxury Design"
+    },
+    {
+      id: 8,
+      title: "Minimalist Design: Less is More in Modern Interiors",
+      excerpt: "Embrace the beauty of simplicity with minimalist design principles that create calm, clutter-free spaces.",
+      author: "Admin",
+      readTime: "4 min",
+      date: "Dec 8, 2024",
+      image: "/create-an-image-where-a-beautiful-girl-shows-her-bedroom-interio.png",
+      category: "Minimalism"
+    },
+    {
+      id: 9,
+      title: "Smart Home Integration in Interior Design",
+      excerpt: "Learn how to seamlessly integrate smart home technology into your interior design for a modern lifestyle.",
+      author: "Admin",
+      readTime: "7 min",
+      date: "Dec 7, 2024",
+      image: "/a-office-interior-image.png",
+      category: "Technology"
+    },
+    {
+      id: 10,
+      title: "Seasonal Decorating: Refreshing Your Space Throughout the Year",
+      excerpt: "Discover how to update your home's look with seasonal decorating tips that keep your space fresh and inviting.",
       author: "Admin",
       readTime: "5 min",
-      date: "Dec 15, 2024",
-      image: "/rectangle-9.png",
-      category: "Luxury Design"
+      date: "Dec 6, 2024",
+      image: "/dining-interior.png",
+      category: "Seasonal Design"
     }
   ];
+
+  // Get currently visible posts
+  const displayedPosts = allBlogPosts.slice(0, visiblePosts);
+  const hasMorePosts = visiblePosts < allBlogPosts.length;
+
+  const handleLoadMore = () => {
+    setLoading(true);
+    
+    // Simulate loading delay
+    setTimeout(() => {
+      setVisiblePosts(prev => Math.min(prev + 6, allBlogPosts.length));
+      setLoading(false);
+    }, 1000);
+  };
 
   const handleBlogDetailsClick = () => {
     navigate('/blog-details');
@@ -195,7 +252,7 @@ export const BlogGridSection = (): JSX.Element => {
           ref={gridRef}
           className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 mb-12 md:mb-16"
         >
-          {blogPosts.map((post, index) => (
+          {displayedPosts.map((post, index) => (
             <motion.article
               key={post.id}
               layout
@@ -205,6 +262,7 @@ export const BlogGridSection = (): JSX.Element => {
               className="group cursor-pointer"
               onMouseEnter={() => setHoveredPost(post.id)}
               onMouseLeave={() => setHoveredPost(null)}
+              onClick={handleBlogDetailsClick}
             >
               {/* Blog Post Image */}
               <div className="relative overflow-hidden rounded-lg mb-6 bg-gray-200 aspect-[4/3]">
@@ -233,12 +291,13 @@ export const BlogGridSection = (): JSX.Element => {
                 <div className="flex items-center space-x-4 text-sm text-[#626161] [font-family:'Fahkwang',Helvetica]">
                   <div className="flex items-center space-x-1">
                     <User className="w-4 h-4" />
-                    <span>Read More</span>
+                    <span>{post.author}</span>
                   </div>
                   <div className="flex items-center space-x-1">
                     <Clock className="w-4 h-4" />
                     <span>{post.readTime}</span>
                   </div>
+                  <span className="text-[#626161]">{post.date}</span>
                 </div>
 
                 {/* Title */}
@@ -248,28 +307,55 @@ export const BlogGridSection = (): JSX.Element => {
                   {post.title}
                 </h3>
 
+                {/* Excerpt */}
+                <p className="text-[#626161] [font-family:'Fahkwang',Helvetica] leading-relaxed">
+                  {post.excerpt}
+                </p>
+
                 {/* Read More Link */}
-                <div className="flex items-center space-x-2 text-sm text-[#626161] [font-family:'Fahkwang',Helvetica] group-hover:text-primary transition-colors duration-300">
+                <div className="flex items-center space-x-2 text-sm text-primary [font-family:'Fahkwang',Helvetica] group-hover:text-secondary transition-colors duration-300">
                   <span>Read More</span>
-                  <div className="flex items-center space-x-1">
-                    <Clock className="w-4 h-4" />
-                    <span>{post.readTime}</span>
-                  </div>
                 </div>
               </div>
             </motion.article>
           ))}
         </div>
 
-        {/* Load More Button */}
-        <div className="text-center">
-          <Button 
-            ref={loadMoreRef}
-            className="bg-[#1d1e24] text-white px-8 py-3 rounded-full [font-family:'Fahkwang',Helvetica] font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg hover:bg-[#2a2b31]"
-          >
-            Load more
-          </Button>
-        </div>
+        {/* Load More Section */}
+        {hasMorePosts && (
+          <div className="text-center">
+            <Button 
+              ref={loadMoreRef}
+              onClick={handleLoadMore}
+              disabled={loading}
+              className="bg-[#1d1e24] text-white px-8 py-3 rounded-full [font-family:'Fahkwang',Helvetica] font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg hover:bg-[#2a2b31] disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? (
+                <div className="flex items-center space-x-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>Loading...</span>
+                </div>
+              ) : (
+                'Load More'
+              )}
+            </Button>
+          </div>
+        )}
+
+        {/* End message */}
+        {!hasMorePosts && displayedPosts.length > 6 && (
+          <div className="text-center">
+            <p className="text-[#626161] [font-family:'Fahkwang',Helvetica] mb-4">
+              You've reached the end of our blog posts.
+            </p>
+            <Button 
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              className="bg-primary text-white px-6 py-2 rounded-lg [font-family:'Fahkwang',Helvetica] font-medium hover:bg-primary-hover transition-colors duration-300"
+            >
+              Back to Top
+            </Button>
+          </div>
+        )}
       </div>
     </section>
   );

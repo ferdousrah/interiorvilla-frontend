@@ -3,22 +3,25 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { Button } from "../../../../ui/button";
 import gsap from "gsap";
-import { SplitText } from "gsap/SplitText";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Clock, User, ArrowRight, Calendar, Tag } from "lucide-react";
 
-gsap.registerPlugin(SplitText);
+gsap.registerPlugin(ScrollTrigger);
 
 const CMS_ORIGIN = "https://cms.interiorvillabd.com";
 
 interface BlogPost {
   id: number;
   title: string;
-  slug: string;
+  slug?: string;
   shortDescription: string;
   featuredImage?: { url: string; alt?: string };
   category?: { title: string };
   publishedDate?: string;
+  author?: string;
+  readTime?: string;
 }
 
 interface ApiResponse {
@@ -29,12 +32,11 @@ interface ApiResponse {
   totalPages?: number;
 }
 
-const PAGE_SIZE = 3;
+const PAGE_SIZE = 6;
 
 export const BlogGridSection = (): JSX.Element => {
   const sectionRef = useRef<HTMLElement>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
-  const headingWrapperRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
@@ -42,44 +44,120 @@ export const BlogGridSection = (): JSX.Element => {
   const [page, setPage] = useState<number>(0);
   const [hasMore, setHasMore] = useState<boolean>(true);
   const [loading, setLoading] = useState<boolean>(false);
-  const [initialLoading, setInitialLoading] = useState<boolean>(true);
   const [err, setErr] = useState<string | null>(null);
+  const [hoveredPost, setHoveredPost] = useState<number | null>(null);
 
   const navigate = useNavigate();
 
+  // Fallback blog posts for when API is not available
+  const fallbackPosts: BlogPost[] = [
+    {
+      id: 1,
+      title: "Small Space, Big Impact: Interior Design Hacks for Compact Living",
+      shortDescription: "Discover clever design strategies to maximize your small space and create a home that feels spacious, organized, and stylish.",
+      featuredImage: { url: "/a-residential-interior-image.png", alt: "Small space interior design" },
+      category: { title: "Interior Design" },
+      publishedDate: "2024-12-15",
+      author: "Admin",
+      readTime: "5 min"
+    },
+    {
+      id: 2,
+      title: "Sustainable Chic: Eco-Friendly Interior Design Ideas You'll Love",
+      shortDescription: "Learn how to create beautiful, environmentally conscious interiors using sustainable materials and eco-friendly design principles.",
+      featuredImage: { url: "/create-an-image-where-a-beautiful-girl-shows-her-bedroom-interio.png", alt: "Eco-friendly bedroom design" },
+      category: { title: "Sustainability" },
+      publishedDate: "2024-12-14",
+      author: "Admin",
+      readTime: "7 min"
+    },
+    {
+      id: 3,
+      title: "The Psychology of Color in Interior Design",
+      shortDescription: "Explore how different colors affect mood and atmosphere in your home, and learn to choose the perfect palette for each room.",
+      featuredImage: { url: "/a-office-interior-image.png", alt: "Colorful interior design" },
+      category: { title: "Color Theory" },
+      publishedDate: "2024-12-13",
+      author: "Admin",
+      readTime: "6 min"
+    },
+    {
+      id: 4,
+      title: "Modern Kitchen Design Trends for 2025",
+      shortDescription: "Stay ahead of the curve with the latest kitchen design trends that combine functionality with stunning aesthetics.",
+      featuredImage: { url: "/dining-interior.png", alt: "Modern kitchen design" },
+      category: { title: "Kitchen Design" },
+      publishedDate: "2024-12-12",
+      author: "Admin",
+      readTime: "8 min"
+    },
+    {
+      id: 5,
+      title: "Creating the Perfect Home Office: Design Tips for Productivity",
+      shortDescription: "Transform your workspace into a productive and inspiring environment with these professional interior design tips.",
+      featuredImage: { url: "/rectangle-8.png", alt: "Home office design" },
+      category: { title: "Workspace Design" },
+      publishedDate: "2024-12-11",
+      author: "Admin",
+      readTime: "6 min"
+    },
+    {
+      id: 6,
+      title: "Luxury Living: High-End Interior Design Elements",
+      shortDescription: "Discover the key elements that define luxury interior design and how to incorporate them into your own home.",
+      featuredImage: { url: "/rectangle-9.png", alt: "Luxury interior design" },
+      category: { title: "Luxury Design" },
+      publishedDate: "2024-12-10",
+      author: "Admin",
+      readTime: "9 min"
+    }
+  ];
+
   const fetchPage = useCallback(
     async (pageToLoad: number, replace: boolean, signal?: AbortSignal) => {
-      if (pageToLoad === 1) setInitialLoading(true);
       setLoading(true);
       setErr(null);
 
       try {
-        const url = new URL(`${CMS_ORIGIN}/api/blog-posts`);
-        url.searchParams.set("limit", PAGE_SIZE.toString());
-        url.searchParams.set("page", String(pageToLoad));
-        url.searchParams.set("sort", "-publishedDate");
+        // Try to fetch from API first
+        try {
+          const url = new URL(`${CMS_ORIGIN}/api/blog-posts`);
+          url.searchParams.set("limit", PAGE_SIZE.toString());
+          url.searchParams.set("page", String(pageToLoad));
+          url.searchParams.set("sort", "-publishedDate");
 
-        const res = await fetch(url.toString(), { cache: "no-store", signal });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const res = await fetch(url.toString(), { cache: "no-store", signal });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-        const data: ApiResponse = await res.json();
+          const data: ApiResponse = await res.json();
 
-        setPosts(prev =>
-          replace ? (data.docs ?? []) : [...prev, ...(data.docs ?? [])]
-        );
-        setPage(data.page ?? pageToLoad);
-        setHasMore(Boolean(data.nextPage));
+          setPosts(prev =>
+            replace ? (data.docs ?? []) : [...prev, ...(data.docs ?? [])]
+          );
+          setPage(data.page ?? pageToLoad);
+          setHasMore(Boolean(data.nextPage));
+        } catch (apiError) {
+          console.warn('API not available, using fallback data:', apiError);
+          
+          // Use fallback data with pagination simulation
+          const startIndex = (pageToLoad - 1) * PAGE_SIZE;
+          const endIndex = startIndex + PAGE_SIZE;
+          const pageData = fallbackPosts.slice(startIndex, endIndex);
+          
+          setPosts(prev => replace ? pageData : [...prev, ...pageData]);
+          setPage(pageToLoad);
+          setHasMore(endIndex < fallbackPosts.length);
+        }
       } catch (e: any) {
         if (e?.name !== "AbortError") setErr(e?.message || "Failed to load posts");
       } finally {
         setLoading(false);
-        if (pageToLoad === 1) setInitialLoading(false);
       }
     },
-    []
+    [fallbackPosts]
   );
 
-  // ---------- Initial load (page 1 + 2) ----------
+  // ---------- Initial load ----------
   useEffect(() => {
     const controller = new AbortController();
     setPosts([]);
@@ -87,17 +165,14 @@ export const BlogGridSection = (): JSX.Element => {
     setHasMore(true);
     setErr(null);
 
-    (async () => {
-      await fetchPage(1, true, controller.signal);
-      await fetchPage(2, false, controller.signal);
-    })();
+    fetchPage(1, true, controller.signal);
 
     return () => controller.abort();
   }, [fetchPage]);
 
   // ---------- Infinite scroll ----------
   useEffect(() => {
-    if (page < 2 || !hasMore) return; // wait until page 2 is loaded
+    if (page < 1 || !hasMore || loading) return;
     const sentinel = loadMoreRef.current;
     if (!sentinel) return;
 
@@ -114,7 +189,7 @@ export const BlogGridSection = (): JSX.Element => {
 
     const io = new IntersectionObserver(onIntersect, {
       root: null,
-      rootMargin: "1200px 0px",
+      rootMargin: "200px 0px",
       threshold: 0,
     });
 
@@ -126,261 +201,268 @@ export const BlogGridSection = (): JSX.Element => {
     };
   }, [page, hasMore, loading, fetchPage]);
 
-  // ---------- Heading hover animation ----------
+  // ---------- GSAP Animations ----------
   useEffect(() => {
-    if (!headingRef.current || !headingWrapperRef.current) return;
-    const splitText = new SplitText(headingRef.current, {
-      type: "chars,words",
-      charsClass: "char",
-      wordsClass: "word",
-    });
+    if (!sectionRef.current) return;
 
-    const wrapper = headingWrapperRef.current;
+    // Header animation
+    if (headingRef.current) {
+      gsap.fromTo(headingRef.current,
+        {
+          opacity: 0,
+          y: 50
+        },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 1,
+          ease: "power3.out",
+          scrollTrigger: {
+            trigger: headingRef.current,
+            start: "top 85%",
+            end: "top 55%",
+            toggleActions: "play none none reverse"
+          }
+        }
+      );
+    }
 
-    const handleMouseMove = (e: MouseEvent) => {
-      const rect = wrapper.getBoundingClientRect();
-      const x = (e.clientX - rect.left) / rect.width;
-      const y = (e.clientY - rect.top) / rect.height;
+    // Grid animation
+    if (gridRef.current) {
+      const posts = gridRef.current.children;
+      
+      gsap.fromTo(posts,
+        {
+          opacity: 0,
+          y: 80,
+          scale: 0.9
+        },
+        {
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          duration: 1.2,
+          stagger: 0.15,
+          ease: "power3.out",
+          scrollTrigger: {
+            trigger: gridRef.current,
+            start: "top 85%",
+            end: "top 55%",
+            toggleActions: "play none none reverse"
+          }
+        }
+      );
+    }
 
-      gsap.to(splitText.chars, {
-        duration: 0.5,
-        y: (i) => (y - 0.5) * 15 * Math.sin((i + 1) * 0.5),
-        x: (i) => (x - 0.5) * 15 * Math.cos((i + 1) * 0.5),
-        rotationY: (x - 0.5) * 20,
-        rotationX: (y - 0.5) * -20,
-        ease: "power2.out",
-        stagger: { amount: 0.3, from: "center" },
-      });
-    };
-
-    const handleMouseLeave = () => {
-      gsap.to(splitText.chars, {
-        duration: 1,
-        y: 0,
-        x: 0,
-        rotationY: 0,
-        rotationX: 0,
-        ease: "elastic.out(1, 0.3)",
-        stagger: { amount: 0.3, from: "center" },
-      });
-    };
-
-    wrapper.addEventListener("mousemove", handleMouseMove);
-    wrapper.addEventListener("mouseleave", handleMouseLeave);
-
+    // Cleanup function
     return () => {
-      wrapper.removeEventListener("mousemove", handleMouseMove);
-      wrapper.removeEventListener("mouseleave", handleMouseLeave);
-      splitText.revert();
+      ScrollTrigger.getAll().forEach(trigger => trigger.kill());
     };
   }, []);
 
-  const handleBlogDetailsClick = (slug: string) => {
-    navigate(`/blog/${slug}`);
+  const handleBlogDetailsClick = (post: BlogPost) => {
+    if (post.slug) {
+      navigate(`/blog/${post.slug}`);
+    } else {
+      navigate('/blog-details');
+    }
   };
 
   const getCategoryColor = (category?: string) => {
     const colors: Record<string, string> = {
-      Interior: "bg-primary text-white",
+      "Interior Design": "bg-primary text-white",
       "Home Decor": "bg-secondary text-white",
       Sustainability: "bg-green-500 text-white",
       "Color Theory": "bg-purple-500 text-white",
       "Kitchen Design": "bg-orange-500 text-white",
       "Workspace Design": "bg-blue-500 text-white",
+      "Luxury Design": "bg-purple-600 text-white",
     };
     return colors[category || ""] || "bg-gray-500 text-white";
+  };
+
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return "Dec 15, 2024";
+    try {
+      return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    } catch {
+      return "Dec 15, 2024";
+    }
   };
 
   return (
     <section
       ref={sectionRef}
-      className="py-16 md:py-20 bg-white -mt-48 relative z-10 min-h-screen"
+      className="py-16 md:py-20 bg-white -mt-48 relative z-10"
     >
       <div className="container mx-auto px-4 max-w-7xl">
         {/* Header */}
         <div className="text-center mb-12 md:mb-16">
-          <div className="flex items-center justify-center mb-6">
-            <div className="w-1 h-[25px] bg-primary rounded-sm"></div>
-            <div className="mx-3 [font-family:'Fahkwang',Helvetica] font-normal text-[#48515c] text-sm tracking-[0.90px]">
-              LATEST INSIGHTS
-            </div>
-            <div className="w-1 h-[25px] bg-primary rounded-sm"></div>
-          </div>
-
-          <div
-            ref={headingWrapperRef}
-            className="perspective-[1000px] cursor-default"
-            style={{ transformStyle: "preserve-3d" }}
+          <h2
+            ref={headingRef}
+            className="text-2xl md:text-3xl lg:text-4xl font-medium [font-family:'Fahkwang',Helvetica] text-[#01190c] mb-6"
           >
-            <h2
-              ref={headingRef}
-              className="text-2xl md:text-3xl lg:text-4xl font-medium [font-family:'Fahkwang',Helvetica] text-[#01190c] mb-6"
-              style={{ transformStyle: "preserve-3d", transform: "translateZ(0)" }}
-            >
-              Get Interesting Insights into{" "}
-              <span className="text-secondary">Interior Designs</span>
-            </h2>
-          </div>
+            Get Interesting Insights into{" "}
+            <span className="text-secondary">Interior Designs</span>
+          </h2>
 
           <p className="text-lg [font-family:'Fahkwang',Helvetica] text-[#626161] max-w-3xl mx-auto leading-relaxed">
             Discover the latest trends, tips, and inspiration for creating beautiful spaces that reflect your unique style
           </p>
         </div>
 
-        {/* Skeleton on first load */}
-        {posts.length === 0 && initialLoading && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="rounded-2xl shimmer aspect-[4/3]" />
-            ))}
-          </div>
-        )}
-
         {/* Grid */}
-        {posts.length > 0 && (
-          <AnimatePresence mode="wait">
-            <motion.div
-              key="blog-grid"
-              initial={{ opacity: 0, y: 12 }}
+        <div 
+          ref={gridRef}
+          className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 mb-12 md:mb-16"
+        >
+          {posts.map((post, index) => (
+            <motion.article
+              key={post.id}
+              layout
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
-              transition={{ duration: 0.4 }}
-              ref={gridRef}
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10 mb-12 md:mb-16"
+              transition={{ duration: 0.5, delay: index * 0.1 }}
+              className="group cursor-pointer"
+              onMouseEnter={() => setHoveredPost(post.id)}
+              onMouseLeave={() => setHoveredPost(null)}
+              onClick={() => handleBlogDetailsClick(post)}
             >
-              {posts.map((post) => (
-                <motion.article
-                  key={post.id}
-                  initial={{ opacity: 0, scale: 0.98 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.35 }}
-                  className="group cursor-pointer bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500"
-                  onClick={() => handleBlogDetailsClick(post.slug)}
+              {/* Blog Post Image */}
+              <div className="relative overflow-hidden rounded-lg mb-6 bg-gray-200 aspect-[4/3]">
+                <img
+                  src={
+                    post.featuredImage?.url
+                      ? (post.featuredImage.url.startsWith('http') 
+                          ? post.featuredImage.url 
+                          : `${CMS_ORIGIN}${post.featuredImage.url}`)
+                      : "/a-residential-interior-image.png"
+                  }
+                  alt={post.featuredImage?.alt || post.title}
+                  className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+                  loading={index < 4 ? "eager" : "lazy"}
+                />
+                
+                {/* Category Badge */}
+                {post.category?.title && (
+                  <div className="absolute top-4 left-4">
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold [font-family:'Fahkwang',Helvetica] ${getCategoryColor(post.category.title)}`}>
+                      {post.category.title}
+                    </span>
+                  </div>
+                )}
+                
+                {/* Hover Overlay */}
+                <div 
+                  className="absolute inset-0 transition-all duration-500"
+                  style={{
+                    background: hoveredPost === post.id 
+                      ? 'linear-gradient(135deg, rgba(0, 0, 0, 0.3) 0%, rgba(117, 191, 68, 0.2) 100%)'
+                      : 'transparent',
+                    opacity: hoveredPost === post.id ? 1 : 0
+                  }}
+                />
+              </div>
+
+              {/* Blog Post Content */}
+              <div className="space-y-4">
+                {/* Meta Information */}
+                <div className="flex items-center space-x-4 text-sm text-[#626161] [font-family:'Fahkwang',Helvetica]">
+                  <div className="flex items-center space-x-1">
+                    <User className="w-4 h-4" />
+                    <span>{post.author || "Admin"}</span>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <Calendar className="w-4 h-4" />
+                    <span>{formatDate(post.publishedDate)}</span>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <Clock className="w-4 h-4" />
+                    <span>{post.readTime || "5 min"}</span>
+                  </div>
+                </div>
+
+                {/* Title */}
+                <h3 
+                  className="text-xl md:text-2xl font-medium [font-family:'Fahkwang',Helvetica] text-[#01190c] leading-tight transition-colors duration-300 group-hover:text-primary"
                 >
-                  {/* Image */}
-                  <div className="relative overflow-hidden aspect-[4/3]">
-                    <img
-                      src={
-                        post.featuredImage?.url
-                          ? `${CMS_ORIGIN}${post.featuredImage.url}`
-                          : "/placeholder.png"
-                      }
-                      alt={post.featuredImage?.alt || post.title}
-                      className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
-                      loading="lazy"
-                    />
+                  {post.title}
+                </h3>
 
-                    {post.category?.title && (
-                      <div className="absolute top-4 left-4">
-                        <span
-                          className={`px-3 py-1 rounded-full text-xs font-semibold [font-family:'Fahkwang',Helvetica] ${getCategoryColor(
-                            post.category.title
-                          )}`}
-                        >
-                          {post.category.title}
-                        </span>
-                      </div>
-                    )}
-                  </div>
+                {/* Description */}
+                <p className="text-[#626161] [font-family:'Fahkwang',Helvetica] leading-relaxed line-clamp-3">
+                  {post.shortDescription}
+                </p>
 
-                  {/* Content */}
-                  <div className="p-6 space-y-4">
-                    <div className="flex items-center justify-between text-sm text-[#626161] [font-family:'Fahkwang',Helvetica]">
-                      <div className="flex items-center space-x-4">
-                        <div className="flex items-center space-x-1">
-                          <User className="w-4 h-4" />
-                          <span>Admin</span>
-                        </div>
-                        <div className="flex items-center space-x-1">
-                          <Calendar className="w-4 h-4" />
-                          <span>
-                            {post.publishedDate
-                              ? new Date(post.publishedDate).toDateString()
-                              : "—"}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        <Clock className="w-4 h-4" />
-                        <span>5 min</span>
-                      </div>
-                    </div>
-
-                    <h3 className="text-xl font-medium [font-family:'Fahkwang',Helvetica] text-[#01190c] leading-tight transition-colors duration-300 group-hover:text-primary line-clamp-2">
-                      {post.title}
-                    </h3>
-
-                    <p className="text-[#626161] [font-family:'Fahkwang',Helvetica] text-sm leading-relaxed line-clamp-3">
-                      {post.shortDescription}
-                    </p>
-
-                    <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                      <div className="flex items-center space-x-2 text-sm text-primary [font-family:'Fahkwang',Helvetica] font-medium group-hover:text-secondary transition-colors duration-300">
-                        <span>Read More</span>
-                        <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
-                      </div>
-                      {post.category?.title && (
-                        <div className="flex items-center space-x-1 text-xs text-[#626161]">
-                          <Tag className="w-3 h-3" />
-                          <span>{post.category.title}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </motion.article>
-              ))}
-
-              {/* Skeletons for load-more */}
-              {loading && !initialLoading &&
-                Array.from({ length: PAGE_SIZE }).map((_, i) => (
-                  <div key={`skeleton-${i}`} className="rounded-2xl shimmer aspect-[4/3]" />
-                ))}
-            </motion.div>
-          </AnimatePresence>
-        )}
+                {/* Read More Link */}
+                <div className="flex items-center space-x-2 text-sm text-primary [font-family:'Fahkwang',Helvetica] font-medium group-hover:text-secondary transition-colors duration-300">
+                  <span>Read More</span>
+                  <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
+                </div>
+              </div>
+            </motion.article>
+          ))}
+        </div>
 
         {/* Sentinel */}
         <div ref={loadMoreRef} className="h-4 w-full" />
+
+        {/* Loading indicator */}
+        {loading && (
+          <div className="flex items-center justify-center py-8">
+            <div className="flex items-center space-x-2">
+              <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+              <span className="text-[#626161] [font-family:'Fahkwang',Helvetica]">Loading more posts...</span>
+            </div>
+          </div>
+        )}
 
         {/* End / Error feedback */}
         {posts.length > 0 && !loading && (
           <div className="flex items-center justify-center mt-6 min-h-[32px]">
             {!hasMore && (
-              <div className="text-sm text-[#626161]">You’ve reached the end.</div>
+              <div className="text-center">
+                <div className="text-sm text-[#626161] [font-family:'Fahkwang',Helvetica] mb-4">
+                  You've reached the end of our blog posts.
+                </div>
+                <Button 
+                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                  className="bg-primary text-white px-6 py-2 rounded-lg [font-family:'Fahkwang',Helvetica] font-medium hover:bg-primary-hover transition-colors duration-300"
+                >
+                  Back to Top
+                </Button>
+              </div>
             )}
             {err && (
               <button
                 onClick={() => fetchPage(page + 1, false)}
-                className="text-sm text-red-700 underline"
+                className="text-sm text-red-700 underline [font-family:'Fahkwang',Helvetica]"
               >
                 Retry loading more
               </button>
             )}
           </div>
         )}
-      </div>
 
-      {/* Shimmer CSS */}
-      <style jsx global>{`
-        @keyframes shimmer {
-          0% {
-            background-position: -500px 0;
-          }
-          100% {
-            background-position: 500px 0;
-          }
-        }
-        .shimmer {
-          background: linear-gradient(
-            90deg,
-            #f3f3f3 25%,
-            #e0e0e0 50%,
-            #f3f3f3 75%
-          );
-          background-size: 1000px 100%;
-          animation: shimmer 1.5s infinite linear;
-        }
-      `}</style>
+        {/* Empty state */}
+        {posts.length === 0 && !loading && (
+          <div className="text-center py-16">
+            <div className="text-[#626161] [font-family:'Fahkwang',Helvetica] text-lg mb-4">
+              No blog posts available at the moment.
+            </div>
+            <Button 
+              onClick={() => navigate('/contact')}
+              className="bg-primary text-white px-6 py-3 rounded-lg [font-family:'Fahkwang',Helvetica] font-medium hover:bg-primary-hover transition-colors duration-300"
+            >
+              Contact Us for Updates
+            </Button>
+          </div>
+        )}
+      </div>
     </section>
   );
 };
