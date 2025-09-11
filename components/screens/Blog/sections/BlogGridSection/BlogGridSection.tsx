@@ -110,6 +110,26 @@ export const BlogGridSection = (): JSX.Element => {
       publishedDate: "2024-12-10",
       author: "Admin",
       readTime: "9 min"
+    },
+    {
+      id: 7,
+      title: "Minimalist Design: Less is More in Modern Interiors",
+      shortDescription: "Embrace the beauty of simplicity with minimalist design principles that create calm, clutter-free spaces.",
+      featuredImage: { url: "/a-residential-interior-image.png", alt: "Minimalist interior" },
+      category: { title: "Minimalism" },
+      publishedDate: "2024-12-09",
+      author: "Admin",
+      readTime: "4 min"
+    },
+    {
+      id: 8,
+      title: "Smart Home Integration in Interior Design",
+      shortDescription: "Learn how to seamlessly integrate smart home technology into your interior design for a modern lifestyle.",
+      featuredImage: { url: "/a-office-interior-image.png", alt: "Smart home interior" },
+      category: { title: "Technology" },
+      publishedDate: "2024-12-08",
+      author: "Admin",
+      readTime: "7 min"
     }
   ];
 
@@ -189,7 +209,7 @@ export const BlogGridSection = (): JSX.Element => {
 
     const io = new IntersectionObserver(onIntersect, {
       root: null,
-      rootMargin: "200px 0px",
+      rootMargin: "100px 0px",
       threshold: 0,
     });
 
@@ -258,7 +278,7 @@ export const BlogGridSection = (): JSX.Element => {
     return () => {
       ScrollTrigger.getAll().forEach(trigger => trigger.kill());
     };
-  }, []);
+  }, [posts.length]);
 
   const handleBlogDetailsClick = (post: BlogPost) => {
     if (post.slug) {
@@ -277,6 +297,9 @@ export const BlogGridSection = (): JSX.Element => {
       "Kitchen Design": "bg-orange-500 text-white",
       "Workspace Design": "bg-blue-500 text-white",
       "Luxury Design": "bg-purple-600 text-white",
+      Minimalism: "bg-gray-600 text-white",
+      Technology: "bg-indigo-500 text-white",
+      "Seasonal Design": "bg-pink-500 text-white",
     };
     return colors[category || ""] || "bg-gray-500 text-white";
   };
@@ -315,104 +338,144 @@ export const BlogGridSection = (): JSX.Element => {
           </p>
         </div>
 
+        {/* Loading state for initial load */}
+        {posts.length === 0 && loading && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
+            {Array.from({ length: PAGE_SIZE }).map((_, i) => (
+              <div key={i} className="animate-pulse">
+                <div className="bg-gray-200 rounded-lg aspect-[4/3] mb-6"></div>
+                <div className="space-y-3">
+                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                  <div className="h-6 bg-gray-200 rounded"></div>
+                  <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Error state */}
+        {err && posts.length === 0 && !loading && (
+          <div className="text-center py-16">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md mx-auto">
+              <p className="text-red-800 [font-family:'Fahkwang',Helvetica] mb-4">
+                Unable to load blog posts: {err}
+              </p>
+              <Button 
+                onClick={() => fetchPage(1, true)}
+                className="bg-primary text-white px-6 py-2 rounded-lg [font-family:'Fahkwang',Helvetica] font-medium hover:bg-primary-hover"
+              >
+                Try Again
+              </Button>
+            </div>
+          </div>
+        )}
+
         {/* Grid */}
-        <div 
-          ref={gridRef}
-          className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 mb-12 md:mb-16"
-        >
-          {posts.map((post, index) => (
-            <motion.article
-              key={post.id}
-              layout
+        {posts.length > 0 && (
+          <AnimatePresence mode="wait">
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-              className="group cursor-pointer"
-              onMouseEnter={() => setHoveredPost(post.id)}
-              onMouseLeave={() => setHoveredPost(null)}
-              onClick={() => handleBlogDetailsClick(post)}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.4 }}
+              ref={gridRef}
+              className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 mb-12 md:mb-16"
             >
-              {/* Blog Post Image */}
-              <div className="relative overflow-hidden rounded-lg mb-6 bg-gray-200 aspect-[4/3]">
-                <img
-                  src={
-                    post.featuredImage?.url
-                      ? (post.featuredImage.url.startsWith('http') 
-                          ? post.featuredImage.url 
-                          : `${CMS_ORIGIN}${post.featuredImage.url}`)
-                      : "/a-residential-interior-image.png"
-                  }
-                  alt={post.featuredImage?.alt || post.title}
-                  className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
-                  loading={index < 4 ? "eager" : "lazy"}
-                />
-                
-                {/* Category Badge */}
-                {post.category?.title && (
-                  <div className="absolute top-4 left-4">
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold [font-family:'Fahkwang',Helvetica] ${getCategoryColor(post.category.title)}`}>
-                      {post.category.title}
-                    </span>
-                  </div>
-                )}
-                
-                {/* Hover Overlay */}
-                <div 
-                  className="absolute inset-0 transition-all duration-500"
-                  style={{
-                    background: hoveredPost === post.id 
-                      ? 'linear-gradient(135deg, rgba(0, 0, 0, 0.3) 0%, rgba(117, 191, 68, 0.2) 100%)'
-                      : 'transparent',
-                    opacity: hoveredPost === post.id ? 1 : 0
-                  }}
-                />
-              </div>
-
-              {/* Blog Post Content */}
-              <div className="space-y-4">
-                {/* Meta Information */}
-                <div className="flex items-center space-x-4 text-sm text-[#626161] [font-family:'Fahkwang',Helvetica]">
-                  <div className="flex items-center space-x-1">
-                    <User className="w-4 h-4" />
-                    <span>{post.author || "Admin"}</span>
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <Calendar className="w-4 h-4" />
-                    <span>{formatDate(post.publishedDate)}</span>
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <Clock className="w-4 h-4" />
-                    <span>{post.readTime || "5 min"}</span>
-                  </div>
-                </div>
-
-                {/* Title */}
-                <h3 
-                  className="text-xl md:text-2xl font-medium [font-family:'Fahkwang',Helvetica] text-[#01190c] leading-tight transition-colors duration-300 group-hover:text-primary"
+              {posts.map((post, index) => (
+                <motion.article
+                  key={post.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  className="group cursor-pointer"
+                  onMouseEnter={() => setHoveredPost(post.id)}
+                  onMouseLeave={() => setHoveredPost(null)}
+                  onClick={() => handleBlogDetailsClick(post)}
                 >
-                  {post.title}
-                </h3>
+                  {/* Blog Post Image */}
+                  <div className="relative overflow-hidden rounded-lg mb-6 bg-gray-200 aspect-[4/3]">
+                    <img
+                      src={
+                        post.featuredImage?.url
+                          ? (post.featuredImage.url.startsWith('http') 
+                              ? post.featuredImage.url 
+                              : `${CMS_ORIGIN}${post.featuredImage.url}`)
+                          : "/a-residential-interior-image.png"
+                      }
+                      alt={post.featuredImage?.alt || post.title}
+                      className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+                      loading={index < 4 ? "eager" : "lazy"}
+                    />
+                    
+                    {/* Category Badge */}
+                    {post.category?.title && (
+                      <div className="absolute top-4 left-4">
+                        <span className={`px-3 py-1 rounded-full text-xs font-semibold [font-family:'Fahkwang',Helvetica] ${getCategoryColor(post.category.title)}`}>
+                          {post.category.title}
+                        </span>
+                      </div>
+                    )}
+                    
+                    {/* Hover Overlay */}
+                    <div 
+                      className="absolute inset-0 transition-all duration-500"
+                      style={{
+                        background: hoveredPost === post.id 
+                          ? 'linear-gradient(135deg, rgba(0, 0, 0, 0.3) 0%, rgba(117, 191, 68, 0.2) 100%)'
+                          : 'transparent',
+                        opacity: hoveredPost === post.id ? 1 : 0
+                      }}
+                    />
+                  </div>
 
-                {/* Description */}
-                <p className="text-[#626161] [font-family:'Fahkwang',Helvetica] leading-relaxed line-clamp-3">
-                  {post.shortDescription}
-                </p>
+                  {/* Blog Post Content */}
+                  <div className="space-y-4">
+                    {/* Meta Information */}
+                    <div className="flex items-center space-x-4 text-sm text-[#626161] [font-family:'Fahkwang',Helvetica]">
+                      <div className="flex items-center space-x-1">
+                        <User className="w-4 h-4" />
+                        <span>{post.author || "Admin"}</span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <Calendar className="w-4 h-4" />
+                        <span>{formatDate(post.publishedDate)}</span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <Clock className="w-4 h-4" />
+                        <span>{post.readTime || "5 min"}</span>
+                      </div>
+                    </div>
 
-                {/* Read More Link */}
-                <div className="flex items-center space-x-2 text-sm text-primary [font-family:'Fahkwang',Helvetica] font-medium group-hover:text-secondary transition-colors duration-300">
-                  <span>Read More</span>
-                  <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
-                </div>
-              </div>
-            </motion.article>
-          ))}
-        </div>
+                    {/* Title */}
+                    <h3 
+                      className="text-xl md:text-2xl font-medium [font-family:'Fahkwang',Helvetica] text-[#01190c] leading-tight transition-colors duration-300 group-hover:text-primary"
+                    >
+                      {post.title}
+                    </h3>
 
-        {/* Sentinel */}
+                    {/* Description */}
+                    <p className="text-[#626161] [font-family:'Fahkwang',Helvetica] leading-relaxed line-clamp-3">
+                      {post.shortDescription}
+                    </p>
+
+                    {/* Read More Link */}
+                    <div className="flex items-center space-x-2 text-sm text-primary [font-family:'Fahkwang',Helvetica] font-medium group-hover:text-secondary transition-colors duration-300">
+                      <span>Read More</span>
+                      <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
+                    </div>
+                  </div>
+                </motion.article>
+              ))}
+            </motion.div>
+          </AnimatePresence>
+        )}
+
+        {/* Sentinel for infinite scroll */}
         <div ref={loadMoreRef} className="h-4 w-full" />
 
         {/* Loading indicator */}
-        {loading && (
+        {posts.length > 0 && loading && (
           <div className="flex items-center justify-center py-8">
             <div className="flex items-center space-x-2">
               <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
@@ -449,7 +512,7 @@ export const BlogGridSection = (): JSX.Element => {
         )}
 
         {/* Empty state */}
-        {posts.length === 0 && !loading && (
+        {posts.length === 0 && !loading && !err && (
           <div className="text-center py-16">
             <div className="text-[#626161] [font-family:'Fahkwang',Helvetica] text-lg mb-4">
               No blog posts available at the moment.
@@ -463,6 +526,15 @@ export const BlogGridSection = (): JSX.Element => {
           </div>
         )}
       </div>
+
+      <style jsx>{`
+        .line-clamp-3 {
+          display: -webkit-box;
+          -webkit-line-clamp: 3;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+      `}</style>
     </section>
   );
 };
