@@ -100,7 +100,7 @@ function App() {
             </LazyComponent>
           </SEORoute>
         } />
-        <Route path="/blog/:id" element={
+        <Route path="/blog/:slug" element={
           <SEORoute seoKey="blog">
             <LazyComponent fallback={<PageLoadingFallback />}>
               <BlogDetails />

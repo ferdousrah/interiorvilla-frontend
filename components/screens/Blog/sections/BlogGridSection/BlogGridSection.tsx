@@ -1,242 +1,117 @@
-'use client';
-
-import React, { useEffect, useRef, useState, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useEffect, useRef, useState } from "react";
+import { motion } from "framer-motion";
 import { Button } from "../../../../ui/button";
+import { Clock, User, ArrowRight, Calendar, Tag } from "lucide-react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { Clock, User, ArrowRight, Calendar, Tag } from "lucide-react";
+import { SplitText } from "gsap/SplitText";
+import { useNavigate } from "react-router-dom";
 
-gsap.registerPlugin(ScrollTrigger);
-
-const CMS_ORIGIN = "https://cms.interiorvillabd.com";
+gsap.registerPlugin(ScrollTrigger, SplitText);
 
 interface BlogPost {
   id: number;
   title: string;
-  slug?: string;
+  slug: string;
   shortDescription: string;
   featuredImage?: { url: string; alt?: string };
   category?: { title: string };
   publishedDate?: string;
-  author?: string;
-  readTime?: string;
 }
-
-interface ApiResponse {
-  docs: BlogPost[];
-  page?: number;
-  nextPage?: number | null;
-  totalDocs?: number;
-  totalPages?: number;
-}
-
-const PAGE_SIZE = 6;
 
 export const BlogGridSection = (): JSX.Element => {
-  const sectionRef = useRef<HTMLElement>(null);
-  const headingRef = useRef<HTMLHeadingElement>(null);
-  const gridRef = useRef<HTMLDivElement>(null);
-  const loadMoreRef = useRef<HTMLDivElement>(null);
-
   const [posts, setPosts] = useState<BlogPost[]>([]);
-  const [page, setPage] = useState<number>(0);
-  const [hasMore, setHasMore] = useState<boolean>(true);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [err, setErr] = useState<string | null>(null);
   const [hoveredPost, setHoveredPost] = useState<number | null>(null);
+  const [page, setPage] = useState(1);
+  const [hasNextPage, setHasNextPage] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
 
-  // Fallback blog posts for when API is not available
-  const fallbackPosts: BlogPost[] = [
-    {
-      id: 1,
-      title: "Small Space, Big Impact: Interior Design Hacks for Compact Living",
-      shortDescription: "Discover clever design strategies to maximize your small space and create a home that feels spacious, organized, and stylish.",
-      featuredImage: { url: "/a-residential-interior-image.png", alt: "Small space interior design" },
-      category: { title: "Interior Design" },
-      publishedDate: "2024-12-15",
-      author: "Admin",
-      readTime: "5 min"
-    },
-    {
-      id: 2,
-      title: "Sustainable Chic: Eco-Friendly Interior Design Ideas You'll Love",
-      shortDescription: "Learn how to create beautiful, environmentally conscious interiors using sustainable materials and eco-friendly design principles.",
-      featuredImage: { url: "/create-an-image-where-a-beautiful-girl-shows-her-bedroom-interio.png", alt: "Eco-friendly bedroom design" },
-      category: { title: "Sustainability" },
-      publishedDate: "2024-12-14",
-      author: "Admin",
-      readTime: "7 min"
-    },
-    {
-      id: 3,
-      title: "The Psychology of Color in Interior Design",
-      shortDescription: "Explore how different colors affect mood and atmosphere in your home, and learn to choose the perfect palette for each room.",
-      featuredImage: { url: "/a-office-interior-image.png", alt: "Colorful interior design" },
-      category: { title: "Color Theory" },
-      publishedDate: "2024-12-13",
-      author: "Admin",
-      readTime: "6 min"
-    },
-    {
-      id: 4,
-      title: "Modern Kitchen Design Trends for 2025",
-      shortDescription: "Stay ahead of the curve with the latest kitchen design trends that combine functionality with stunning aesthetics.",
-      featuredImage: { url: "/dining-interior.png", alt: "Modern kitchen design" },
-      category: { title: "Kitchen Design" },
-      publishedDate: "2024-12-12",
-      author: "Admin",
-      readTime: "8 min"
-    },
-    {
-      id: 5,
-      title: "Creating the Perfect Home Office: Design Tips for Productivity",
-      shortDescription: "Transform your workspace into a productive and inspiring environment with these professional interior design tips.",
-      featuredImage: { url: "/rectangle-8.png", alt: "Home office design" },
-      category: { title: "Workspace Design" },
-      publishedDate: "2024-12-11",
-      author: "Admin",
-      readTime: "6 min"
-    },
-    {
-      id: 6,
-      title: "Luxury Living: High-End Interior Design Elements",
-      shortDescription: "Discover the key elements that define luxury interior design and how to incorporate them into your own home.",
-      featuredImage: { url: "/rectangle-9.png", alt: "Luxury interior design" },
-      category: { title: "Luxury Design" },
-      publishedDate: "2024-12-10",
-      author: "Admin",
-      readTime: "9 min"
-    }
-  ];
+  const sectionRef = useRef<HTMLElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const headingWrapperRef = useRef<HTMLDivElement>(null);
+  const gridRef = useRef<HTMLDivElement>(null);
+  const loadMoreTriggerRef = useRef<HTMLDivElement>(null);
 
-  const fetchPage = useCallback(
-    async (pageToLoad: number, replace: boolean, signal?: AbortSignal) => {
+  // Fetch posts
+  const fetchPosts = async (pageNum: number) => {
+    try {
       setLoading(true);
-      setErr(null);
+      const res = await fetch(
+        `https://cms.interiorvillabd.com/api/blog-posts?page=${pageNum}&limit=3`
+      );
+      const data = await res.json();
 
-      try {
-        // Try to fetch from API first
-        try {
-          const url = new URL(`${CMS_ORIGIN}/api/blog-posts`);
-          url.searchParams.set("limit", PAGE_SIZE.toString());
-          url.searchParams.set("page", String(pageToLoad));
-          url.searchParams.set("sort", "-publishedDate");
+      if (pageNum === 1) {
+        setPosts(data.docs || []);
+      } else {
+        setPosts((prev) => [...prev, ...(data.docs || [])]);
+      }
 
-          const res = await fetch(url.toString(), { cache: "no-store", signal });
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      setHasNextPage(data.hasNextPage);
+    } catch (err) {
+      console.error("Error fetching posts:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-          const data: ApiResponse = await res.json();
+  useEffect(() => {
+    fetchPosts(1);
+  }, []);
 
-          setPosts(prev =>
-            replace ? (data.docs ?? []) : [...prev, ...(data.docs ?? [])]
-          );
-          setPage(data.page ?? pageToLoad);
-          setHasMore(Boolean(data.nextPage));
-        } catch (apiError) {
-          console.warn('API not available, using fallback data:', apiError);
-          
-          // Use fallback data with pagination simulation
-          const startIndex = (pageToLoad - 1) * PAGE_SIZE;
-          const endIndex = startIndex + PAGE_SIZE;
-          const pageData = fallbackPosts.slice(startIndex, endIndex);
-          
-          setPosts(prev => replace ? pageData : [...prev, ...pageData]);
-          setPage(pageToLoad);
-          setHasMore(endIndex < fallbackPosts.length);
+  // Infinite scroll observer
+  useEffect(() => {
+    if (!loadMoreTriggerRef.current || !hasNextPage) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !loading) {
+          const nextPage = page + 1;
+          setPage(nextPage);
+          fetchPosts(nextPage);
         }
-      } catch (e: any) {
-        if (e?.name !== "AbortError") setErr(e?.message || "Failed to load posts");
-      } finally {
-        setLoading(false);
-      }
-    },
-    [fallbackPosts]
-  );
+      },
+      { threshold: 1 }
+    );
 
-  // ---------- Initial load ----------
-  useEffect(() => {
-    const controller = new AbortController();
-    setPosts([]);
-    setPage(0);
-    setHasMore(true);
-    setErr(null);
-
-    fetchPage(1, true, controller.signal);
-
-    return () => controller.abort();
-  }, [fetchPage]);
-
-  // ---------- Infinite scroll ----------
-  useEffect(() => {
-    if (page < 1 || !hasMore || loading) return;
-    const sentinel = loadMoreRef.current;
-    if (!sentinel) return;
-
-    let controller: AbortController | null = null;
-
-    const onIntersect: IntersectionObserverCallback = (entries) => {
-      const first = entries[0];
-      if (first.isIntersecting && hasMore && !loading) {
-        controller?.abort();
-        controller = new AbortController();
-        fetchPage(page + 1, false, controller.signal);
-      }
-    };
-
-    const io = new IntersectionObserver(onIntersect, {
-      root: null,
-      rootMargin: "200px 0px",
-      threshold: 0,
-    });
-
-    io.observe(sentinel);
+    observer.observe(loadMoreTriggerRef.current);
 
     return () => {
-      io.disconnect();
-      controller?.abort();
+      if (loadMoreTriggerRef.current) observer.unobserve(loadMoreTriggerRef.current);
     };
-  }, [page, hasMore, loading, fetchPage]);
+  }, [page, hasNextPage, loading]);
 
-  // ---------- GSAP Animations ----------
+  // GSAP scroll animations
   useEffect(() => {
     if (!sectionRef.current) return;
 
-    // Header animation
-    if (headingRef.current) {
-      gsap.fromTo(headingRef.current,
-        {
-          opacity: 0,
-          y: 50
-        },
+    if (headerRef.current) {
+      gsap.fromTo(
+        headerRef.current,
+        { opacity: 0, y: 50 },
         {
           opacity: 1,
           y: 0,
           duration: 1,
           ease: "power3.out",
           scrollTrigger: {
-            trigger: headingRef.current,
+            trigger: headerRef.current,
             start: "top 85%",
             end: "top 55%",
-            toggleActions: "play none none reverse"
-          }
+            toggleActions: "play none none reverse",
+          },
         }
       );
     }
 
-    // Grid animation
     if (gridRef.current) {
       const posts = gridRef.current.children;
-      
-      gsap.fromTo(posts,
-        {
-          opacity: 0,
-          y: 80,
-          scale: 0.9
-        },
+      gsap.fromTo(
+        posts,
+        { opacity: 0, y: 80, scale: 0.9 },
         {
           opacity: 1,
           y: 0,
@@ -248,78 +123,108 @@ export const BlogGridSection = (): JSX.Element => {
             trigger: gridRef.current,
             start: "top 85%",
             end: "top 55%",
-            toggleActions: "play none none reverse"
-          }
+            toggleActions: "play none none reverse",
+          },
         }
       );
     }
 
-    // Cleanup function
     return () => {
-      ScrollTrigger.getAll().forEach(trigger => trigger.kill());
+      ScrollTrigger.getAll().forEach((t) => t.kill());
+    };
+  }, [posts]);
+
+  // GSAP SplitText hover animation for heading
+  useEffect(() => {
+    if (!headingRef.current) return;
+
+    const splitText = new SplitText(headingRef.current, {
+      type: "chars,words",
+      charsClass: "char",
+      wordsClass: "word",
+    });
+
+    if (headingWrapperRef.current) {
+      headingWrapperRef.current.addEventListener("mousemove", (e) => {
+        const rect = headingWrapperRef.current!.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / rect.width;
+        const y = (e.clientY - rect.top) / rect.height;
+
+        gsap.to(splitText.chars, {
+          duration: 0.5,
+          y: (i) => (y - 0.5) * 15 * Math.sin((i + 1) * 0.5),
+          x: (i) => (x - 0.5) * 15 * Math.cos((i + 1) * 0.5),
+          rotationY: (x - 0.5) * 20,
+          rotationX: (y - 0.5) * -20,
+          ease: "power2.out",
+          stagger: { amount: 0.3, from: "center" },
+        });
+      });
+
+      headingWrapperRef.current.addEventListener("mouseleave", () => {
+        gsap.to(splitText.chars, {
+          duration: 1,
+          y: 0,
+          x: 0,
+          rotationY: 0,
+          rotationX: 0,
+          ease: "elastic.out(1, 0.3)",
+          stagger: { amount: 0.3, from: "center" },
+        });
+      });
+    }
+
+    return () => {
+      splitText.revert();
     };
   }, []);
 
-  const handleBlogDetailsClick = (post: BlogPost) => {
-    if (post.slug) {
-      navigate(`/blog/${post.slug}`);
-    } else {
-      navigate('/blog-details');
-    }
+  const handleBlogDetailsClick = (slug: string) => {
+    navigate(`/blog/${slug}`);
   };
 
   const getCategoryColor = (category?: string) => {
     const colors: Record<string, string> = {
-      "Interior Design": "bg-primary text-white",
+      Interior: "bg-primary text-white",
       "Home Decor": "bg-secondary text-white",
       Sustainability: "bg-green-500 text-white",
       "Color Theory": "bg-purple-500 text-white",
       "Kitchen Design": "bg-orange-500 text-white",
       "Workspace Design": "bg-blue-500 text-white",
-      "Luxury Design": "bg-purple-600 text-white",
     };
     return colors[category || ""] || "bg-gray-500 text-white";
   };
 
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return "Dec 15, 2024";
-    try {
-      return new Date(dateString).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-      });
-    } catch {
-      return "Dec 15, 2024";
-    }
-  };
-
   return (
-    <section
-      ref={sectionRef}
-      className="py-16 md:py-20 bg-white -mt-48 relative z-10"
-    >
+    <section ref={sectionRef} className="py-16 md:py-20 bg-white -mt-48 relative z-10">
       <div className="container mx-auto px-4 max-w-7xl">
-        {/* Header */}
-        <div className="text-center mb-12 md:mb-16">
-          <h2
-            ref={headingRef}
-            className="text-2xl md:text-3xl lg:text-4xl font-medium [font-family:'Fahkwang',Helvetica] text-[#01190c] mb-6"
-          >
-            Get Interesting Insights into{" "}
-            <span className="text-secondary">Interior Designs</span>
-          </h2>
+        {/* Header Section */}
+        <div ref={headerRef} className="text-center mb-12 md:mb-16">
+          <div className="flex items-center justify-center mb-6">
+            <div className="w-1 h-[25px] bg-primary rounded-sm"></div>
+            <div className="mx-3 [font-family:'Fahkwang',Helvetica] font-normal text-[#48515c] text-sm tracking-[0.90px]">
+              LATEST INSIGHTS
+            </div>
+            <div className="w-1 h-[25px] bg-primary rounded-sm"></div>
+          </div>
+
+          <div ref={headingWrapperRef} className="perspective-[1000px] cursor-default">
+            <h2
+              ref={headingRef}
+              className="text-2xl md:text-3xl lg:text-4xl font-medium [font-family:'Fahkwang',Helvetica] text-[#01190c] mb-6"
+              style={{ transformStyle: "preserve-3d", transform: "translateZ(0)" }}
+            >
+              Get Interesting Insights into <span className="text-secondary">Interior Designs</span>
+            </h2>
+          </div>
 
           <p className="text-lg [font-family:'Fahkwang',Helvetica] text-[#626161] max-w-3xl mx-auto leading-relaxed">
             Discover the latest trends, tips, and inspiration for creating beautiful spaces that reflect your unique style
           </p>
         </div>
 
-        {/* Grid */}
-        <div 
-          ref={gridRef}
-          className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 mb-12 md:mb-16"
-        >
+        {/* Blog Posts Grid */}
+        <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10 mb-12 md:mb-16">
           {posts.map((post, index) => (
             <motion.article
               key={post.id}
@@ -327,139 +232,125 @@ export const BlogGridSection = (): JSX.Element => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
-              className="group cursor-pointer"
+              className="group cursor-pointer bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500"
               onMouseEnter={() => setHoveredPost(post.id)}
               onMouseLeave={() => setHoveredPost(null)}
-              onClick={() => handleBlogDetailsClick(post)}
+              onClick={() => handleBlogDetailsClick(post.slug)}
+              style={{
+                transform: hoveredPost === post.id ? "translateY(-8px) scale(1.02)" : "translateY(0) scale(1)",
+                boxShadow:
+                  hoveredPost === post.id
+                    ? "0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 25px rgba(117, 191, 68, 0.15)"
+                    : "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+              }}
             >
               {/* Blog Post Image */}
-              <div className="relative overflow-hidden rounded-lg mb-6 bg-gray-200 aspect-[4/3]">
+              <div className="relative overflow-hidden aspect-[4/3]">
                 <img
                   src={
                     post.featuredImage?.url
-                      ? (post.featuredImage.url.startsWith('http') 
-                          ? post.featuredImage.url 
-                          : `${CMS_ORIGIN}${post.featuredImage.url}`)
-                      : "/a-residential-interior-image.png"
+                      ? `https://cms.interiorvillabd.com${post.featuredImage.url}`
+                      : "/placeholder.png"
                   }
                   alt={post.featuredImage?.alt || post.title}
                   className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
-                  loading={index < 4 ? "eager" : "lazy"}
+                  loading="lazy"
                 />
-                
+
                 {/* Category Badge */}
                 {post.category?.title && (
                   <div className="absolute top-4 left-4">
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold [font-family:'Fahkwang',Helvetica] ${getCategoryColor(post.category.title)}`}>
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-semibold [font-family:'Fahkwang',Helvetica] ${getCategoryColor(
+                        post.category.title
+                      )}`}
+                    >
                       {post.category.title}
                     </span>
                   </div>
                 )}
-                
+
                 {/* Hover Overlay */}
-                <div 
+                <div
                   className="absolute inset-0 transition-all duration-500"
                   style={{
-                    background: hoveredPost === post.id 
-                      ? 'linear-gradient(135deg, rgba(0, 0, 0, 0.3) 0%, rgba(117, 191, 68, 0.2) 100%)'
-                      : 'transparent',
-                    opacity: hoveredPost === post.id ? 1 : 0
+                    background:
+                      hoveredPost === post.id
+                        ? "linear-gradient(135deg, rgba(0, 0, 0, 0.3) 0%, rgba(117, 191, 68, 0.2) 100%)"
+                        : "transparent",
+                    opacity: hoveredPost === post.id ? 1 : 0,
                   }}
                 />
+
+                {/* Read More Button Overlay */}
+                <div
+                  className="absolute inset-0 flex items-center justify-center transition-all duration-500"
+                  style={{
+                    opacity: hoveredPost === post.id ? 1 : 0,
+                    transform: hoveredPost === post.id ? "scale(1)" : "scale(0.8)",
+                  }}
+                >
+                  <Button className="bg-white text-primary hover:bg-primary hover:text-white transition-all duration-300 rounded-full px-6 py-2 font-semibold">
+                    Read Article
+                    <ArrowRight className="ml-2 w-4 h-4" />
+                  </Button>
+                </div>
               </div>
 
               {/* Blog Post Content */}
-              <div className="space-y-4">
+              <div className="p-6 space-y-4">
                 {/* Meta Information */}
-                <div className="flex items-center space-x-4 text-sm text-[#626161] [font-family:'Fahkwang',Helvetica]">
-                  <div className="flex items-center space-x-1">
-                    <User className="w-4 h-4" />
-                    <span>{post.author || "Admin"}</span>
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <Calendar className="w-4 h-4" />
-                    <span>{formatDate(post.publishedDate)}</span>
+                <div className="flex items-center justify-between text-sm text-[#626161] [font-family:'Fahkwang',Helvetica]">
+                  <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-1">
+                      <User className="w-4 h-4" />
+                      <span>Admin</span>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <Calendar className="w-4 h-4" />
+                      <span>
+                        {post.publishedDate ? new Date(post.publishedDate).toDateString() : "—"}
+                      </span>
+                    </div>
                   </div>
                   <div className="flex items-center space-x-1">
                     <Clock className="w-4 h-4" />
-                    <span>{post.readTime || "5 min"}</span>
+                    <span>5 min</span>
                   </div>
                 </div>
 
                 {/* Title */}
-                <h3 
-                  className="text-xl md:text-2xl font-medium [font-family:'Fahkwang',Helvetica] text-[#01190c] leading-tight transition-colors duration-300 group-hover:text-primary"
-                >
+                <h3 className="text-xl font-medium [font-family:'Fahkwang',Helvetica] text-[#01190c] leading-tight transition-colors duration-300 group-hover:text-primary line-clamp-2">
                   {post.title}
                 </h3>
 
-                {/* Description */}
-                <p className="text-[#626161] [font-family:'Fahkwang',Helvetica] leading-relaxed line-clamp-3">
+                {/* Excerpt */}
+                <p className="text-[#626161] [font-family:'Fahkwang',Helvetica] text-sm leading-relaxed line-clamp-3">
                   {post.shortDescription}
                 </p>
 
                 {/* Read More Link */}
-                <div className="flex items-center space-x-2 text-sm text-primary [font-family:'Fahkwang',Helvetica] font-medium group-hover:text-secondary transition-colors duration-300">
-                  <span>Read More</span>
-                  <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
+                <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                  <div className="flex items-center space-x-2 text-sm text-primary [font-family:'Fahkwang',Helvetica] font-medium group-hover:text-secondary transition-colors duration-300">
+                    <span>Read More</span>
+                    <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
+                  </div>
+                  {post.category?.title && (
+                    <div className="flex items-center space-x-1 text-xs text-[#626161]">
+                      <Tag className="w-3 h-3" />
+                      <span>{post.category.title}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </motion.article>
           ))}
         </div>
 
-        {/* Sentinel */}
-        <div ref={loadMoreRef} className="h-4 w-full" />
-
-        {/* Loading indicator */}
-        {loading && (
-          <div className="flex items-center justify-center py-8">
-            <div className="flex items-center space-x-2">
-              <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-              <span className="text-[#626161] [font-family:'Fahkwang',Helvetica]">Loading more posts...</span>
-            </div>
-          </div>
-        )}
-
-        {/* End / Error feedback */}
-        {posts.length > 0 && !loading && (
-          <div className="flex items-center justify-center mt-6 min-h-[32px]">
-            {!hasMore && (
-              <div className="text-center">
-                <div className="text-sm text-[#626161] [font-family:'Fahkwang',Helvetica] mb-4">
-                  You've reached the end of our blog posts.
-                </div>
-                <Button 
-                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                  className="bg-primary text-white px-6 py-2 rounded-lg [font-family:'Fahkwang',Helvetica] font-medium hover:bg-primary-hover transition-colors duration-300"
-                >
-                  Back to Top
-                </Button>
-              </div>
-            )}
-            {err && (
-              <button
-                onClick={() => fetchPage(page + 1, false)}
-                className="text-sm text-red-700 underline [font-family:'Fahkwang',Helvetica]"
-              >
-                Retry loading more
-              </button>
-            )}
-          </div>
-        )}
-
-        {/* Empty state */}
-        {posts.length === 0 && !loading && (
-          <div className="text-center py-16">
-            <div className="text-[#626161] [font-family:'Fahkwang',Helvetica] text-lg mb-4">
-              No blog posts available at the moment.
-            </div>
-            <Button 
-              onClick={() => navigate('/contact')}
-              className="bg-primary text-white px-6 py-3 rounded-lg [font-family:'Fahkwang',Helvetica] font-medium hover:bg-primary-hover transition-colors duration-300"
-            >
-              Contact Us for Updates
-            </Button>
+        {/* Infinite Scroll Trigger */}
+        {hasNextPage && (
+          <div ref={loadMoreTriggerRef} className="h-10 flex justify-center items-center">
+            {loading && <p>Loading...</p>}
           </div>
         )}
       </div>

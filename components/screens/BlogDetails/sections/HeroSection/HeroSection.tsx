@@ -4,11 +4,57 @@ import { motion, AnimatePresence } from "framer-motion";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { X, ChevronDown, Home as HomeIcon, User, Briefcase, FolderOpen, BookOpen, Mail, ChevronRight } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom"; // ⬅️ added useParams
 
 gsap.registerPlugin(ScrollTrigger);
 
 export const HeroSection = (): JSX.Element => {
+
+   // ---- NEW: dynamic title state ----
+  const { slug } = useParams<{ slug?: string }>();
+  const [pageTitle, setPageTitle] = useState<string>("Blog Details");
+
+   // Pretty fallback while API loads
+  const niceTitleFromSlug = (s: string) =>
+    decodeURIComponent(s)
+      .replace(/[-_]+/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .replace(/\b([a-z])/gi, (m) => m.toUpperCase());
+
+  useEffect(() => {
+    if (!slug) {
+      setPageTitle("Blog Details");
+      return;
+    }
+
+    // optimistic title from slug (instant)
+    setPageTitle(niceTitleFromSlug(slug));
+
+    // fetch the real title from CMS
+    const ctrl = new AbortController();
+    (async () => {
+      try {
+        const res = await fetch(
+          `https://cms.interiorvillabd.com/api/blog-posts?limit=1&where[slug][equals]=${encodeURIComponent(
+            slug
+          )}`,
+          { signal: ctrl.signal }
+        );
+        if (res.ok) {
+          const data = await res.json();
+          const t = data?.docs?.[0]?.title;
+          if (t) setPageTitle(t);
+        }
+      } catch {
+        // ignore (keep fallback title)
+      }
+    })();
+
+    return () => ctrl.abort();
+  }, [slug]);
+  // ---- END dynamic title ----
+
   const [hoveredMenu, setHoveredMenu] = useState<string | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -19,6 +65,7 @@ export const HeroSection = (): JSX.Element => {
   const logoRef = useRef<HTMLImageElement>(null);
   const menuContainerRef = useRef<HTMLDivElement>(null);
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+ 
 
   const navItems = [
     { 
@@ -608,7 +655,7 @@ export const HeroSection = (): JSX.Element => {
                 lineHeight: '1.1'
               }}
             >
-              Why Are Team Leadership Skills So Important?
+              {pageTitle}
             </motion.h1>
 
             {/* Breadcrumb - Positioned after title */}
