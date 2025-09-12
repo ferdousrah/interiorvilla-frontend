@@ -28,16 +28,72 @@ export const BlogGridSection = (): JSX.Element => {
 
   const navigate = useNavigate();
 
-  const sectionRef = useRef<HTMLElement>(null);
-  const headerRef = useRef<HTMLDivElement>(null);
-  const headingRef = useRef<HTMLHeadingElement>(null);
-  const headingWrapperRef = useRef<HTMLDivElement>(null);
-  const gridRef = useRef<HTMLDivElement>(null);
-  const loadMoreTriggerRef = useRef<HTMLDivElement>(null);
+  // Fallback blog posts for when API is not available
+  const fallbackPosts: BlogPost[] = [
+    {
+      id: 1,
+      title: "Small Space, Big Impact: Interior Design Hacks for Compact Living",
+      shortDescription: "Discover clever design strategies to maximize your small space and create a home that feels spacious, organized, and stylish.",
+      featuredImage: { url: "/a-residential-interior-image.png", alt: "Small space interior design" },
+      category: { title: "Interior Design" },
+      publishedDate: "2024-12-15",
+      author: "Admin",
+      readTime: "5 min"
+    },
+    {
+      id: 2,
+      title: "Sustainable Chic: Eco-Friendly Interior Design Ideas You'll Love",
+      shortDescription: "Learn how to create beautiful, environmentally conscious interiors using sustainable materials and eco-friendly design principles.",
+      featuredImage: { url: "/create-an-image-where-a-beautiful-girl-shows-her-bedroom-interio.png", alt: "Eco-friendly bedroom design" },
+      category: { title: "Sustainability" },
+      publishedDate: "2024-12-14",
+      author: "Admin",
+      readTime: "7 min"
+    },
+    {
+      id: 3,
+      title: "The Psychology of Color in Interior Design",
+      shortDescription: "Explore how different colors affect mood and atmosphere in your home, and learn to choose the perfect palette for each room.",
+      featuredImage: { url: "/a-office-interior-image.png", alt: "Colorful interior design" },
+      category: { title: "Color Theory" },
+      publishedDate: "2024-12-13",
+      author: "Admin",
+      readTime: "6 min"
+    },
+    {
+      id: 4,
+      title: "Modern Kitchen Design Trends for 2025",
+      shortDescription: "Stay ahead of the curve with the latest kitchen design trends that combine functionality with stunning aesthetics.",
+      featuredImage: { url: "/dining-interior.png", alt: "Modern kitchen design" },
+      category: { title: "Kitchen Design" },
+      publishedDate: "2024-12-12",
+      author: "Admin",
+      readTime: "8 min"
+    },
+    {
+      id: 5,
+      title: "Creating the Perfect Home Office: Design Tips for Productivity",
+      shortDescription: "Transform your workspace into a productive and inspiring environment with these professional interior design tips.",
+      featuredImage: { url: "/rectangle-8.png", alt: "Home office design" },
+      category: { title: "Workspace Design" },
+      publishedDate: "2024-12-11",
+      author: "Admin",
+      readTime: "6 min"
+    },
+    {
+      id: 6,
+      title: "Luxury Living: High-End Interior Design Elements",
+      shortDescription: "Discover the key elements that define luxury interior design and how to incorporate them into your own home.",
+      featuredImage: { url: "/rectangle-9.png", alt: "Luxury interior design" },
+      category: { title: "Luxury Design" },
+      publishedDate: "2024-12-10",
+      author: "Admin",
+      readTime: "9 min"
+    }
+  ];
 
-  // Fetch posts
-  const fetchPosts = async (pageNum: number) => {
-    try {
+  const fetchPage = useCallback(
+    async (pageToLoad: number, replace: boolean, signal?: AbortSignal) => {
       setLoading(true);
       const res = await fetch(
         `https://cms.interiorvillabd.com/api/blog-posts?page=${pageNum}&limit=3`
@@ -66,16 +122,22 @@ export const BlogGridSection = (): JSX.Element => {
   useEffect(() => {
     if (!loadMoreTriggerRef.current || !hasNextPage) return;
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && !loading) {
-          const nextPage = page + 1;
-          setPage(nextPage);
-          fetchPosts(nextPage);
-        }
-      },
-      { threshold: 1 }
-    );
+    let controller: AbortController | null = null;
+
+    const onIntersect: IntersectionObserverCallback = (entries) => {
+      const first = entries[0];
+      if (first.isIntersecting && hasMore && !loading) {
+        controller?.abort();
+        controller = new AbortController();
+        fetchPage(page + 1, false, controller.signal);
+      }
+    };
+
+    const io = new IntersectionObserver(onIntersect, {
+      root: null,
+      rootMargin: "200px 0px",
+      threshold: 0,
+    });
 
     observer.observe(loadMoreTriggerRef.current);
 
@@ -177,7 +239,7 @@ export const BlogGridSection = (): JSX.Element => {
     return () => {
       splitText.revert();
     };
-  }, []);
+  }, [posts.length]);
 
   const handleBlogDetailsClick = (slug: string) => {
     navigate(`/blog/${slug}`);
@@ -191,6 +253,7 @@ export const BlogGridSection = (): JSX.Element => {
       "Color Theory": "bg-purple-500 text-white",
       "Kitchen Design": "bg-orange-500 text-white",
       "Workspace Design": "bg-blue-500 text-white",
+      "Luxury Design": "bg-purple-600 text-white",
     };
     return colors[category || ""] || "bg-gray-500 text-white";
   };
@@ -223,8 +286,44 @@ export const BlogGridSection = (): JSX.Element => {
           </p>
         </div>
 
-        {/* Blog Posts Grid */}
-        <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10 mb-12 md:mb-16">
+        {/* Loading state for initial load */}
+        {posts.length === 0 && loading && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
+            {Array.from({ length: PAGE_SIZE }).map((_, i) => (
+              <div key={i} className="animate-pulse">
+                <div className="bg-gray-200 rounded-lg aspect-[4/3] mb-6"></div>
+                <div className="space-y-3">
+                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                  <div className="h-6 bg-gray-200 rounded"></div>
+                  <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Error state */}
+        {err && posts.length === 0 && !loading && (
+          <div className="text-center py-16">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md mx-auto">
+              <p className="text-red-800 [font-family:'Fahkwang',Helvetica] mb-4">
+                Unable to load blog posts: {err}
+              </p>
+              <Button 
+                onClick={() => fetchPage(1, true)}
+                className="bg-primary text-white px-6 py-2 rounded-lg [font-family:'Fahkwang',Helvetica] font-medium hover:bg-primary-hover"
+              >
+                Try Again
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Grid */}
+        <div 
+          ref={gridRef}
+          className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 mb-12 md:mb-16"
+        >
           {posts.map((post, index) => (
             <motion.article
               key={post.id}
@@ -232,128 +331,151 @@ export const BlogGridSection = (): JSX.Element => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
-              className="group cursor-pointer bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500"
+              className="group cursor-pointer"
               onMouseEnter={() => setHoveredPost(post.id)}
               onMouseLeave={() => setHoveredPost(null)}
-              onClick={() => handleBlogDetailsClick(post.slug)}
-              style={{
-                transform: hoveredPost === post.id ? "translateY(-8px) scale(1.02)" : "translateY(0) scale(1)",
-                boxShadow:
-                  hoveredPost === post.id
-                    ? "0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 25px rgba(117, 191, 68, 0.15)"
-                    : "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
-              }}
+              onClick={() => handleBlogDetailsClick(post)}
             >
               {/* Blog Post Image */}
-              <div className="relative overflow-hidden aspect-[4/3]">
+              <div className="relative overflow-hidden rounded-lg mb-6 bg-gray-200 aspect-[4/3]">
                 <img
                   src={
                     post.featuredImage?.url
-                      ? `https://cms.interiorvillabd.com${post.featuredImage.url}`
-                      : "/placeholder.png"
+                      ? (post.featuredImage.url.startsWith('http') 
+                          ? post.featuredImage.url 
+                          : `${CMS_ORIGIN}${post.featuredImage.url}`)
+                      : "/a-residential-interior-image.png"
                   }
                   alt={post.featuredImage?.alt || post.title}
                   className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
-                  loading="lazy"
+                  loading={index < 4 ? "eager" : "lazy"}
                 />
-
+                
                 {/* Category Badge */}
                 {post.category?.title && (
                   <div className="absolute top-4 left-4">
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-semibold [font-family:'Fahkwang',Helvetica] ${getCategoryColor(
-                        post.category.title
-                      )}`}
-                    >
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold [font-family:'Fahkwang',Helvetica] ${getCategoryColor(post.category.title)}`}>
                       {post.category.title}
                     </span>
                   </div>
                 )}
-
+                
                 {/* Hover Overlay */}
-                <div
+                <div 
                   className="absolute inset-0 transition-all duration-500"
                   style={{
-                    background:
-                      hoveredPost === post.id
-                        ? "linear-gradient(135deg, rgba(0, 0, 0, 0.3) 0%, rgba(117, 191, 68, 0.2) 100%)"
-                        : "transparent",
-                    opacity: hoveredPost === post.id ? 1 : 0,
+                    background: hoveredPost === post.id 
+                      ? 'linear-gradient(135deg, rgba(0, 0, 0, 0.3) 0%, rgba(117, 191, 68, 0.2) 100%)'
+                      : 'transparent',
+                    opacity: hoveredPost === post.id ? 1 : 0
                   }}
                 />
-
-                {/* Read More Button Overlay */}
-                <div
-                  className="absolute inset-0 flex items-center justify-center transition-all duration-500"
-                  style={{
-                    opacity: hoveredPost === post.id ? 1 : 0,
-                    transform: hoveredPost === post.id ? "scale(1)" : "scale(0.8)",
-                  }}
-                >
-                  <Button className="bg-white text-primary hover:bg-primary hover:text-white transition-all duration-300 rounded-full px-6 py-2 font-semibold">
-                    Read Article
-                    <ArrowRight className="ml-2 w-4 h-4" />
-                  </Button>
-                </div>
               </div>
 
               {/* Blog Post Content */}
-              <div className="p-6 space-y-4">
+              <div className="space-y-4">
                 {/* Meta Information */}
-                <div className="flex items-center justify-between text-sm text-[#626161] [font-family:'Fahkwang',Helvetica]">
-                  <div className="flex items-center space-x-4">
-                    <div className="flex items-center space-x-1">
-                      <User className="w-4 h-4" />
-                      <span>Admin</span>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <Calendar className="w-4 h-4" />
-                      <span>
-                        {post.publishedDate ? new Date(post.publishedDate).toDateString() : "—"}
-                      </span>
-                    </div>
+                <div className="flex items-center space-x-4 text-sm text-[#626161] [font-family:'Fahkwang',Helvetica]">
+                  <div className="flex items-center space-x-1">
+                    <User className="w-4 h-4" />
+                    <span>{post.author || "Admin"}</span>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <Calendar className="w-4 h-4" />
+                    <span>{formatDate(post.publishedDate)}</span>
                   </div>
                   <div className="flex items-center space-x-1">
                     <Clock className="w-4 h-4" />
-                    <span>5 min</span>
+                    <span>{post.readTime || "5 min"}</span>
                   </div>
                 </div>
 
                 {/* Title */}
-                <h3 className="text-xl font-medium [font-family:'Fahkwang',Helvetica] text-[#01190c] leading-tight transition-colors duration-300 group-hover:text-primary line-clamp-2">
+                <h3 
+                  className="text-xl md:text-2xl font-medium [font-family:'Fahkwang',Helvetica] text-[#01190c] leading-tight transition-colors duration-300 group-hover:text-primary"
+                >
                   {post.title}
                 </h3>
 
-                {/* Excerpt */}
-                <p className="text-[#626161] [font-family:'Fahkwang',Helvetica] text-sm leading-relaxed line-clamp-3">
+                {/* Description */}
+                <p className="text-[#626161] [font-family:'Fahkwang',Helvetica] leading-relaxed line-clamp-3">
                   {post.shortDescription}
                 </p>
 
                 {/* Read More Link */}
-                <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                  <div className="flex items-center space-x-2 text-sm text-primary [font-family:'Fahkwang',Helvetica] font-medium group-hover:text-secondary transition-colors duration-300">
-                    <span>Read More</span>
-                    <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
-                  </div>
-                  {post.category?.title && (
-                    <div className="flex items-center space-x-1 text-xs text-[#626161]">
-                      <Tag className="w-3 h-3" />
-                      <span>{post.category.title}</span>
-                    </div>
-                  )}
+                <div className="flex items-center space-x-2 text-sm text-primary [font-family:'Fahkwang',Helvetica] font-medium group-hover:text-secondary transition-colors duration-300">
+                  <span>Read More</span>
+                  <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
                 </div>
               </div>
             </motion.article>
           ))}
         </div>
 
-        {/* Infinite Scroll Trigger */}
-        {hasNextPage && (
-          <div ref={loadMoreTriggerRef} className="h-10 flex justify-center items-center">
-            {loading && <p>Loading...</p>}
+        {/* Sentinel */}
+        <div ref={loadMoreRef} className="h-4 w-full" />
+
+        {/* Loading indicator */}
+        {loading && (
+          <div className="flex items-center justify-center py-8">
+            <div className="flex items-center space-x-2">
+              <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+              <span className="text-[#626161] [font-family:'Fahkwang',Helvetica]">Loading more posts...</span>
+            </div>
+          </div>
+        )}
+
+        {/* End / Error feedback */}
+        {posts.length > 0 && !loading && (
+          <div className="flex items-center justify-center mt-6 min-h-[32px]">
+            {!hasMore && (
+              <div className="text-center">
+                <div className="text-sm text-[#626161] [font-family:'Fahkwang',Helvetica] mb-4">
+                  You've reached the end of our blog posts.
+                </div>
+                <Button 
+                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                  className="bg-primary text-white px-6 py-2 rounded-lg [font-family:'Fahkwang',Helvetica] font-medium hover:bg-primary-hover transition-colors duration-300"
+                >
+                  Back to Top
+                </Button>
+              </div>
+            )}
+            {err && (
+              <button
+                onClick={() => fetchPage(page + 1, false)}
+                className="text-sm text-red-700 underline [font-family:'Fahkwang',Helvetica]"
+              >
+                Retry loading more
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Empty state */}
+        {posts.length === 0 && !loading && (
+          <div className="text-center py-16">
+            <div className="text-[#626161] [font-family:'Fahkwang',Helvetica] text-lg mb-4">
+              No blog posts available at the moment.
+            </div>
+            <Button 
+              onClick={() => navigate('/contact')}
+              className="bg-primary text-white px-6 py-3 rounded-lg [font-family:'Fahkwang',Helvetica] font-medium hover:bg-primary-hover transition-colors duration-300"
+            >
+              Contact Us for Updates
+            </Button>
           </div>
         )}
       </div>
+
+      <style jsx>{`
+        .line-clamp-3 {
+          display: -webkit-box;
+          -webkit-line-clamp: 3;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+      `}</style>
     </section>
   );
 };

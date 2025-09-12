@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Button } from "../../../../ui/button";
 import { motion, AnimatePresence } from "framer-motion";
+import { Link, useNavigate } from "react-router-dom";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { X, ChevronDown, Home as HomeIcon, User, Briefcase, FolderOpen, BookOpen, Mail, ChevronRight } from "lucide-react";
-import { Link } from "react-router-dom";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -19,6 +19,7 @@ export const HeroSection = (): JSX.Element => {
   const logoRef = useRef<HTMLImageElement>(null);
   const menuContainerRef = useRef<HTMLDivElement>(null);
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const navigate = useNavigate();
 
   const navItems = [
     { 
@@ -39,9 +40,9 @@ export const HeroSection = (): JSX.Element => {
       icon: Briefcase,
       href: "#",
       subItems: [
-        "Residential Interior",
-        "Commercial Interior",
-        "Architectural Consultancy"
+        { name: "Residential Interior", href: "/residential-interior" },
+        { name: "Commercial Interior", href: "/commercial-interior" },
+        { name: "Architectural Consultancy", href: "/architectural-consultancy" }
       ]
     },
     { 
@@ -284,6 +285,13 @@ export const HeroSection = (): JSX.Element => {
     setExpandedSubmenu(expandedSubmenu === itemName ? null : itemName);
   };
 
+  const handleNavigation = (href: string) => {
+    navigate(href);
+  };
+
+  const handleSubmenuNavigation = (href: string) => {
+    navigate(href);
+  };
   return (
     <div ref={heroContainerRef} className="w-full h-[60vh] md:h-[70vh] lg:h-[80vh] relative overflow-hidden">
       {/* Background Image - Full Cover */}
@@ -431,7 +439,7 @@ export const HeroSection = (): JSX.Element => {
                                   transition={{ delay: subIndex * 0.1 }}
                                   className="w-full px-4 py-3 text-left text-sm text-white hover:text-primary transition-colors duration-300 [font-family:'Fahkwang',Helvetica] relative group overflow-hidden"
                                 >
-                                  <span className="relative z-10">{subItem}</span>
+                                  <span className="relative z-10">{subItem.name}</span>
                                 </motion.button>
                               ))}
                             </motion.div>
@@ -479,7 +487,6 @@ export const HeroSection = (): JSX.Element => {
                     className="w-40 h-8 object-cover cursor-pointer"
                     alt="Interior villa dark"
                     src="/interior-villa-dark.png"
-                    onClick={() => setIsMobileMenuOpen(false)}
                   />
                 </Link>
                 <button
@@ -513,11 +520,18 @@ export const HeroSection = (): JSX.Element => {
                           if (item.subItems) {
                             handleSubmenuToggle(item.name);
                           } else {
+                            navigate(item.href);
                             setIsMobileMenuOpen(false);
                           }
                         }}
                       >
-                        <Link to={item.href} className="flex items-center space-x-4 flex-1">
+                        <Link to={item.href} className="flex items-center space-x-4" onClick={(e) => {
+                          if (item.subItems) {
+                            e.preventDefault();
+                          } else {
+                            setIsMobileMenuOpen(false);
+                          }
+                        }}>
                           <div className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-300 ${
                             item.active 
                               ? "bg-white/20" 
@@ -557,11 +571,14 @@ export const HeroSection = (): JSX.Element => {
                                 animate={{ x: 0, opacity: 1 }}
                                 transition={{ delay: subIndex * 0.1 }}
                                 className="flex items-center p-3 rounded-lg text-gray-400 hover:text-primary hover:bg-gray-800/30 transition-all duration-300 cursor-pointer group"
-                                onClick={() => setIsMobileMenuOpen(false)}
+                                onClick={() => {
+                                  setIsMobileMenuOpen(false);
+                                  navigate(subItem.href);
+                                }}
                               >
                                 <div className="w-2 h-2 rounded-full bg-gray-600 group-hover:bg-primary transition-colors duration-300 mr-4"></div>
                                 <span className="[font-family:'Fahkwang',Helvetica] font-normal text-sm">
-                                  {subItem}
+                                  {subItem.name}
                                 </span>
                               </motion.div>
                             ))}
