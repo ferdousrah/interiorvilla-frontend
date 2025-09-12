@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Button } from "../../../../ui/button";
 import { Clock, User, ArrowRight, Calendar, Tag } from "lucide-react";
@@ -17,7 +17,12 @@ interface BlogPost {
   featuredImage?: { url: string; alt?: string };
   category?: { title: string };
   publishedDate?: string;
+  author?: string;
+  readTime?: string;
 }
+
+const CMS_ORIGIN = "https://cms.interiorvillabd.com";
+const PAGE_SIZE = 6;
 
 export const BlogGridSection = (): JSX.Element => {
   const [posts, setPosts] = useState<BlogPost[]>([]);
@@ -25,14 +30,22 @@ export const BlogGridSection = (): JSX.Element => {
   const [page, setPage] = useState(1);
   const [hasNextPage, setHasNextPage] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
 
   const navigate = useNavigate();
+  const sectionRef = useRef<HTMLElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
+  const gridRef = useRef<HTMLDivElement>(null);
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const headingWrapperRef = useRef<HTMLDivElement>(null);
+  const loadMoreTriggerRef = useRef<HTMLDivElement>(null);
 
   // Fallback blog posts for when API is not available
   const fallbackPosts: BlogPost[] = [
     {
       id: 1,
       title: "Small Space, Big Impact: Interior Design Hacks for Compact Living",
+      slug: "small-space-big-impact",
       shortDescription: "Discover clever design strategies to maximize your small space and create a home that feels spacious, organized, and stylish.",
       featuredImage: { url: "/a-residential-interior-image.png", alt: "Small space interior design" },
       category: { title: "Interior Design" },
@@ -43,6 +56,7 @@ export const BlogGridSection = (): JSX.Element => {
     {
       id: 2,
       title: "Sustainable Chic: Eco-Friendly Interior Design Ideas You'll Love",
+      slug: "sustainable-chic-eco-friendly-design",
       shortDescription: "Learn how to create beautiful, environmentally conscious interiors using sustainable materials and eco-friendly design principles.",
       featuredImage: { url: "/create-an-image-where-a-beautiful-girl-shows-her-bedroom-interio.png", alt: "Eco-friendly bedroom design" },
       category: { title: "Sustainability" },
@@ -53,6 +67,7 @@ export const BlogGridSection = (): JSX.Element => {
     {
       id: 3,
       title: "The Psychology of Color in Interior Design",
+      slug: "psychology-of-color-interior-design",
       shortDescription: "Explore how different colors affect mood and atmosphere in your home, and learn to choose the perfect palette for each room.",
       featuredImage: { url: "/a-office-interior-image.png", alt: "Colorful interior design" },
       category: { title: "Color Theory" },
@@ -63,6 +78,7 @@ export const BlogGridSection = (): JSX.Element => {
     {
       id: 4,
       title: "Modern Kitchen Design Trends for 2025",
+      slug: "modern-kitchen-design-trends-2025",
       shortDescription: "Stay ahead of the curve with the latest kitchen design trends that combine functionality with stunning aesthetics.",
       featuredImage: { url: "/dining-interior.png", alt: "Modern kitchen design" },
       category: { title: "Kitchen Design" },
@@ -73,6 +89,7 @@ export const BlogGridSection = (): JSX.Element => {
     {
       id: 5,
       title: "Creating the Perfect Home Office: Design Tips for Productivity",
+      slug: "perfect-home-office-design-tips",
       shortDescription: "Transform your workspace into a productive and inspiring environment with these professional interior design tips.",
       featuredImage: { url: "/rectangle-8.png", alt: "Home office design" },
       category: { title: "Workspace Design" },
@@ -83,6 +100,7 @@ export const BlogGridSection = (): JSX.Element => {
     {
       id: 6,
       title: "Luxury Living: High-End Interior Design Elements",
+      slug: "luxury-living-high-end-design-elements",
       shortDescription: "Discover the key elements that define luxury interior design and how to incorporate them into your own home.",
       featuredImage: { url: "/rectangle-9.png", alt: "Luxury interior design" },
       category: { title: "Luxury Design" },
@@ -92,31 +110,64 @@ export const BlogGridSection = (): JSX.Element => {
     }
   ];
 
-  const fetchPage = useCallback(
-    async (pageToLoad: number, replace: boolean, signal?: AbortSignal) => {
-      setLoading(true);
-      const res = await fetch(
-        `https://cms.interiorvillabd.com/api/blog-posts?page=${pageNum}&limit=3`
-      );
-      const data = await res.json();
-
-      if (pageNum === 1) {
-        setPosts(data.docs || []);
-      } else {
-        setPosts((prev) => [...prev, ...(data.docs || [])]);
-      }
-
-      setHasNextPage(data.hasNextPage);
-    } catch (err) {
-      console.error("Error fetching posts:", err);
-    } finally {
-      setLoading(false);
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return "Recent";
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric' 
+      });
+    } catch {
+      return "Recent";
     }
   };
 
+  const fetchPage = useCallback(
+    async (pageToLoad: number, replace: boolean, signal?: AbortSignal) => {
+      try {
+        setLoading(true);
+        setErr(null);
+        
+        const res = await fetch(
+          `https://cms.interiorvillabd.com/api/blog-posts?page=${pageToLoad}&limit=${PAGE_SIZE}`,
+          { signal }
+        );
+        
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        
+        const data = await res.json();
+
+        if (replace || pageToLoad === 1) {
+          setPosts(data.docs || fallbackPosts);
+        } else {
+          setPosts((prev) => [...prev, ...(data.docs || [])]);
+        }
+
+        setHasNextPage(data.hasNextPage || false);
+        setPage(pageToLoad);
+      } catch (err) {
+        console.error("Error fetching posts:", err);
+        setErr(err instanceof Error ? err.message : "Failed to fetch posts");
+        
+        // Use fallback posts on first page load
+        if (pageToLoad === 1) {
+          setPosts(fallbackPosts);
+          setHasNextPage(false);
+        }
+      } finally {
+        setLoading(false);
+      }
+    },
+    [fallbackPosts]
+  );
+
   useEffect(() => {
-    fetchPosts(1);
-  }, []);
+    fetchPage(1, true);
+  }, [fetchPage]);
 
   // Infinite scroll observer
   useEffect(() => {
@@ -126,7 +177,7 @@ export const BlogGridSection = (): JSX.Element => {
 
     const onIntersect: IntersectionObserverCallback = (entries) => {
       const first = entries[0];
-      if (first.isIntersecting && hasMore && !loading) {
+      if (first.isIntersecting && hasNextPage && !loading) {
         controller?.abort();
         controller = new AbortController();
         fetchPage(page + 1, false, controller.signal);
@@ -139,12 +190,15 @@ export const BlogGridSection = (): JSX.Element => {
       threshold: 0,
     });
 
-    observer.observe(loadMoreTriggerRef.current);
+    io.observe(loadMoreTriggerRef.current);
 
     return () => {
-      if (loadMoreTriggerRef.current) observer.unobserve(loadMoreTriggerRef.current);
+      controller?.abort();
+      if (loadMoreTriggerRef.current) {
+        io.unobserve(loadMoreTriggerRef.current);
+      }
     };
-  }, [page, hasNextPage, loading]);
+  }, [page, hasNextPage, loading, fetchPage]);
 
   // GSAP scroll animations
   useEffect(() => {
@@ -207,7 +261,7 @@ export const BlogGridSection = (): JSX.Element => {
     });
 
     if (headingWrapperRef.current) {
-      headingWrapperRef.current.addEventListener("mousemove", (e) => {
+      const handleMouseMove = (e: MouseEvent) => {
         const rect = headingWrapperRef.current!.getBoundingClientRect();
         const x = (e.clientX - rect.left) / rect.width;
         const y = (e.clientY - rect.top) / rect.height;
@@ -221,9 +275,9 @@ export const BlogGridSection = (): JSX.Element => {
           ease: "power2.out",
           stagger: { amount: 0.3, from: "center" },
         });
-      });
+      };
 
-      headingWrapperRef.current.addEventListener("mouseleave", () => {
+      const handleMouseLeave = () => {
         gsap.to(splitText.chars, {
           duration: 1,
           y: 0,
@@ -233,7 +287,18 @@ export const BlogGridSection = (): JSX.Element => {
           ease: "elastic.out(1, 0.3)",
           stagger: { amount: 0.3, from: "center" },
         });
-      });
+      };
+
+      headingWrapperRef.current.addEventListener("mousemove", handleMouseMove);
+      headingWrapperRef.current.addEventListener("mouseleave", handleMouseLeave);
+
+      return () => {
+        if (headingWrapperRef.current) {
+          headingWrapperRef.current.removeEventListener("mousemove", handleMouseMove);
+          headingWrapperRef.current.removeEventListener("mouseleave", handleMouseLeave);
+        }
+        splitText.revert();
+      };
     }
 
     return () => {
@@ -241,13 +306,13 @@ export const BlogGridSection = (): JSX.Element => {
     };
   }, [posts.length]);
 
-  const handleBlogDetailsClick = (slug: string) => {
-    navigate(`/blog/${slug}`);
+  const handleBlogDetailsClick = (post: BlogPost) => {
+    navigate(`/blog/${post.slug}`);
   };
 
   const getCategoryColor = (category?: string) => {
     const colors: Record<string, string> = {
-      Interior: "bg-primary text-white",
+      "Interior Design": "bg-primary text-white",
       "Home Decor": "bg-secondary text-white",
       Sustainability: "bg-green-500 text-white",
       "Color Theory": "bg-purple-500 text-white",
@@ -412,11 +477,11 @@ export const BlogGridSection = (): JSX.Element => {
           ))}
         </div>
 
-        {/* Sentinel */}
-        <div ref={loadMoreRef} className="h-4 w-full" />
+        {/* Sentinel for infinite scroll */}
+        <div ref={loadMoreTriggerRef} className="h-4 w-full" />
 
         {/* Loading indicator */}
-        {loading && (
+        {loading && posts.length > 0 && (
           <div className="flex items-center justify-center py-8">
             <div className="flex items-center space-x-2">
               <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
@@ -428,7 +493,7 @@ export const BlogGridSection = (): JSX.Element => {
         {/* End / Error feedback */}
         {posts.length > 0 && !loading && (
           <div className="flex items-center justify-center mt-6 min-h-[32px]">
-            {!hasMore && (
+            {!hasNextPage && (
               <div className="text-center">
                 <div className="text-sm text-[#626161] [font-family:'Fahkwang',Helvetica] mb-4">
                   You've reached the end of our blog posts.
@@ -453,7 +518,7 @@ export const BlogGridSection = (): JSX.Element => {
         )}
 
         {/* Empty state */}
-        {posts.length === 0 && !loading && (
+        {posts.length === 0 && !loading && !err && (
           <div className="text-center py-16">
             <div className="text-[#626161] [font-family:'Fahkwang',Helvetica] text-lg mb-4">
               No blog posts available at the moment.

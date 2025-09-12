@@ -285,13 +285,6 @@ export const HeroSection = (): JSX.Element => {
     setExpandedSubmenu(expandedSubmenu === itemName ? null : itemName);
   };
 
-  const handleNavigation = (href: string) => {
-    navigate(href);
-  };
-
-  const handleSubmenuNavigation = (href: string) => {
-    navigate(href);
-  };
   return (
     <div ref={heroContainerRef} className="w-full h-[60vh] md:h-[70vh] lg:h-[80vh] relative overflow-hidden">
       {/* Background Image - Full Cover */}
