@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "../../../../ui/button";
-import { Clock, User, Calendar, Tag, ArrowRight } from "lucide-react";
+import { Clock, User, Calendar, ArrowRight } from "lucide-react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
@@ -18,19 +18,46 @@ function renderLexical(node: any): string {
   switch (node.type) {
     case "root":
       return (node.children || []).map(renderLexical).join("");
+
     case "paragraph":
       return `<p>${(node.children || []).map(renderLexical).join("")}</p>`;
-    case "text":
-      return node.text || "";
+
+    case "text": {
+      let text = node.text || "";
+      if (node.format & 1) text = `<strong>${text}</strong>`;
+      if (node.format & 2) text = `<em>${text}</em>`;
+      if (node.format & 4) text = `<u>${text}</u>`;
+      return text;
+    }
+
     case "heading":
-      return `<h${node.tag || 2}>${(node.children || []).map(renderLexical).join("")}</h${node.tag || 2}>`;
+      return `<${node.tag || "h2"}>${(node.children || [])
+        .map(renderLexical)
+        .join("")}</${node.tag || "h2"}>`;
+
     case "quote":
-      return `<blockquote>${(node.children || []).map(renderLexical).join("")}</blockquote>`;
-    case "list":
+      return `<blockquote>${(node.children || [])
+        .map(renderLexical)
+        .join("")}</blockquote>`;
+
+    case "list": {
       const listTag = node.listType === "ordered" ? "ol" : "ul";
-      return `<${listTag}>${(node.children || []).map(renderLexical).join("")}</${listTag}>`;
+      return `<${listTag}>${(node.children || [])
+        .map(renderLexical)
+        .join("")}</${listTag}>`;
+    }
+
     case "listitem":
       return `<li>${(node.children || []).map(renderLexical).join("")}</li>`;
+
+    case "upload":
+      if (node.value?.url) {
+        return `<div class="my-6"><img src="${CMS_ORIGIN}${node.value.url}" alt="${
+          node.value.alt || ""
+        }" class="rounded-lg"/></div>`;
+      }
+      return "";
+
     default:
       return (node.children || []).map(renderLexical).join("");
   }
@@ -73,7 +100,9 @@ export const BlogContentSection = (): JSX.Element => {
       try {
         setLoading(true);
         setErr(null);
-        const res = await fetch(`${CMS_ORIGIN}/api/blog-posts?where[slug][equals]=${slug}&depth=2`);
+        const res = await fetch(
+          `${CMS_ORIGIN}/api/blog-posts?where[slug][equals]=${slug}&depth=2`
+        );
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         setPost(data.docs?.[0] || null);
@@ -165,7 +194,10 @@ export const BlogContentSection = (): JSX.Element => {
   };
 
   return (
-    <section ref={sectionRef} className="py-16 md:py-20 bg-white -mt-48 relative z-10">
+    <section
+      ref={sectionRef}
+      className="py-16 md:py-20 bg-white -mt-48 relative z-10"
+    >
       <div className="container mx-auto px-4 max-w-7xl grid grid-cols-1 lg:grid-cols-3 gap-12">
         {/* Main Content */}
         <div ref={contentRef} className="lg:col-span-2">
@@ -194,7 +226,7 @@ export const BlogContentSection = (): JSX.Element => {
               )}
 
               {/* Meta */}
-              <div className="flex flex-wrap items-center gap-4 mb-6 text-sm text-[#626161] [font-family:'Fahkwang',Helvetica]">
+              <div className="flex flex-wrap items-center gap-4 mb-6 text-sm text-[#626161]">
                 <div className="flex items-center space-x-2">
                   <User className="w-4 h-4" />
                   <span>Admin</span>
@@ -210,13 +242,13 @@ export const BlogContentSection = (): JSX.Element => {
               </div>
 
               {/* Title */}
-              <h1 className="text-3xl md:text-4xl font-medium [font-family:'Fahkwang',Helvetica] text-[#01190c] mb-8 leading-tight">
+              <h1 className="text-3xl md:text-4xl font-medium text-[#01190c] mb-8 leading-tight">
                 {post.title}
               </h1>
 
               {/* Content */}
               <div
-                className="prose prose-lg max-w-none [font-family:'Fahkwang',Helvetica] text-[#626161] leading-relaxed text-justify"
+                className="prose prose-lg max-w-none text-[#626161] leading-relaxed text-justify"
                 dangerouslySetInnerHTML={{
                   __html: renderLexical(post.fullContent?.root),
                 }}
@@ -226,7 +258,9 @@ export const BlogContentSection = (): JSX.Element => {
               {post.tags && post.tags.length > 0 && (
                 <div className="mt-12 pt-8 border-t border-gray-200">
                   <div className="flex flex-wrap items-center gap-4">
-                    <span className="text-sm font-medium text-[#01190c]">Tags:</span>
+                    <span className="text-sm font-medium text-[#01190c]">
+                      Tags:
+                    </span>
                     <div className="flex flex-wrap gap-2">
                       {post.tags.map((tag) => (
                         <span
@@ -273,14 +307,12 @@ export const BlogContentSection = (): JSX.Element => {
 
           {/* Help Widget */}
           <div className="bg-[#1d1e24] text-white rounded-lg p-6 text-center">
-            <h3 className="text-xl font-medium [font-family:'Fahkwang',Helvetica] mb-4">
-              How Can We Help?
-            </h3>
-            <p className="text-sm text-gray-300 [font-family:'Fahkwang',Helvetica] mb-6">
+            <h3 className="text-xl font-medium mb-4">How Can We Help?</h3>
+            <p className="text-sm text-gray-300 mb-6">
               Contact our experts for personalized interior design consultation
             </p>
             <Link to="/contact">
-              <Button className="bg-primary text-white px-6 py-2 rounded-lg [font-family:'Fahkwang',Helvetica] font-medium hover:bg-primary-hover transition-colors duration-300 w-full">
+              <Button className="bg-primary text-white px-6 py-2 rounded-lg font-medium hover:bg-primary-hover transition-colors duration-300 w-full">
                 Start Consultation
                 <ArrowRight className="ml-2 w-4 h-4" />
               </Button>
