@@ -18,6 +18,7 @@ export const HeroSection = (): JSX.Element => {
   const headerRef = useRef<HTMLElement>(null);
   const logoRef = useRef<HTMLImageElement>(null);
   const menuContainerRef = useRef<HTMLDivElement>(null);
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const navigate = useNavigate();
 
   const navItems = [
@@ -255,6 +256,19 @@ export const HeroSection = (): JSX.Element => {
 
   const handleSubmenuToggle = (itemName: string) => {
     setExpandedSubmenu(expandedSubmenu === itemName ? null : itemName);
+  };
+
+  const handleMouseEnter = (itemName: string) => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+    }
+    setHoveredMenu(itemName);
+  };
+
+  const handleMouseLeave = () => {
+    hoverTimeoutRef.current = setTimeout(() => {
+      setHoveredMenu(null);
+    }, 150);
   };
 
   return (
