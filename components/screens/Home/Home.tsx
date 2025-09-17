@@ -87,7 +87,7 @@ const Home = (): JSX.Element => {
         { name: "Residential Interior", href: "/residential-interior" },
         { name: "Commercial Interior", href: "/commercial-interior" },
         { name: "Architectural Consultancy", href: "/architectural-consultancy" }
-      ]
+      ],
       megaMenu: {
         sections: [
           {
@@ -560,45 +560,145 @@ const Home = (): JSX.Element => {
                         
                         <AnimatePresence>
                           {item.subItems && hoveredMenu === item.name && (
-                            <motion.div
-                              variants={submenuVariants}
-                              initial="hidden"
-                              animate="visible"
-                              exit="hidden"
-                              role="menu"
-                              aria-label={`${item.name} submenu`}
-                              className="absolute top-full left-0 mt-2 min-w-[200px] bg-[#1b1b1b] rounded-lg shadow-2xl overflow-hidden z-50 border border-[#333333]"
-                              style={{
-                                boxShadow: "0 20px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(0, 0, 0, 0.3)"
-                              }}
-                              onMouseEnter={() => handleMouseEnter(item.name)}
-                              onMouseLeave={handleMouseLeave}
-                            >
-                              <motion.div className="py-2">
-                                {item.subItems.map((subItem, subIndex) => (
-                                  <motion.button
-                                    key={subIndex}
-                                    role="menuitem"
-                                    ref={(el) => {
-                                      const key = `${item.name}-${subIndex}`;
-                                      if (el && !el.dataset.animationKey) {
-                                        addSubmenuItemAnimation(el, key);
-                                      }
-                                    }}
-                                    variants={itemVariants}
-                                    transition={{ delay: subIndex * 0.1 }}
-                                    onClick={() => navigate(subItem.href)}
-                                    className="w-full px-4 py-3 text-left text-sm text-white hover:text-primary transition-colors duration-300 [font-family:'Fahkwang',Helvetica] relative group overflow-hidden"
-                                    style={{ 
-                                      transformStyle: 'preserve-3d',
-                                      perspective: '500px'
-                                    }}
-                                  >
-                                    <span className="relative z-10">{subItem.name}</span>
-                                  </motion.button>
-                                ))}
+                            item.name === "Services" && item.megaMenu ? (
+                              <motion.div
+                                variants={submenuVariants}
+                                initial="hidden"
+                                animate="visible"
+                                exit="hidden"
+                                role="menu"
+                                aria-label="Services mega menu"
+                                className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-[800px] bg-white rounded-2xl shadow-2xl overflow-hidden z-50 border border-gray-200"
+                                style={{
+                                  boxShadow: "0 25px 50px rgba(0, 0, 0, 0.15), 0 0 30px rgba(0, 0, 0, 0.1)"
+                                }}
+                                onMouseEnter={() => handleMouseEnter(item.name)}
+                                onMouseLeave={handleMouseLeave}
+                              >
+                                {/* Mega Menu Header */}
+                                <div className="bg-gradient-to-r from-primary/5 via-secondary/5 to-primary/5 px-8 py-6 border-b border-gray-100">
+                                  <h3 className="text-2xl font-semibold [font-family:'Fahkwang',Helvetica] text-[#01190c] mb-2">
+                                    Our Services
+                                  </h3>
+                                  <p className="text-sm text-[#626161] [font-family:'Fahkwang',Helvetica]">
+                                    Comprehensive interior design solutions for every space
+                                  </p>
+                                </div>
+
+                                {/* Mega Menu Content */}
+                                <div className="grid grid-cols-3 gap-0">
+                                  {item.megaMenu.sections.map((section, sectionIndex) => (
+                                    <motion.div
+                                      key={sectionIndex}
+                                      variants={itemVariants}
+                                      transition={{ delay: sectionIndex * 0.1 }}
+                                      className="p-6 hover:bg-gray-50/50 transition-colors duration-300 border-r border-gray-100 last:border-r-0"
+                                    >
+                                      {/* Section Header */}
+                                      <div className="flex items-center mb-4">
+                                        <div 
+                                          className="w-10 h-10 rounded-xl flex items-center justify-center mr-3 text-lg"
+                                          style={{ backgroundColor: `${section.color}15` }}
+                                        >
+                                          {section.icon}
+                                        </div>
+                                        <div>
+                                          <h4 
+                                            className="text-lg font-semibold [font-family:'Fahkwang',Helvetica] mb-1"
+                                            style={{ color: section.color }}
+                                          >
+                                            {section.title}
+                                          </h4>
+                                          <p className="text-xs text-[#626161] [font-family:'Fahkwang',Helvetica]">
+                                            {section.description}
+                                          </p>
+                                        </div>
+                                      </div>
+
+                                      {/* Section Links */}
+                                      <div className="space-y-2">
+                                        {section.links.map((link, linkIndex) => (
+                                          <motion.button
+                                            key={linkIndex}
+                                            role="menuitem"
+                                            variants={itemVariants}
+                                            transition={{ delay: (sectionIndex * 0.1) + (linkIndex * 0.05) }}
+                                            onClick={() => navigate(link.href)}
+                                            className={`w-full text-left px-3 py-2 rounded-lg transition-all duration-300 [font-family:'Fahkwang',Helvetica] relative group overflow-hidden ${
+                                              link.featured 
+                                                ? 'bg-gradient-to-r from-primary/10 to-secondary/10 text-[#01190c] font-medium border border-primary/20 hover:border-primary/40 hover:shadow-md' 
+                                                : 'text-[#626161] hover:text-[#01190c] hover:bg-gray-100/80'
+                                            }`}
+                                          >
+                                            <span className="relative z-10 text-sm">
+                                              {link.name}
+                                            </span>
+                                            {link.featured && (
+                                              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-all duration-700 ease-out" />
+                                            )}
+                                          </motion.button>
+                                        ))}
+                                      </div>
+                                    </motion.div>
+                                  ))}
+                                </div>
+
+                                {/* Mega Menu Footer */}
+                                <div className="bg-gray-50/50 px-8 py-4 border-t border-gray-100">
+                                  <div className="flex items-center justify-between">
+                                    <div className="text-sm text-[#626161] [font-family:'Fahkwang',Helvetica]">
+                                      Need help choosing? <span className="text-primary font-medium">Contact our experts</span>
+                                    </div>
+                                    <button
+                                      onClick={() => navigate('/contact')}
+                                      className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium [font-family:'Fahkwang',Helvetica] hover:bg-primary-hover transition-all duration-300 hover:scale-105"
+                                    >
+                                      Get Consultation
+                                    </button>
+                                  </div>
+                                </div>
                               </motion.div>
-                            </motion.div>
+                            ) : (
+                              <motion.div
+                                variants={submenuVariants}
+                                initial="hidden"
+                                animate="visible"
+                                exit="hidden"
+                                role="menu"
+                                aria-label={`${item.name} submenu`}
+                                className="absolute top-full left-0 mt-2 min-w-[200px] bg-[#1b1b1b] rounded-lg shadow-2xl overflow-hidden z-50 border border-[#333333]"
+                                style={{
+                                  boxShadow: "0 20px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(0, 0, 0, 0.3)"
+                                }}
+                                onMouseEnter={() => handleMouseEnter(item.name)}
+                                onMouseLeave={handleMouseLeave}
+                              >
+                                <motion.div className="py-2">
+                                  {item.subItems.map((subItem, subIndex) => (
+                                    <motion.button
+                                      key={subIndex}
+                                      role="menuitem"
+                                      ref={(el) => {
+                                        const key = `${item.name}-${subIndex}`;
+                                        if (el && !el.dataset.animationKey) {
+                                          addSubmenuItemAnimation(el, key);
+                                        }
+                                      }}
+                                      variants={itemVariants}
+                                      transition={{ delay: subIndex * 0.1 }}
+                                      onClick={() => navigate(subItem.href)}
+                                      className="w-full px-4 py-3 text-left text-sm text-white hover:text-primary transition-colors duration-300 [font-family:'Fahkwang',Helvetica] relative group overflow-hidden"
+                                      style={{ 
+                                        transformStyle: 'preserve-3d',
+                                        perspective: '500px'
+                                      }}
+                                    >
+                                      <span className="relative z-10">{subItem.name}</span>
+                                    </motion.button>
+                                  ))}
+                                </motion.div>
+                              </motion.div>
+                            )
                           )}
                         </AnimatePresence>
                       </div>
