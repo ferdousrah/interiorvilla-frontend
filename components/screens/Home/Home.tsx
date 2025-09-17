@@ -568,8 +568,10 @@ const Home = (): JSX.Element => {
                                 exit="hidden"
                                 role="menu"
                                 aria-label="Services mega menu"
-                               className="fixed top-full left-0 right-0 mt-2 bg-white shadow-2xl overflow-hidden z-50 border-t border-gray-200"
+                               className="fixed left-0 right-0 bg-white shadow-2xl overflow-hidden z-50 border-t border-gray-200"
                                 style={{
+                                 top: `${(isScrolled && isScrollingUp) ? '60px' : '112px'}`,
+                                 width: '100vw',
                                   boxShadow: "0 25px 50px rgba(0, 0, 0, 0.15), 0 0 30px rgba(0, 0, 0, 0.1)"
                                 }}
                                 onMouseEnter={() => handleMouseEnter(item.name)}
