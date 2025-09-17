@@ -1,0 +1,41 @@
+
+/* Project Gallery Section Styles */
+
+/* Fancybox polish */
+.fancybox__container {
+  --fancybox-bg: rgba(0, 0, 0, 0.95);
+  --fancybox-accent-color: #75bf44;
+}
+.fancybox__backdrop { background: var(--fancybox-bg); }
+.fancybox__toolbar {
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(10px);
+  border-radius: 8px;
+  margin: 20px;
+  padding: 8px;
+}
+.fancybox__button {
+  color: #fff !important;
+  background: rgba(255,255,255,0.12) !important;
+  border-radius: 50% !important;
+  transition: all .3s ease !important;
+  width: 40px !important;
+  height: 40px !important;
+  margin: 0 2px !important;
+}
+.fancybox__button:hover { background: #75bf44 !important; transform: scale(1.07) !important; }
+.fancybox__nav { background: rgba(0,0,0,0.7) !important; color:#fff !important; border-radius:50% !important; width:48px !important; height:48px !important; }
+.fancybox__nav:hover { background:#75bf44 !important; }
+.fancybox__caption {
+  background: rgba(0,0,0,0.8);
+  color: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  margin: 20px;
+  text-align: center;
+}
+@media (max-width: 768px) {
+  .fancybox__button { width: 35px !important; height: 35px !important; }
+  .fancybox__nav { width: 40px !important; height: 40px !important; }
+  .fancybox__toolbar { margin: 10px !important; padding: 6px !important; }
+}
