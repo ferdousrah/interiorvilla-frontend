@@ -568,20 +568,14 @@ const Home = (): JSX.Element => {
                                 exit="hidden"
                                 role="menu"
                                 aria-label="Services mega menu"
-                               className="fixed inset-x-0 bg-white shadow-2xl overflow-hidden z-50 border-t border-gray-200"
+                               className="fixed top-full left-0 right-0 mt-2 bg-white shadow-2xl overflow-hidden z-50 border-t border-gray-200"
                                 style={{
-                                 top: `${(isScrolled && isScrollingUp) ? '60px' : '112px'}`,
-                                 left: '0',
-                                 right: '0',
-                                 width: '100vw',
-                                 marginLeft: '0',
-                                 marginRight: '0',
                                   boxShadow: "0 25px 50px rgba(0, 0, 0, 0.15), 0 0 30px rgba(0, 0, 0, 0.1)"
                                 }}
                                 onMouseEnter={() => handleMouseEnter(item.name)}
                                 onMouseLeave={handleMouseLeave}
                               >
-                                <div className="w-full px-8 max-w-none">
+                                <div className="container mx-auto px-4 max-w-7xl">
                                   {/* Mega Menu Header */}
                                   <div className="bg-gradient-to-r from-primary/5 via-secondary/5 to-primary/5 px-8 py-6 border-b border-gray-100">
                                     <h3 className="text-2xl font-semibold [font-family:'Fahkwang',Helvetica] text-[#01190c] mb-2">
@@ -593,7 +587,7 @@ const Home = (): JSX.Element => {
                                   </div>
 
                                   {/* Mega Menu Content */}
-                                  <div className="grid grid-cols-3 gap-0 max-w-7xl mx-auto">
+                                  <div className="grid grid-cols-3 gap-0">
                                     {item.megaMenu.sections.map((section, sectionIndex) => (
                                       <motion.div
                                         key={sectionIndex}
@@ -651,7 +645,7 @@ const Home = (): JSX.Element => {
                                   </div>
 
                                   {/* Mega Menu Footer */}
-                                  <div className="bg-gray-50/50 px-8 py-6 border-t border-gray-100 max-w-7xl mx-auto">
+                                  <div className="bg-gray-50/50 px-8 py-6 border-t border-gray-100">
                                     <div className="flex items-center justify-between">
                                       <div className="text-sm text-[#626161] [font-family:'Fahkwang',Helvetica]">
                                         Need help choosing? <span className="text-primary font-medium">Contact our experts</span>
