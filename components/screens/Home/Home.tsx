@@ -568,97 +568,95 @@ const Home = (): JSX.Element => {
                                 exit="hidden"
                                 role="menu"
                                 aria-label="Services mega menu"
-                               className="absolute top-full left-0 mt-2 w-[800px] bg-white rounded-2xl shadow-2xl overflow-hidden z-50 border border-gray-200"
-                               style={{
-                                 transform: 'translateX(-50%)',
-                                 left: '50%'
-                               }}
+                               className="fixed top-full left-0 right-0 mt-2 bg-white shadow-2xl overflow-hidden z-50 border-t border-gray-200"
                                 style={{
                                   boxShadow: "0 25px 50px rgba(0, 0, 0, 0.15), 0 0 30px rgba(0, 0, 0, 0.1)"
                                 }}
                                 onMouseEnter={() => handleMouseEnter(item.name)}
                                 onMouseLeave={handleMouseLeave}
                               >
-                                {/* Mega Menu Header */}
-                                <div className="bg-gradient-to-r from-primary/5 via-secondary/5 to-primary/5 px-8 py-6 border-b border-gray-100">
-                                  <h3 className="text-2xl font-semibold [font-family:'Fahkwang',Helvetica] text-[#01190c] mb-2">
-                                    Our Services
-                                  </h3>
-                                  <p className="text-sm text-[#626161] [font-family:'Fahkwang',Helvetica]">
-                                    Comprehensive interior design solutions for every space
-                                  </p>
-                                </div>
+                                <div className="container mx-auto px-4 max-w-7xl">
+                                  {/* Mega Menu Header */}
+                                  <div className="bg-gradient-to-r from-primary/5 via-secondary/5 to-primary/5 px-8 py-6 border-b border-gray-100">
+                                    <h3 className="text-2xl font-semibold [font-family:'Fahkwang',Helvetica] text-[#01190c] mb-2">
+                                      Our Services
+                                    </h3>
+                                    <p className="text-sm text-[#626161] [font-family:'Fahkwang',Helvetica]">
+                                      Comprehensive interior design solutions for every space
+                                    </p>
+                                  </div>
 
-                                {/* Mega Menu Content */}
-                                <div className="grid grid-cols-3 gap-0">
-                                  {item.megaMenu.sections.map((section, sectionIndex) => (
-                                    <motion.div
-                                      key={sectionIndex}
-                                      variants={itemVariants}
-                                      transition={{ delay: sectionIndex * 0.1 }}
-                                      className="p-6 hover:bg-gray-50/50 transition-colors duration-300 border-r border-gray-100 last:border-r-0"
-                                    >
-                                      {/* Section Header */}
-                                      <div className="flex items-center mb-4">
-                                        <div 
-                                          className="w-10 h-10 rounded-xl flex items-center justify-center mr-3 text-lg"
-                                          style={{ backgroundColor: `${section.color}15` }}
-                                        >
-                                          {section.icon}
-                                        </div>
-                                        <div>
-                                          <h4 
-                                            className="text-lg font-semibold [font-family:'Fahkwang',Helvetica] mb-1"
-                                            style={{ color: section.color }}
+                                  {/* Mega Menu Content */}
+                                  <div className="grid grid-cols-3 gap-0">
+                                    {item.megaMenu.sections.map((section, sectionIndex) => (
+                                      <motion.div
+                                        key={sectionIndex}
+                                        variants={itemVariants}
+                                        transition={{ delay: sectionIndex * 0.1 }}
+                                        className="p-8 hover:bg-gray-50/50 transition-colors duration-300 border-r border-gray-100 last:border-r-0"
+                                      >
+                                        {/* Section Header */}
+                                        <div className="flex items-center mb-6">
+                                          <div 
+                                            className="w-12 h-12 rounded-xl flex items-center justify-center mr-4 text-xl"
+                                            style={{ backgroundColor: `${section.color}15` }}
                                           >
-                                            {section.title}
-                                          </h4>
-                                          <p className="text-xs text-[#626161] [font-family:'Fahkwang',Helvetica]">
-                                            {section.description}
-                                          </p>
+                                            {section.icon}
+                                          </div>
+                                          <div>
+                                            <h4 
+                                              className="text-xl font-semibold [font-family:'Fahkwang',Helvetica] mb-1"
+                                              style={{ color: section.color }}
+                                            >
+                                              {section.title}
+                                            </h4>
+                                            <p className="text-sm text-[#626161] [font-family:'Fahkwang',Helvetica]">
+                                              {section.description}
+                                            </p>
+                                          </div>
                                         </div>
-                                      </div>
 
-                                      {/* Section Links */}
-                                      <div className="space-y-2">
-                                        {section.links.map((link, linkIndex) => (
-                                          <motion.button
-                                            key={linkIndex}
-                                            role="menuitem"
-                                            variants={itemVariants}
-                                            transition={{ delay: (sectionIndex * 0.1) + (linkIndex * 0.05) }}
-                                            onClick={() => navigate(link.href)}
-                                            className={`w-full text-left px-3 py-2 rounded-lg transition-all duration-300 [font-family:'Fahkwang',Helvetica] relative group overflow-hidden ${
-                                              link.featured 
-                                                ? 'bg-gradient-to-r from-primary/10 to-secondary/10 text-[#01190c] font-medium border border-primary/20 hover:border-primary/40 hover:shadow-md' 
-                                                : 'text-[#626161] hover:text-[#01190c] hover:bg-gray-100/80'
-                                            }`}
-                                          >
-                                            <span className="relative z-10 text-sm">
-                                              {link.name}
-                                            </span>
-                                            {link.featured && (
-                                              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-all duration-700 ease-out" />
-                                            )}
-                                          </motion.button>
-                                        ))}
-                                      </div>
-                                    </motion.div>
-                                  ))}
-                                </div>
+                                        {/* Section Links */}
+                                        <div className="space-y-3">
+                                          {section.links.map((link, linkIndex) => (
+                                            <motion.button
+                                              key={linkIndex}
+                                              role="menuitem"
+                                              variants={itemVariants}
+                                              transition={{ delay: (sectionIndex * 0.1) + (linkIndex * 0.05) }}
+                                              onClick={() => navigate(link.href)}
+                                              className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-300 [font-family:'Fahkwang',Helvetica] relative group overflow-hidden ${
+                                                link.featured 
+                                                  ? 'bg-gradient-to-r from-primary/10 to-secondary/10 text-[#01190c] font-medium border border-primary/20 hover:border-primary/40 hover:shadow-md' 
+                                                  : 'text-[#626161] hover:text-[#01190c] hover:bg-gray-100/80'
+                                              }`}
+                                            >
+                                              <span className="relative z-10 text-sm">
+                                                {link.name}
+                                              </span>
+                                              {link.featured && (
+                                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-all duration-700 ease-out" />
+                                              )}
+                                            </motion.button>
+                                          ))}
+                                        </div>
+                                      </motion.div>
+                                    ))}
+                                  </div>
 
-                                {/* Mega Menu Footer */}
-                                <div className="bg-gray-50/50 px-8 py-4 border-t border-gray-100">
-                                  <div className="flex items-center justify-between">
-                                    <div className="text-sm text-[#626161] [font-family:'Fahkwang',Helvetica]">
-                                      Need help choosing? <span className="text-primary font-medium">Contact our experts</span>
+                                  {/* Mega Menu Footer */}
+                                  <div className="bg-gray-50/50 px-8 py-6 border-t border-gray-100">
+                                    <div className="flex items-center justify-between">
+                                      <div className="text-sm text-[#626161] [font-family:'Fahkwang',Helvetica]">
+                                        Need help choosing? <span className="text-primary font-medium">Contact our experts</span>
+                                      </div>
+                                      <button
+                                        onClick={() => navigate('/contact')}
+                                        className="px-6 py-3 bg-primary text-white rounded-lg text-sm font-medium [font-family:'Fahkwang',Helvetica] hover:bg-primary-hover transition-all duration-300 hover:scale-105"
+                                      >
+                                        Get Consultation
+                                      </button>
                                     </div>
-                                    <button
-                                      onClick={() => navigate('/contact')}
-                                      className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium [font-family:'Fahkwang',Helvetica] hover:bg-primary-hover transition-all duration-300 hover:scale-105"
-                                    >
-                                      Get Consultation
-                                    </button>
                                   </div>
                                 </div>
                               </motion.div>
