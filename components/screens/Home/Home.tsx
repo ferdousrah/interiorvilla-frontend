@@ -88,6 +88,52 @@ const Home = (): JSX.Element => {
         { name: "Commercial Interior", href: "/commercial-interior" },
         { name: "Architectural Consultancy", href: "/architectural-consultancy" }
       ]
+      megaMenu: {
+        sections: [
+          {
+            title: "Residential",
+            description: "Transform your home into a sanctuary",
+            icon: "🏠",
+            color: "#75BF44",
+            links: [
+              { name: "Living Room Design", href: "/residential-interior#living-room" },
+              { name: "Bedroom Design", href: "/residential-interior#bedroom" },
+              { name: "Kitchen Design", href: "/residential-interior#kitchen" },
+              { name: "Bathroom Design", href: "/residential-interior#bathroom" },
+              { name: "Home Office", href: "/residential-interior#home-office" },
+              { name: "View All Residential", href: "/residential-interior", featured: true }
+            ]
+          },
+          {
+            title: "Commercial",
+            description: "Create inspiring workspaces",
+            icon: "🏢",
+            color: "#EE5428",
+            links: [
+              { name: "Office Design", href: "/commercial-interior#office" },
+              { name: "Retail Spaces", href: "/commercial-interior#retail" },
+              { name: "Restaurant Design", href: "/commercial-interior#restaurant" },
+              { name: "Hotel Interiors", href: "/commercial-interior#hotel" },
+              { name: "Corporate Spaces", href: "/commercial-interior#corporate" },
+              { name: "View All Commercial", href: "/commercial-interior", featured: true }
+            ]
+          },
+          {
+            title: "Architectural",
+            description: "Expert architectural solutions",
+            icon: "📐",
+            color: "#4F46E5",
+            links: [
+              { name: "Building Design", href: "/architectural-consultancy#building" },
+              { name: "Space Planning", href: "/architectural-consultancy#planning" },
+              { name: "3D Visualization", href: "/architectural-consultancy#visualization" },
+              { name: "Technical Drawings", href: "/architectural-consultancy#drawings" },
+              { name: "Project Management", href: "/architectural-consultancy#management" },
+              { name: "View All Services", href: "/architectural-consultancy", featured: true }
+            ]
+          }
+        ]
+      }
     },
     { 
       name: "Portfolio", 
