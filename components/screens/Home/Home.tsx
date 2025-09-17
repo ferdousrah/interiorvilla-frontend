@@ -568,7 +568,7 @@ const Home = (): JSX.Element => {
                                 exit="hidden"
                                 role="menu"
                                 aria-label="Services mega menu"
-                                className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-[800px] bg-white rounded-2xl shadow-2xl overflow-hidden z-50 border border-gray-200"
+                               className="absolute top-full left-0 transform -translate-x-1/3 mt-2 w-[800px] bg-white rounded-2xl shadow-2xl overflow-hidden z-50 border border-gray-200"
                                 style={{
                                   boxShadow: "0 25px 50px rgba(0, 0, 0, 0.15), 0 0 30px rgba(0, 0, 0, 0.1)"
                                 }}
