@@ -569,9 +569,12 @@ const Home = (): JSX.Element => {
                                 role="menu"
                                 aria-label="Services mega menu"
                                className="fixed top-full left-0 right-0 mt-2 bg-white shadow-2xl overflow-hidden z-50 border-t border-gray-200"
-                               className="fixed top-full left-0 right-0 mt-2 bg-white shadow-2xl overflow-hidden z-50 border-t border-gray-200 rounded-b-2xl"
+                               className="fixed left-0 right-0 bg-white shadow-2xl overflow-hidden z-50 border-t border-gray-200 rounded-b-2xl"
                                 style={{
-                                  boxShadow: "0 25px 50px rgba(0, 0, 0, 0.15), 0 0 30px rgba(0, 0, 0, 0.1)"
+                                  boxShadow: "0 25px 50px rgba(0, 0, 0, 0.15), 0 0 30px rgba(0, 0, 0, 0.1)",
+                                  top: isScrolled && isScrollingUp ? '60px' : '112px', // 90px header + 22px top margin
+                                  width: '100vw',
+                                  marginLeft: 'calc(-50vw + 50%)'
                                 }}
                                 onMouseEnter={() => handleMouseEnter(item.name)}
                                 onMouseLeave={handleMouseLeave}
