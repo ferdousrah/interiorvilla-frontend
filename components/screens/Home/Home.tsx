@@ -447,7 +447,7 @@ const Home = (): JSX.Element => {
             autoPlay={true}
             autoPlayInterval={6000}
             showControls={true}
-            showIndicators={true}
+            showIndicators={false}
             transitionEffect="fade" // or "zoom", "flip", "slide", or "auto" to cycle through all
           />
         </section>
