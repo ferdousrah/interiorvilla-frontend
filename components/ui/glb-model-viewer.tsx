@@ -66,11 +66,25 @@ export const GLBModelViewer: React.FC<ModelViewerProps> = ({
 
     // GLTF Loader
     const loader = new GLTFLoader();
-    loader.setPath('/3dmodel/'); // ensures .bin resolves
-    loader.setResourcePath('/3dmodel/'); // ensures textures resolve
+    
+    // Set up loading manager for better error handling
+    const loadingManager = new THREE.LoadingManager();
+    loadingManager.onProgress = (url, itemsLoaded, itemsTotal) => {
+      const progress = (itemsLoaded / itemsTotal) * 100;
+      setLoadingProgress(progress);
+    };
+    
+    loadingManager.onError = (url) => {
+      console.error('Loading error for:', url);
+      setError(`Failed to load resource: ${url}`);
+      setIsLoading(false);
+    };
+    
+    const gltfLoader = new GLTFLoader(loadingManager);
 
-    loader.load(
-      'scene.gltf',
+    // Load the complete model path
+    gltfLoader.load(
+      modelPath, // Use the full path directly
       (gltf) => {
         const model = gltf.scene;
         modelRef.current = model;
@@ -87,6 +101,7 @@ export const GLBModelViewer: React.FC<ModelViewerProps> = ({
         setIsLoaded(true);
         setIsLoading(false);
         setError(null);
+        console.log('✅ 3D model loaded successfully');
       },
       (xhr) => {
         if (xhr.total) {
@@ -95,7 +110,8 @@ export const GLBModelViewer: React.FC<ModelViewerProps> = ({
       },
       (err) => {
         console.error('❌ Error loading GLTF:', err);
-        setError(`Failed to load 3D model from ${modelPath}`);
+        console.error('Model path attempted:', modelPath);
+        setError(`Failed to load 3D model. Please check if the model file exists at: ${modelPath}`);
         setIsLoading(false);
       }
     );
