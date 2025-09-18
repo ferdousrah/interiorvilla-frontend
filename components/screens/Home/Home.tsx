@@ -457,10 +457,7 @@ const Home = (): JSX.Element => {
           } transition-all duration-700 ease-out`}
           style={{
             height: (isScrolled && isScrollingUp) ? "60px" : "90px",
-            backgroundColor: (isScrolled && isScrollingUp) ? "rgba(27, 27, 27, 0.95)" : "rgba(0, 0, 0, 0.4)",
-            backdropFilter: (isScrolled && isScrollingUp) ? "blur(20px)" : "blur(10px)",
-            boxShadow: (isScrolled && isScrollingUp) ? "0 8px 32px rgba(0, 0, 0, 0.1)" : "0 4px 20px rgba(0, 0, 0, 0.3)",
-            transform: (isScrolled && isScrollingUp) ? "translateY(0)" : isScrolled ? "translateY(-100%)" : "translateY(0)"
+            
           }}
         >
           <div className="container mx-auto px-4 relative flex items-center justify-between h-full">
@@ -482,17 +479,22 @@ const Home = (): JSX.Element => {
             <div 
               ref={menuContainerRef}
               className={`flex items-center menu-container ${
-                !(isScrolled && isScrollingUp) && 'bg-black/30 rounded-[50px] backdrop-blur-[10px] px-4 border border-white/20'
+                !(isScrolled && isScrollingUp) && 'bg-black/30 rounded-[50px] backdrop-blur-[10px] px-4'
               }`}
               style={{ 
                 minWidth: "fit-content",
-                boxShadow: !(isScrolled && isScrollingUp) ? '0 8px 32px rgba(0, 0, 0, 0.3)' : 'none'
+                
+                backgroundColor: (isScrolled && isScrollingUp) ? "rgba(27, 27, 27, 0.95)" : "rgba(0, 0, 0, 0.4)",
+                backdropFilter: (isScrolled && isScrollingUp) ? "blur(20px)" : "blur(10px)",
+                boxShadow: (isScrolled && isScrollingUp) ? "0 8px 32px rgba(0, 0, 0, 0.1)" : "0 4px 20px rgba(0, 0, 0, 0.3)",
+                transform: (isScrolled && isScrollingUp) ? "translateY(0)" : isScrolled ? "translateY(-100%)" : "translateY(0)"
               }}
+              
             >
               <div className="flex items-center justify-end h-full">
                 <button 
                   aria-label="Toggle mobile menu"
-                  className="lg:hidden text-white transition-all duration-300 hover:scale-110 z-50 relative bg-black/20 rounded-full p-2 backdrop-blur-sm border border-white/20"
+                  className="lg:hidden text-white transition-all duration-300 hover:scale-110 z-50 relative bg-black/20 rounded-full p-2 backdrop-blur-sm"
                   style={{
                     filter: 'drop-shadow(0 2px 8px rgba(0, 0, 0, 0.5))',
                   }}
@@ -578,8 +580,7 @@ const Home = (): JSX.Element => {
                                 role="menu"
                                 aria-label="Services mega menu"
                                className="fixed top-full left-0 right-0 mt-2 bg-white shadow-2xl overflow-hidden z-50 border-t border-gray-200"
-                               className="fixed inset-x-0 bg-white shadow-2xl overflow-hidden z-50 border-t border-gray-200 rounded-b-2xl"
-                                style={{
+                                  style={{
                                   boxShadow: "0 25px 50px rgba(0, 0, 0, 0.15), 0 0 30px rgba(0, 0, 0, 0.1)",
                                   top: isScrolled && isScrollingUp ? '60px' : '112px', // 90px header + 22px top margin
                                   left: '0',
