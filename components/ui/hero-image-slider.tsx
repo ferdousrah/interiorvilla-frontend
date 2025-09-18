@@ -57,6 +57,15 @@ export const HeroImageSlider: React.FC<HeroImageSliderProps> = ({
     }
   ];
 
+  // Defensive check: return null if no images or invalid currentIndex
+  if (!images || images.length === 0) {
+    return null;
+  }
+
+  // Ensure currentIndex is always within bounds
+  const safeCurrentIndex = currentIndex % images.length;
+  const currentImage = images[safeCurrentIndex];
+
   // Auto-play functionality
   useEffect(() => {
     if (isPlaying) {
@@ -78,7 +87,7 @@ export const HeroImageSlider: React.FC<HeroImageSliderProps> = ({
   }, [isPlaying, autoPlayInterval, images.length]);
 
   const goToSlide = (index: number) => {
-    setDirection(index > currentIndex ? 1 : -1);
+    setDirection(index > safeCurrentIndex ? 1 : -1);
     setCurrentIndex(index);
   };
 
@@ -159,7 +168,7 @@ export const HeroImageSlider: React.FC<HeroImageSliderProps> = ({
       <div className="relative w-full h-full">
         <AnimatePresence initial={false} custom={direction} mode="wait">
           <motion.div
-            key={currentIndex}
+            key={safeCurrentIndex}
             custom={direction}
             variants={slideVariants}
             initial="enter"
@@ -180,8 +189,8 @@ export const HeroImageSlider: React.FC<HeroImageSliderProps> = ({
             }}
           >
             <img
-              src={images[currentIndex].src}
-              alt={images[currentIndex].alt}
+              src={currentImage.src}
+              alt={currentImage.alt}
               className="w-full h-full object-cover will-change-transform"
               style={{
                 imageRendering: 'high-quality',
@@ -198,7 +207,7 @@ export const HeroImageSlider: React.FC<HeroImageSliderProps> = ({
               transition={{ duration: 0.8, delay: 0.2 }}
               style={{
                 background: `linear-gradient(
-                  ${45 + (currentIndex * 15)}deg, 
+                  ${45 + (safeCurrentIndex * 15)}deg, 
                   rgba(0,0,0,0.7) 0%, 
                   rgba(0,0,0,0.4) 30%, 
                   rgba(0,0,0,0.2) 60%, 
@@ -215,7 +224,7 @@ export const HeroImageSlider: React.FC<HeroImageSliderProps> = ({
               transition={{ duration: 2, ease: "easeInOut", repeat: Infinity, repeatType: "reverse" }}
               style={{
                 background: `conic-gradient(
-                  from ${currentIndex * 60}deg at 70% 30%, 
+                  from ${safeCurrentIndex * 60}deg at 70% 30%, 
                   transparent 0deg, 
                   rgba(255,255,255,0.1) 45deg, 
                   transparent 90deg, 
@@ -228,7 +237,7 @@ export const HeroImageSlider: React.FC<HeroImageSliderProps> = ({
             {/* Animated Text Overlay */}
             <AnimatePresence mode="wait">
               <motion.div
-                key={`text-${currentIndex}`}
+                key={`text-${safeCurrentIndex}`}
                 custom={direction}
                 variants={overlayVariants}
                 initial="enter"
@@ -248,7 +257,7 @@ export const HeroImageSlider: React.FC<HeroImageSliderProps> = ({
               >
                 <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
                   <div className="text-left text-white max-w-2xl">
-                    {images[currentIndex].title && (
+                    {currentImage.title && (
                       <motion.h1
                         initial={{ opacity: 0, x: -80, y: 30, rotateX: -15, scale: 0.9 }}
                         animate={{ opacity: 1, x: 0, y: 0, rotateX: 0, scale: 1 }}
@@ -267,11 +276,11 @@ export const HeroImageSlider: React.FC<HeroImageSliderProps> = ({
                           transformStyle: 'preserve-3d',
                         }}
                       >
-                        {images[currentIndex].title}
+                        {currentImage.title}
                       </motion.h1>
                     )}
                     
-                    {images[currentIndex].subtitle && (
+                    {currentImage.subtitle && (
                       <motion.p
                         initial={{ opacity: 0, x: -60, y: 20, scale: 0.95 }}
                         animate={{ opacity: 1, x: 0, y: 0, scale: 1 }}
@@ -290,7 +299,7 @@ export const HeroImageSlider: React.FC<HeroImageSliderProps> = ({
                           transformStyle: 'preserve-3d',
                         }}
                       >
-                        {images[currentIndex].subtitle}
+                        {currentImage.subtitle}
                       </motion.p>
                     )}
                     
@@ -371,13 +380,13 @@ export const HeroImageSlider: React.FC<HeroImageSliderProps> = ({
               whileHover={{ scale: 1.3 }}
               whileTap={{ scale: 0.9 }}
               className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                index === currentIndex
+                index === safeCurrentIndex
                   ? 'bg-primary shadow-lg shadow-primary/50'
                   : 'bg-white/40 hover:bg-white/60 hover:scale-110'
               }`}
               aria-label={`Go to slide ${index + 1}`}
             >
-              {index === currentIndex && (
+              {index === safeCurrentIndex && (
                 <motion.div
                   className="absolute inset-0 bg-primary rounded-full"
                   layoutId="activeIndicator"
@@ -393,7 +402,7 @@ export const HeroImageSlider: React.FC<HeroImageSliderProps> = ({
       {autoPlay && isPlaying && (
         <div className="absolute bottom-0 left-0 w-full h-1 bg-white/20 z-20 overflow-hidden">
           <motion.div
-            key={currentIndex}
+            key={safeCurrentIndex}
             className="h-full bg-gradient-to-r from-primary via-secondary to-primary relative"
             initial={{ width: '0%' }}
             animate={{ width: '100%' }}
@@ -502,13 +511,13 @@ export const HeroImageSlider: React.FC<HeroImageSliderProps> = ({
         transition={{ duration: 0.5, delay: 1.5 }}
       >
         <motion.span
-          key={currentIndex}
+          key={safeCurrentIndex}
           initial={{ y: 10, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: -10, opacity: 0 }}
           transition={{ duration: 0.3 }}
         >
-          {currentIndex + 1} / {images.length}
+          {safeCurrentIndex + 1} / {images.length}
         </motion.span>
       </motion.div>
     </div>
