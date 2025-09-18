@@ -542,14 +542,14 @@ const Home = (): JSX.Element => {
                             variant={item.active ? "default" : "ghost"}
                             className={`min-w-[108px] px-6 rounded-[50px] whitespace-nowrap transition-all duration-300 hover:bg-primary hover:text-white hover:scale-105 hover:shadow-lg ${
                               item.active
-                                ? "bg-primary text-white shadow-lg border border-primary/50"
-                                : "bg-black/20 text-white hover:shadow-[0_0_20px_rgba(117,191,68,0.3)] border border-white/30 backdrop-blur-sm"
+                                ? "text-white"
+                                : "text-white"
                             }`}
                             style={{
-                             height: (isScrolled && isScrollingUp) ? "36px" : "38px",
-                             fontSize: (isScrolled && isScrollingUp) ? "13px" : "14px",
-                             textShadow: '0 1px 4px rgba(0, 0, 0, 0.5)',
-                             filter: 'drop-shadow(0 2px 6px rgba(0, 0, 0, 0.3))'
+                              height: (isScrolled && isScrollingUp) ? "36px" : "38px",
+                              fontSize: (isScrolled && isScrollingUp) ? "13px" : "14px",
+                              textShadow: '0 1px 4px rgba(0, 0, 0, 0.5)',
+                              filter: 'drop-shadow(0 2px 6px rgba(0, 0, 0, 0.3))'
                             }}
                             onClick={() => {
                               window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
@@ -567,6 +567,7 @@ const Home = (): JSX.Element => {
                               </motion.span>
                             )}
                           </Button>
+
                         </Link>
                         
                         <AnimatePresence>
