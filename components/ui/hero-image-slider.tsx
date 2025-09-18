@@ -33,41 +33,27 @@ export const HeroImageSlider: React.FC<HeroImageSliderProps> = ({
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Hero images for the slider
-  const images: SlideImage[] = [
+ const images: SlideImage[] = [
     {
       id: 1,
-      src: '/image.png',
+      src: '/slide/slide1.jpg',
       alt: 'Modern Living Room Design',
       title: 'Transform Your Space',
       subtitle: 'Premium Interior Design Services'
     },
     {
       id: 2,
-      src: '/a-residential-interior-image.png',
+      src: '/slide/slide2.jpg',
       alt: 'Elegant Residential Interior',
       title: 'Residential Excellence',
       subtitle: 'Creating Beautiful Homes'
     },
     {
       id: 3,
-      src: '/a-office-interior-image.png',
+      src: '/slide/slide3.jpg',
       alt: 'Professional Office Design',
       title: 'Commercial Spaces',
       subtitle: 'Inspiring Work Environments'
-    },
-    {
-      id: 4,
-      src: '/dining-interior.png',
-      alt: 'Sophisticated Dining Area',
-      title: 'Dining Elegance',
-      subtitle: 'Where Style Meets Function'
-    },
-    {
-      id: 5,
-      src: '/create-an-image-where-a-beautiful-girl-shows-her-bedroom-interio.png',
-      alt: 'Luxurious Bedroom Design',
-      title: 'Dream Bedrooms',
-      subtitle: 'Your Personal Sanctuary'
     }
   ];
 
