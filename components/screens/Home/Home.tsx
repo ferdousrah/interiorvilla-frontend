@@ -13,9 +13,17 @@ import { motion, AnimatePresence } from "framer-motion";
 import { BlogSection } from "./sections/BlogSection/BlogSection";
 import { CustomCursor } from "../../ui/cursor";
 import { CTASection } from "./sections/CTASection/CTASection";
-import { X, ChevronDown, Home as HomeIcon, User, Briefcase, FolderOpen, BookOpen, Mail } from "lucide-react";
+import {
+  X,
+  ChevronDown,
+  Home as HomeIcon,
+  User,
+  Briefcase,
+  FolderOpen,
+  BookOpen,
+  Mail,
+} from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { LazyComponent } from "../../ui/lazy-component";
 
 // Import the new image slider
 import { HeroImageSlider } from "../../ui/hero-image-slider";
@@ -25,21 +33,25 @@ const loadGSAP = async () => {
   const [gsap, ScrollTrigger, SplitText] = await Promise.all([
     import("gsap"),
     import("gsap/ScrollTrigger"),
-    import("gsap/SplitText")
+    import("gsap/SplitText"),
   ]);
-  
+
   gsap.default.registerPlugin(ScrollTrigger.ScrollTrigger, SplitText.SplitText);
-  return { gsap: gsap.default, ScrollTrigger: ScrollTrigger.ScrollTrigger, SplitText: SplitText.SplitText };
+  return {
+    gsap: gsap.default,
+    ScrollTrigger: ScrollTrigger.ScrollTrigger,
+    SplitText: SplitText.SplitText,
+  };
 };
 
 // Throttle function for performance
 const throttle = (func: Function, limit: number) => {
   let inThrottle: boolean;
-  return function(this: any, ...args: any[]) {
+  return function (this: any, ...args: any[]) {
     if (!inThrottle) {
       func.apply(this, args);
       inThrottle = true;
-      setTimeout(() => inThrottle = false, limit);
+      setTimeout(() => (inThrottle = false), limit);
     }
   };
 };
@@ -64,27 +76,27 @@ const Home = (): JSX.Element => {
   const cachedHeaderRect = useRef<DOMRect | null>(null);
 
   const navItems = [
-    { 
-      name: "Home", 
+    {
+      name: "Home",
       active: true,
       icon: HomeIcon,
-      href: "/"
+      href: "/",
     },
-    { 
-      name: "About Us", 
+    {
+      name: "About Us",
       active: false,
       icon: User,
-      href: "/about"
+      href: "/about",
     },
-    { 
-      name: "Services", 
+    {
+      name: "Services",
       active: false,
       icon: Briefcase,
       href: "#",
       subItems: [
         { name: "Residential Interior", href: "/residential-interior" },
         { name: "Commercial Interior", href: "/commercial-interior" },
-        { name: "Architectural Consultancy", href: "/architectural-consultancy" }
+        { name: "Architectural Consultancy", href: "/architectural-consultancy" },
       ],
       megaMenu: {
         sections: [
@@ -99,8 +111,8 @@ const Home = (): JSX.Element => {
               { name: "Kitchen Design", href: "/residential-interior#kitchen" },
               { name: "Bathroom Design", href: "/residential-interior#bathroom" },
               { name: "Home Office", href: "/residential-interior#home-office" },
-              { name: "View All Residential", href: "/residential-interior", featured: true }
-            ]
+              { name: "View All Residential", href: "/residential-interior", featured: true },
+            ],
           },
           {
             title: "Commercial",
@@ -113,8 +125,8 @@ const Home = (): JSX.Element => {
               { name: "Restaurant Design", href: "/commercial-interior#restaurant" },
               { name: "Hotel Interiors", href: "/commercial-interior#hotel" },
               { name: "Corporate Spaces", href: "/commercial-interior#corporate" },
-              { name: "View All Commercial", href: "/commercial-interior", featured: true }
-            ]
+              { name: "View All Commercial", href: "/commercial-interior", featured: true },
+            ],
           },
           {
             title: "Architectural",
@@ -127,29 +139,29 @@ const Home = (): JSX.Element => {
               { name: "3D Visualization", href: "/architectural-consultancy#visualization" },
               { name: "Technical Drawings", href: "/architectural-consultancy#drawings" },
               { name: "Project Management", href: "/architectural-consultancy#management" },
-              { name: "View All Services", href: "/architectural-consultancy", featured: true }
-            ]
-          }
-        ]
-      }
+              { name: "View All Services", href: "/architectural-consultancy", featured: true },
+            ],
+          },
+        ],
+      },
     },
-    { 
-      name: "Portfolio", 
+    {
+      name: "Portfolio",
       active: false,
       icon: FolderOpen,
-      href: "/portfolio"
+      href: "/portfolio",
     },
-    { 
-      name: "Blog", 
+    {
+      name: "Blog",
       active: false,
       icon: BookOpen,
-      href: "/blog"
+      href: "/blog",
     },
-    { 
-      name: "Contact Us", 
+    {
+      name: "Contact Us",
       active: false,
       icon: Mail,
-      href: "/contact"
+      href: "/contact",
     },
   ];
 
@@ -165,48 +177,47 @@ const Home = (): JSX.Element => {
 
   // Handle mouse leave with delay
   const handleMouseLeave = () => {
-    // Set a delay before hiding the submenu
     hoverTimeoutRef.current = setTimeout(() => {
       setHoveredMenu(null);
-    }, 300); // Increased delay to 300ms
+    }, 300);
   };
 
   useEffect(() => {
     const handleScroll = () => {
       if (rafId.current) return;
-      
+
       rafId.current = requestAnimationFrame(() => {
-      const scrollPosition = window.scrollY;
-      
+        const scrollPosition = window.scrollY;
+
         // Only update if scroll changed significantly
         if (Math.abs(scrollPosition - cachedScrollY.current) < 5) {
           rafId.current = null;
           return;
         }
-        
-        const scrollDirection = scrollPosition > lastScrollY.current ? 'down' : 'up';
+
+        const scrollDirection = scrollPosition > lastScrollY.current ? "down" : "up";
         const shouldBeScrolled = scrollPosition > 100;
-        
+
         // Batch state updates
-        if (scrollDirection === 'up' && scrollPosition > 100) {
+        if (scrollDirection === "up" && scrollPosition > 100) {
           setIsScrollingUp(true);
-        } else if (scrollDirection === 'down') {
+        } else if (scrollDirection === "down") {
           setIsScrollingUp(false);
         }
-        
+
         if (shouldBeScrolled !== isScrolled) {
           setIsScrolled(shouldBeScrolled);
         }
-        
+
         lastScrollY.current = scrollPosition;
         cachedScrollY.current = scrollPosition;
         rafId.current = null;
       });
     };
-      
-    window.addEventListener('scroll', handleScroll, { passive: true });
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => {
-      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener("scroll", handleScroll);
       if (rafId.current) {
         cancelAnimationFrame(rafId.current);
       }
@@ -224,22 +235,24 @@ const Home = (): JSX.Element => {
     // Use CSS custom properties to avoid forced reflows
     const updateHeaderStyles = () => {
       const shouldTransform = isScrolled && isScrollingUp;
-      
-      // Batch all style updates in a single RAF
+
       requestAnimationFrame(() => {
-        header.style.setProperty('--header-height', shouldTransform ? '60px' : '90px');
-        header.style.setProperty('--header-bg', shouldTransform ? 'rgba(27, 27, 27, 0.95)' : 'transparent');
-        header.style.setProperty('--header-backdrop', shouldTransform ? 'blur(20px)' : 'none');
-        header.style.setProperty('--header-shadow', shouldTransform ? '0 8px 32px rgba(0, 0, 0, 0.1)' : 'none');
-        header.style.setProperty('--header-transform', shouldTransform ? 'translateY(0)' : isScrolled ? 'translateY(-100%)' : 'translateY(0)');
-        
-        logo.style.setProperty('--logo-scale', shouldTransform ? '0.8' : '1');
-        
-        menuContainer.style.setProperty('--menu-height', shouldTransform ? '50px' : '60px');
-        menuContainer.style.setProperty('--menu-padding', shouldTransform ? '0 16px' : '0 16px');
+        header.style.setProperty("--header-height", shouldTransform ? "60px" : "90px");
+        header.style.setProperty("--header-bg", shouldTransform ? "rgba(27, 27, 27, 0.95)" : "transparent");
+        header.style.setProperty("--header-backdrop", shouldTransform ? "blur(20px)" : "none");
+        header.style.setProperty("--header-shadow", shouldTransform ? "0 8px 32px rgba(0, 0, 0, 0.1)" : "none");
+        header.style.setProperty(
+          "--header-transform",
+          shouldTransform ? "translateY(0)" : isScrolled ? "translateY(-100%)" : "translateY(0)"
+        );
+
+        logo.style.setProperty("--logo-scale", shouldTransform ? "0.8" : "1");
+
+        menuContainer.style.setProperty("--menu-height", shouldTransform ? "50px" : "60px");
+        menuContainer.style.setProperty("--menu-padding", shouldTransform ? "0 16px" : "0 16px");
       });
     };
-    
+
     updateHeaderStyles();
   }, [isScrolled, isScrollingUp]);
 
@@ -253,34 +266,31 @@ const Home = (): JSX.Element => {
 
     const updateParallax = () => {
       const scrolled = window.pageYOffset;
-      
-      // Only update if scroll position changed significantly
+
       if (Math.abs(scrolled - cachedScrollY.current) < 2) {
         parallaxRafId = requestAnimationFrame(updateParallax);
         return;
       }
-      
+
       cachedScrollY.current = scrolled;
-      
-      // Cache rect calculation and only update when needed  
+
       if (!cachedRect || Math.abs(scrolled - cachedScrollY.current) > 50) {
         cachedRect = heroContainer.getBoundingClientRect();
       }
-      
+
       if (cachedRect.bottom >= 0 && cachedRect.top <= window.innerHeight) {
-        const rate = scrolled * -0.2; // Further reduced parallax intensity
-        const scale = Math.max(1, 1.03 - scrolled * 0.00003); // Reduced scale effect
-        
-        // Use CSS custom properties to avoid forced reflows
-        heroImage.style.setProperty('--parallax-y', `${rate}px`);
-        heroImage.style.setProperty('--parallax-scale', scale.toString());
+        const rate = scrolled * -0.2;
+        const scale = Math.max(1, 1.03 - scrolled * 0.00003);
+
+        heroImage.style.setProperty("--parallax-y", `${rate}px`);
+        heroImage.style.setProperty("--parallax-scale", scale.toString());
       }
-      
+
       parallaxRafId = requestAnimationFrame(updateParallax);
     };
 
     parallaxRafId = requestAnimationFrame(updateParallax);
-    
+
     return () => {
       if (parallaxRafId) {
         cancelAnimationFrame(parallaxRafId);
@@ -291,13 +301,13 @@ const Home = (): JSX.Element => {
   // Lock body scroll when mobile menu is open
   useEffect(() => {
     if (isMobileMenuOpen) {
-      document.body.style.overflow = 'hidden';
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = "unset";
     }
 
     return () => {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = "unset";
     };
   }, [isMobileMenuOpen]);
 
@@ -310,15 +320,13 @@ const Home = (): JSX.Element => {
     };
   }, []);
 
-  // Add hover animation for submenu items
+  // Deferred submenu animations
   useEffect(() => {
-    // Defer submenu animations to reduce initial load
     const timer = setTimeout(() => {
       navItems.forEach((item) => {
         if (item.subItems) {
           item.subItems.forEach((subItem, subIndex) => {
             const key = `${item.name}-${subIndex}`;
-            // Animation will be applied when submenu items are rendered
           });
         }
       });
@@ -327,48 +335,46 @@ const Home = (): JSX.Element => {
     return () => clearTimeout(timer);
   }, []);
 
-  // Function to add hover animation to submenu item
   const addSubmenuItemAnimation = (element: HTMLButtonElement, key: string) => {
     if (!element || element.dataset.animationKey) return;
 
-    // Use simple CSS transforms instead of GSAP for better performance
-    element.addEventListener('mouseenter', () => {
-      element.style.transform = 'translateX(4px) scale(1.02)';
-      element.style.transition = 'transform 0.2s ease-out';
+    element.addEventListener("mouseenter", () => {
+      element.style.transform = "translateX(4px) scale(1.02)";
+      element.style.transition = "transform 0.2s ease-out";
     });
 
-    element.addEventListener('mouseleave', () => {
-      element.style.transform = 'translateX(0) scale(1)';
-      element.style.transition = 'transform 0.2s ease-out';
+    element.addEventListener("mouseleave", () => {
+      element.style.transform = "translateX(0) scale(1)";
+      element.style.transition = "transform 0.2s ease-out";
     });
 
     element.dataset.animationKey = key;
   };
 
   const submenuVariants = {
-    hidden: { 
+    hidden: {
       opacity: 0,
       y: -10,
       scale: 0.95,
       transition: {
         duration: 0.3,
-        when: "beforeChildren"
-      }
+        when: "beforeChildren",
+      },
     },
-    visible: { 
+    visible: {
       opacity: 1,
       y: 0,
       scale: 1,
       transition: {
         duration: 0.4,
-        when: "beforeChildren"
-      }
-    }
+        when: "beforeChildren",
+      },
+    },
   };
 
   const itemVariants = {
     hidden: { opacity: 0, x: -20 },
-    visible: { opacity: 1, x: 0 }
+    visible: { opacity: 1, x: 0 },
   };
 
   const sidebarVariants = {
@@ -377,38 +383,38 @@ const Home = (): JSX.Element => {
       transition: {
         type: "spring",
         stiffness: 400,
-        damping: 40
-      }
+        damping: 40,
+      },
     },
     open: {
       x: "0%",
       transition: {
         type: "spring",
         stiffness: 400,
-        damping: 40
-      }
-    }
+        damping: 40,
+      },
+    },
   };
 
   const overlayVariants = {
     closed: {
       opacity: 0,
       transition: {
-        duration: 0.3
-      }
+        duration: 0.3,
+      },
     },
     open: {
       opacity: 1,
       transition: {
-        duration: 0.3
-      }
-    }
+        duration: 0.3,
+      },
+    },
   };
 
   const menuItemVariants = {
     closed: {
       x: -50,
-      opacity: 0
+      opacity: 0,
     },
     open: (i: number) => ({
       x: 0,
@@ -416,9 +422,9 @@ const Home = (): JSX.Element => {
       transition: {
         delay: i * 0.1,
         duration: 0.5,
-        ease: "easeOut"
-      }
-    })
+        ease: "easeOut",
+      },
+    }),
   };
 
   const handleSubmenuToggle = (itemName: string) => {
@@ -426,44 +432,38 @@ const Home = (): JSX.Element => {
   };
 
   const handleSubmenuNavigation = (href: string) => {
-    // Ensure scroll to top before navigation
-    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
     navigate(href);
     setIsMobileMenuOpen(false);
   };
 
   return (
     <main className="flex flex-col w-full items-start relative bg-white overflow-x-hidden">
-      {/* Custom Cursor */}
       <CustomCursor className="custom-cursor" />
-      
+
       <div ref={heroContainerRef} className="w-full relative overflow-hidden">
         <section className="w-full h-[800px] relative">
-          <HeroImageSlider 
-            className="w-full h-full"
+          <HeroImageSlider
             autoPlay={true}
             autoPlayInterval={6000}
             showControls={true}
             showIndicators={true}
+            transitionEffect="fade" // or "zoom", "flip", "slide", or "auto" to cycle through all
           />
         </section>
 
-        <header 
+        <header
           ref={headerRef}
           className={`${
-            isScrolled && isScrollingUp
-              ? 'fixed top-0 left-0 w-full z-50' 
-              : 'absolute w-full top-[22px] z-50'
+            isScrolled && isScrollingUp ? "fixed top-0 left-0 w-full z-50" : "absolute w-full top-[22px] z-50"
           } transition-all duration-700 ease-out`}
           style={{
-            height: (isScrolled && isScrollingUp) ? "60px" : "90px",
-            
+            height: isScrolled && isScrollingUp ? "60px" : "90px",
           }}
         >
           <div className="container mx-auto px-4 relative flex items-center justify-between h-full">
-            {/* Enhanced background for better visibility */}
             <div className="absolute inset-0 bg-gradient-to-r from-black/30 via-black/20 to-black/30 backdrop-blur-sm rounded-lg"></div>
-            
+
             <Link to="/" aria-label="Interior Villa Home">
               <img
                 ref={logoRef}
@@ -471,57 +471,52 @@ const Home = (): JSX.Element => {
                 alt="Interior villa dark"
                 src="/interior-villa-dark.png"
                 style={{
-                  filter: 'drop-shadow(0 2px 8px rgba(0, 0, 0, 0.5))',
+                  filter: "drop-shadow(0 2px 8px rgba(0, 0, 0, 0.5))",
                 }}
               />
             </Link>
-            
-            <div 
+
+            <div
               ref={menuContainerRef}
               className={`flex items-center menu-container ${
-                !(isScrolled && isScrollingUp) && 'bg-black/30 rounded-[50px] backdrop-blur-[10px] px-4'
+                !(isScrolled && isScrollingUp) && "bg-black/30 rounded-[50px] backdrop-blur-[10px] px-4"
               }`}
-              style={{ 
+              style={{
                 minWidth: "fit-content",
-                
-                backgroundColor: (isScrolled && isScrollingUp) ? "rgba(27, 27, 27, 0.95)" : "rgba(0, 0, 0, 0.4)",
-                backdropFilter: (isScrolled && isScrollingUp) ? "blur(20px)" : "blur(10px)",
-                boxShadow: (isScrolled && isScrollingUp) ? "0 8px 32px rgba(0, 0, 0, 0.1)" : "0 4px 20px rgba(0, 0, 0, 0.3)",
-                transform: (isScrolled && isScrollingUp) ? "translateY(0)" : isScrolled ? "translateY(-100%)" : "translateY(0)"
+                backgroundColor: isScrolled && isScrollingUp ? "rgba(27, 27, 27, 0.95)" : "rgba(0, 0, 0, 0.4)",
+                backdropFilter: isScrolled && isScrollingUp ? "blur(20px)" : "blur(10px)",
+                boxShadow: isScrolled && isScrollingUp ? "0 8px 32px rgba(0, 0, 0, 0.1)" : "0 4px 20px rgba(0, 0, 0, 0.3)",
+                transform: isScrolled && isScrollingUp ? "translateY(0)" : isScrolled ? "translateY(-100%)" : "translateY(0)",
               }}
-              
             >
               <div className="flex items-center justify-end h-full">
-                <button 
+                <button
                   aria-label="Toggle mobile menu"
                   className="lg:hidden text-white transition-all duration-300 hover:scale-110 z-50 relative bg-black/20 rounded-full p-2 backdrop-blur-sm"
                   style={{
-                    filter: 'drop-shadow(0 2px 8px rgba(0, 0, 0, 0.5))',
+                    filter: "drop-shadow(0 2px 8px rgba(0, 0, 0, 0.5))",
                   }}
                   onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                 >
-                  <motion.div
-                    animate={isMobileMenuOpen ? "open" : "closed"}
-                    className="w-6 h-6 flex flex-col justify-center items-center"
-                  >
+                  <motion.div animate={isMobileMenuOpen ? "open" : "closed"} className="w-6 h-6 flex flex-col justify-center items-center">
                     <motion.span
                       variants={{
                         closed: { rotate: 0, y: 0 },
-                        open: { rotate: 45, y: 6 }
+                        open: { rotate: 45, y: 6 },
                       }}
                       className="w-6 h-0.5 bg-current block transform origin-center transition-all duration-300"
                     />
                     <motion.span
                       variants={{
                         closed: { opacity: 1 },
-                        open: { opacity: 0 }
+                        open: { opacity: 0 },
                       }}
                       className="w-6 h-0.5 bg-current block mt-1.5 transition-all duration-300"
                     />
                     <motion.span
                       variants={{
                         closed: { rotate: 0, y: 0 },
-                        open: { rotate: -45, y: -6 }
+                        open: { rotate: -45, y: -6 },
                       }}
                       className="w-6 h-0.5 bg-current block mt-1.5 transform origin-center transition-all duration-300"
                     />
@@ -531,45 +526,32 @@ const Home = (): JSX.Element => {
                 <div className="hidden lg:block">
                   <nav className="flex space-x-2" role="navigation" aria-label="Main navigation">
                     {navItems.map((item, index) => (
-                      <div 
-                        key={index} 
-                        className="relative group"
-                        onMouseEnter={() => handleMouseEnter(item.name)}
-                        onMouseLeave={handleMouseLeave}
-                      >
+                      <div key={index} className="relative group" onMouseEnter={() => handleMouseEnter(item.name)} onMouseLeave={handleMouseLeave}>
                         <Link to={item.href} aria-label={`Navigate to ${item.name}`}>
                           <Button
                             variant={item.active ? "default" : "ghost"}
                             className={`min-w-[108px] px-6 rounded-[50px] whitespace-nowrap transition-all duration-300 hover:bg-primary hover:text-white hover:scale-105 hover:shadow-lg ${
-                              item.active
-                                ? "text-white"
-                                : "text-white"
+                              item.active ? "text-white" : "text-white"
                             }`}
                             style={{
-                              height: (isScrolled && isScrollingUp) ? "36px" : "38px",
-                              fontSize: (isScrolled && isScrollingUp) ? "13px" : "14px",
-                              textShadow: '0 1px 4px rgba(0, 0, 0, 0.5)',
-                              filter: 'drop-shadow(0 2px 6px rgba(0, 0, 0, 0.3))'
+                              height: isScrolled && isScrollingUp ? "36px" : "38px",
+                              fontSize: isScrolled && isScrollingUp ? "13px" : "14px",
+                              textShadow: "0 1px 4px rgba(0, 0, 0, 0.5)",
+                              filter: "drop-shadow(0 2px 6px rgba(0, 0, 0, 0.3))",
                             }}
                             onClick={() => {
-                              window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+                              window.scrollTo({ top: 0, left: 0, behavior: "instant" });
                             }}
                           >
-                            <span className="[font-family:'Fahkwang',Helvetica] font-medium text-center transition-all duration-300">
-                              {item.name}
-                            </span>
+                            <span className="[font-family:'Fahkwang',Helvetica] font-medium text-center transition-all duration-300">{item.name}</span>
                             {item.subItems && (
-                              <motion.span
-                                className="ml-1 text-xs transition-all duration-300"
-                                animate={{ rotate: hoveredMenu === item.name ? 180 : 0 }}
-                              >
+                              <motion.span className="ml-1 text-xs transition-all duration-300" animate={{ rotate: hoveredMenu === item.name ? 180 : 0 }}>
                                 +
                               </motion.span>
                             )}
                           </Button>
-
                         </Link>
-                        
+
                         <AnimatePresence>
                           {item.subItems && hoveredMenu === item.name && (
                             item.name === "Services" && item.megaMenu ? (
@@ -580,102 +562,83 @@ const Home = (): JSX.Element => {
                                 exit="hidden"
                                 role="menu"
                                 aria-label="Services mega menu"
-                               className="fixed top-full left-0 right-0 mt-2 bg-white shadow-2xl overflow-hidden z-50 border-t border-gray-200"
-                                  style={{
+                                className="fixed top-full left-0 right-0 bg-white shadow-2xl overflow-hidden z-50 border-t border-gray-200 rounded-xl"
+                                style={{
                                   boxShadow: "0 25px 50px rgba(0, 0, 0, 0.15), 0 0 30px rgba(0, 0, 0, 0.1)",
-                                  top: isScrolled && isScrollingUp ? '60px' : '112px', // 90px header + 22px top margin
-                                  left: '0',
-                                  right: '0',
-                                  width: '100vw'
+                                  top: isScrolled && isScrollingUp ? "60px" : "70px",
+                                  left: "0",
+                                  right: "0",
+                                  width: "40vw",
                                 }}
                                 onMouseEnter={() => handleMouseEnter(item.name)}
                                 onMouseLeave={handleMouseLeave}
                               >
                                 <div className="w-full px-8">
-                                  {/* Mega Menu Header */}
-                                  <div className="bg-gradient-to-r from-primary/5 via-secondary/5 to-primary/5 px-8 py-6 border-b border-gray-100">
-                                    <h3 className="text-2xl font-semibold [font-family:'Fahkwang',Helvetica] text-[#01190c] mb-2">
-                                      Our Services
-                                    </h3>
-                                    <p className="text-sm text-[#626161] [font-family:'Fahkwang',Helvetica]">
-                                      Comprehensive interior design solutions for every space
-                                    </p>
-                                  </div>
-
-                                  {/* Mega Menu Content */}
                                   <div className="max-w-7xl mx-auto">
                                     <div className="grid grid-cols-3 gap-0">
-                                    {item.megaMenu.sections.map((section, sectionIndex) => (
-                                      <motion.div
-                                        key={sectionIndex}
-                                        variants={itemVariants}
-                                        transition={{ delay: sectionIndex * 0.1 }}
-                                        className="p-8 hover:bg-gray-50/50 transition-colors duration-300 border-r border-gray-100 last:border-r-0"
-                                      >
-                                        {/* Section Header */}
-                                        <div className="flex items-center mb-6">
-                                          <div 
-                                            className="w-12 h-12 rounded-xl flex items-center justify-center mr-4 text-xl"
-                                            style={{ backgroundColor: `${section.color}15` }}
-                                          >
-                                            {section.icon}
-                                          </div>
-                                          <div>
-                                            <h4 
-                                              className="text-xl font-semibold [font-family:'Fahkwang',Helvetica] mb-1"
-                                              style={{ color: section.color }}
+                                      {item.megaMenu.sections.map((section, sectionIndex) => (
+                                        <motion.div
+                                          key={sectionIndex}
+                                          variants={itemVariants}
+                                          transition={{ delay: sectionIndex * 0.1 }}
+                                          className="p-8 hover:bg-gray-50/50 transition-colors duration-300 border-r border-gray-100 last:border-r-0"
+                                        >
+                                          <div className="flex items-center mb-6">
+                                            <div
+                                              className="w-12 h-12 rounded-xl flex items-center justify-center mr-4 text-xl"
+                                              style={{ backgroundColor: `${section.color}15` }}
                                             >
-                                              {section.title}
-                                            </h4>
-                                            <p className="text-sm text-[#626161] [font-family:'Fahkwang',Helvetica]">
-                                              {section.description}
-                                            </p>
+                                              {section.icon}
+                                            </div>
+                                            <div>
+                                              <h4
+                                                className="text-xl font-semibold [font-family:'Fahkwang',Helvetica] mb-1"
+                                                style={{ color: section.color }}
+                                              >
+                                                {section.title}
+                                              </h4>
+                                              <p className="text-sm text-[#626161] [font-family:'Fahkwang',Helvetica]">{section.description}</p>
+                                            </div>
                                           </div>
-                                        </div>
 
-                                        {/* Section Links */}
-                                        <div className="space-y-3">
-                                          {section.links.map((link, linkIndex) => (
-                                            <motion.button
-                                              key={linkIndex}
-                                              role="menuitem"
-                                              variants={itemVariants}
-                                              transition={{ delay: (sectionIndex * 0.1) + (linkIndex * 0.05) }}
-                                              onClick={() => navigate(link.href)}
-                                              className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-300 [font-family:'Fahkwang',Helvetica] relative group overflow-hidden ${
-                                                link.featured 
-                                                  ? 'bg-gradient-to-r from-primary/10 to-secondary/10 text-[#01190c] font-medium border border-primary/20 hover:border-primary/40 hover:shadow-md' 
-                                                  : 'text-[#626161] hover:text-[#01190c] hover:bg-gray-100/80'
-                                              }`}
-                                            >
-                                              <span className="relative z-10 text-sm">
-                                                {link.name}
-                                              </span>
-                                              {link.featured && (
-                                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-all duration-700 ease-out" />
-                                              )}
-                                            </motion.button>
-                                          ))}
-                                        </div>
-                                      </motion.div>
-                                    ))}
+                                          <div className="space-y-3">
+                                            {section.links.map((link, linkIndex) => (
+                                              <motion.button
+                                                key={linkIndex}
+                                                role="menuitem"
+                                                variants={itemVariants}
+                                                transition={{ delay: sectionIndex * 0.1 + linkIndex * 0.05 }}
+                                                onClick={() => navigate(link.href)}
+                                                className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-300 [font-family:'Fahkwang',Helvetica] relative group overflow-hidden ${
+                                                  link.featured
+                                                    ? "bg-gradient-to-r from-primary/10 to-secondary/10 text-[#01190c] font-medium border border-primary/20 hover:border-primary/40 hover:shadow-md"
+                                                    : "text-[#626161] hover:text-[#01190c] hover:bg-gray-100/80"
+                                                }`}
+                                              >
+                                                <span className="relative z-10 text-sm">{link.name}</span>
+                                                {link.featured && (
+                                                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-all duration-700 ease-out" />
+                                                )}
+                                              </motion.button>
+                                            ))}
+                                          </div>
+                                        </motion.div>
+                                      ))}
                                     </div>
                                   </div>
-
-                                  {/* Mega Menu Footer */}
                                   <div className="bg-gray-50/50 px-8 py-6 border-t border-gray-100">
                                     <div className="max-w-7xl mx-auto">
-                                    <div className="flex items-center justify-between">
-                                      <div className="text-sm text-[#626161] [font-family:'Fahkwang',Helvetica]">
-                                        Need help choosing? <span className="text-primary font-medium">Contact our experts</span>
+                                      <div className="flex items-center justify-between">
+                                        <div className="text-sm text-[#626161] [font-family:'Fahkwang',Helvetica]">
+                                          Need help choosing? <span className="text-primary font-medium">Contact our experts</span>
+                                        </div>
+                                        <button
+                                          onClick={() => navigate("/contact")}
+                                          className="px-6 py-3 bg-primary text-white rounded-lg text-sm font-medium [font-family:'Fahkwang',Helvetica] hover:bg-primary-hover transition-all duration-300 hover:scale-105"
+                                        >
+                                          Get Consultation
+                                        </button>
                                       </div>
-                                      <button
-                                        onClick={() => navigate('/contact')}
-                                        className="px-6 py-3 bg-primary text-white rounded-lg text-sm font-medium [font-family:'Fahkwang',Helvetica] hover:bg-primary-hover transition-all duration-300 hover:scale-105"
-                                      >
-                                        Get Consultation
-                                      </button>
-                                    </div>
                                     </div>
                                   </div>
                                 </div>
@@ -690,7 +653,7 @@ const Home = (): JSX.Element => {
                                 aria-label={`${item.name} submenu`}
                                 className="absolute top-full left-0 mt-2 min-w-[200px] bg-[#1b1b1b] rounded-lg shadow-2xl overflow-hidden z-50 border border-[#333333]"
                                 style={{
-                                  boxShadow: "0 20px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(0, 0, 0, 0.3)"
+                                  boxShadow: "0 20px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(0, 0, 0, 0.3)",
                                 }}
                                 onMouseEnter={() => handleMouseEnter(item.name)}
                                 onMouseLeave={handleMouseLeave}
@@ -710,9 +673,9 @@ const Home = (): JSX.Element => {
                                       transition={{ delay: subIndex * 0.1 }}
                                       onClick={() => navigate(subItem.href)}
                                       className="w-full px-4 py-3 text-left text-sm text-white hover:text-primary transition-colors duration-300 [font-family:'Fahkwang',Helvetica] relative group overflow-hidden"
-                                      style={{ 
-                                        transformStyle: 'preserve-3d',
-                                        perspective: '500px'
+                                      style={{
+                                        transformStyle: "preserve-3d",
+                                        perspective: "500px",
                                       }}
                                     >
                                       <span className="relative z-10">{subItem.name}</span>
@@ -756,17 +719,13 @@ const Home = (): JSX.Element => {
                 aria-label="Mobile navigation"
                 className="fixed top-0 left-0 h-full w-80 bg-gradient-to-br from-[#1a1a1a] via-[#1e1e1e] to-[#1a1a1a] z-50 lg:hidden shadow-2xl"
                 style={{
-                  boxShadow: "20px 0 40px rgba(0, 0, 0, 0.3)"
+                  boxShadow: "20px 0 40px rgba(0, 0, 0, 0.3)",
                 }}
               >
                 {/* Sidebar Header */}
                 <div className="flex items-center justify-between p-6 border-b border-gray-700/50">
                   <Link to="/" onClick={() => setIsMobileMenuOpen(false)} aria-label="Interior Villa Home">
-                    <img
-                      className="w-40 h-8 object-cover"
-                      alt="Interior villa dark"
-                      src="/interior-villa-dark.png"
-                    />
+                    <img className="w-40 h-8 object-cover" alt="Interior villa dark" src="/interior-villa-dark.png" />
                   </Link>
                   <button
                     aria-label="Close mobile menu"
@@ -792,42 +751,39 @@ const Home = (): JSX.Element => {
                       >
                         <div
                           className={`flex items-center justify-between p-4 rounded-xl transition-all duration-300 cursor-pointer group ${
-                            item.active
-                              ? "bg-primary text-white shadow-lg"
-                              : "text-gray-300 hover:bg-gray-800/50 hover:text-white"
+                            item.active ? "bg-primary text-white shadow-lg" : "text-gray-300 hover:bg-gray-800/50 hover:text-white"
                           }`}
                           onClick={() => {
                             if (item.subItems) {
                               handleSubmenuToggle(item.name);
                             } else {
-                              window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+                              window.scrollTo({ top: 0, left: 0, behavior: "instant" });
                               navigate(item.href);
                               setIsMobileMenuOpen(false);
                             }
                           }}
                         >
-                          <Link to={item.href} className="flex items-center space-x-4 flex-1" aria-label={`Navigate to ${item.name}`} onClick={(e) => {
-                            if (item.subItems) {
-                              e.preventDefault();
-                            }
-                          }}>
-                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-300 ${
-                              item.active 
-                                ? "bg-white/20" 
-                                : "bg-gray-700/50 group-hover:bg-gray-600/50"
-                            }`}>
+                          <Link
+                            to={item.href}
+                            className="flex items-center space-x-4 flex-1"
+                            aria-label={`Navigate to ${item.name}`}
+                            onClick={(e) => {
+                              if (item.subItems) {
+                                e.preventDefault();
+                              }
+                            }}
+                          >
+                            <div
+                              className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-300 ${
+                                item.active ? "bg-white/20" : "bg-gray-700/50 group-hover:bg-gray-600/50"
+                              }`}
+                            >
                               <IconComponent className="w-5 h-5" />
                             </div>
-                            <span className="[font-family:'Fahkwang',Helvetica] font-medium text-base">
-                              {item.name}
-                            </span>
+                            <span className="[font-family:'Fahkwang',Helvetica] font-medium text-base">{item.name}</span>
                           </Link>
                           {item.subItems && (
-                            <motion.div
-                              animate={{ rotate: expandedSubmenu === item.name ? 180 : 0 }}
-                              transition={{ duration: 0.3 }}
-                              className="w-6 h-6 flex items-center justify-center"
-                            >
+                            <motion.div animate={{ rotate: expandedSubmenu === item.name ? 180 : 0 }} transition={{ duration: 0.3 }} className="w-6 h-6 flex items-center justify-center">
                               <ChevronDown className="w-4 h-4" />
                             </motion.div>
                           )}
@@ -836,32 +792,56 @@ const Home = (): JSX.Element => {
                         {/* Submenu */}
                         <AnimatePresence>
                           {item.subItems && expandedSubmenu === item.name && (
-                            <motion.div
-                              initial={{ height: 0, opacity: 0 }}
-                              animate={{ height: "auto", opacity: 1 }}
-                              exit={{ height: 0, opacity: 0 }}
-                              transition={{ duration: 0.3 }}
-                              className="overflow-hidden ml-4 mt-2"
-                            >
-                              {item.subItems.map((subItem, subIndex) => (
-                                <motion.div
-                                  key={subIndex}
-                                  ref={(el) => {
-                                    const key = `mobile-${item.name}-${subIndex}`;
-                                  }}
-                                  initial={{ x: -20, opacity: 0 }}
-                                  animate={{ x: 0, opacity: 1 }}
-                                  transition={{ delay: subIndex * 0.1 }}
-                                  className="flex items-center p-3 rounded-lg text-gray-300 hover:text-white hover:bg-gray-800/30 transition-all duration-300 cursor-pointer group"
-                                  onClick={() => handleSubmenuNavigation(subItem.href)}
-                                >
-                                  <div className="w-2 h-2 rounded-full bg-gray-600 group-hover:bg-primary transition-colors duration-300 mr-4"></div>
-                                  <span className="[font-family:'Fahkwang',Helvetica] font-normal text-sm">
-                                    {subItem.name}
-                                  </span>
-                                </motion.div>
-                              ))}
-                            </motion.div>
+                            item.megaMenu ? (
+                              // Render the full mega menu for mobile
+                              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} className="overflow-hidden ml-4 mt-2 space-y-4">
+                                {item.megaMenu.sections.map((section, sectionIndex) => (
+                                  <div key={sectionIndex} className="p-4 rounded-xl bg-gray-800/40">
+                                    <div className="flex items-center mb-3">
+                                      <span className="w-10 h-10 flex items-center justify-center rounded-lg text-xl" style={{ backgroundColor: `${section.color}15`, color: section.color }}>
+                                        {section.icon}
+                                      </span>
+                                      <div className="ml-3">
+                                        <h4 className="text-lg font-semibold" style={{ color: section.color }}>
+                                          {section.title}
+                                        </h4>
+                                        <p className="text-xs text-gray-400">{section.description}</p>
+                                      </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                      {section.links.map((link, linkIndex) => (
+                                        <button
+                                          key={linkIndex}
+                                          onClick={() => handleSubmenuNavigation(link.href)}
+                                          className={`block w-full text-left px-3 py-2 text-sm rounded-md transition ${
+                                            link.featured ? "bg-primary/10 text-white border border-primary/30 hover:bg-primary/20" : "text-gray-300 hover:text-white hover:bg-gray-700/40"
+                                          }`}
+                                        >
+                                          {link.name}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  </div>
+                                ))}
+                              </motion.div>
+                            ) : (
+                              // Default subitems for non-mega menu items
+                              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} className="overflow-hidden ml-4 mt-2">
+                                {item.subItems.map((subItem, subIndex) => (
+                                  <motion.div
+                                    key={subIndex}
+                                    initial={{ x: -20, opacity: 0 }}
+                                    animate={{ x: 0, opacity: 1 }}
+                                    transition={{ delay: subIndex * 0.1 }}
+                                    className="flex items-center p-3 rounded-lg text-gray-300 hover:text-white hover:bg-gray-800/30 transition-all duration-300 cursor-pointer"
+                                    onClick={() => handleSubmenuNavigation(subItem.href)}
+                                  >
+                                    <div className="w-2 h-2 rounded-full bg-gray-600 group-hover:bg-primary transition-colors duration-300 mr-4"></div>
+                                    <span className="[font-family:'Fahkwang',Helvetica] font-normal text-sm">{subItem.name}</span>
+                                  </motion.div>
+                                ))}
+                              </motion.div>
+                            )
                           )}
                         </AnimatePresence>
                       </motion.div>
@@ -872,12 +852,8 @@ const Home = (): JSX.Element => {
                 {/* Sidebar Footer */}
                 <div className="absolute bottom-0 left-0 right-0 p-6 border-t border-gray-700/50 bg-gradient-to-t from-[#1a1a1a] to-transparent">
                   <div className="text-center">
-                    <p className="text-gray-400 text-xs [font-family:'Fahkwang',Helvetica]">
-                      © 2025 Interior Villa
-                    </p>
-                    <p className="text-gray-500 text-xs [font-family:'Fahkwang',Helvetica] mt-1">
-                      Elevating Interiors with Passion
-                    </p>
+                    <p className="text-gray-400 text-xs [font-family:'Fahkwang',Helvetica]">© 2025 Interior Villa</p>
+                    <p className="text-gray-500 text-xs [font-family:'Fahkwang',Helvetica] mt-1">Elevating Interiors with Passion</p>
                   </div>
                 </div>
 
@@ -892,17 +868,14 @@ const Home = (): JSX.Element => {
       <FeaturedWorksHeaderSection />
       <OurFeaturedWorksSection />
       <AboutSection />
-      
       <ServicesSection />
       <OurProcessSection />
-      
       <TestimonialSection />
       <BlogSection />
       <CTASection />
       <FooterSection />
-      
+
       <style jsx>{`
-        /* CSS custom properties for header animations to avoid forced reflows */
         header {
           height: var(--header-height, 90px);
           background-color: var(--header-bg, transparent);
@@ -911,29 +884,27 @@ const Home = (): JSX.Element => {
           transform: var(--header-transform, translateY(0));
           transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        
+
         .logo-container {
           transform: scale(var(--logo-scale, 1));
           transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        
+
         .menu-container {
           height: var(--menu-height, 60px);
           padding: var(--menu-padding, 0 16px);
           transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        
+
         .hero-image {
           transform: translate3d(0, var(--parallax-y, 0), 0) scale(var(--parallax-scale, 1));
           will-change: transform;
         }
-        
-        /* Enhanced smooth scrolling */
+
         html {
           scroll-behavior: smooth;
         }
 
-        /* Improved backdrop blur support */
         @supports (backdrop-filter: blur(20px)) {
           .backdrop-blur-enhanced {
             backdrop-filter: blur(20px);
@@ -941,7 +912,6 @@ const Home = (): JSX.Element => {
           }
         }
 
-        /* Custom scrollbar for better UX */
         ::-webkit-scrollbar {
           width: 8px;
         }
@@ -959,15 +929,11 @@ const Home = (): JSX.Element => {
           background: #68ab3c;
         }
 
-        /* Enhanced focus states for accessibility */
         button:focus-visible {
           outline: 2px solid #75bf44;
           outline-offset: 2px;
         }
 
-        /* Smooth transitions for all interactive elements */
-
-        /* Sidebar scrollbar styling */
         .sidebar-scroll::-webkit-scrollbar {
           width: 4px;
         }
