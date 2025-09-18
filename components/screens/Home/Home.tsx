@@ -449,7 +449,8 @@ const Home = (): JSX.Element => {
               </div>
             </div>
           }>
-            <GLBModelViewer className="w-full h-full" modelPath="https://assets.interiorvillabd.com/intro.glb" />
+            <GLBModelViewer modelPath="/3dmodel/scene.gltf" />
+
           </LazyComponent>
         </section>
 
