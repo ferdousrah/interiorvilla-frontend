@@ -443,30 +443,262 @@ export const HeroSection = (): JSX.Element => {
                       
                       <AnimatePresence>
                         {item.subItems && hoveredMenu === item.name && (
-                          <motion.div
-                            variants={submenuVariants}
-                            initial="hidden"
-                            animate="visible"
-                            exit="hidden"
-                            className="absolute top-full left-0 mt-2 min-w-[200px] bg-[#1b1b1b] rounded-lg shadow-2xl overflow-hidden z-50 border border-[#333333]"
-                            style={{
-                              boxShadow: "0 20px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(0, 0, 0, 0.3)"
-                            }}
-                          >
-                            <motion.div className="py-2">
-                              {item.subItems.map((subItem, subIndex) => (
-                                <motion.button
-                                  key={subIndex}
-                                  variants={itemVariants}
-                                  transition={{ delay: subIndex * 0.1 }}
-                                  className="w-full px-4 py-3 text-left text-sm text-white hover:text-primary transition-colors duration-300 [font-family:'Fahkwang',Helvetica] relative group overflow-hidden"
-                                  onClick={() => navigate(subItem.href)}
-                                >
-                                  <span className="relative z-10">{subItem.name}</span>
-                                </motion.button>
-                              ))}
+                          item.name === "Services" ? (
+                            <motion.div
+                              variants={submenuVariants}
+                              initial="hidden"
+                              animate="visible"
+                              exit="hidden"
+                              role="menu"
+                              aria-label="Services mega menu"
+                              className="fixed inset-x-0 bg-white shadow-2xl overflow-hidden z-50 border-t border-gray-200 rounded-b-2xl"
+                              style={{
+                                boxShadow: "0 25px 50px rgba(0, 0, 0, 0.15), 0 0 30px rgba(0, 0, 0, 0.1)",
+                                top: isScrolled ? '60px' : '112px',
+                                left: '0',
+                                right: '0',
+                                width: '100vw'
+                              }}
+                              onMouseEnter={() => setHoveredMenu(item.name)}
+                              onMouseLeave={() => setHoveredMenu(null)}
+                            >
+                              <div className="w-full px-8">
+                                {/* Mega Menu Header */}
+                                <div className="bg-gradient-to-r from-primary/5 via-secondary/5 to-primary/5 px-8 py-6 border-b border-gray-100">
+                                  <h3 className="text-2xl font-semibold [font-family:'Fahkwang',Helvetica] text-[#01190c] mb-2">
+                                    Our Services
+                                  </h3>
+                                  <p className="text-sm text-[#626161] [font-family:'Fahkwang',Helvetica]">
+                                    Comprehensive interior design solutions for every space
+                                  </p>
+                                </div>
+
+                                {/* Mega Menu Content */}
+                                <div className="max-w-7xl mx-auto">
+                                  <div className="grid grid-cols-3 gap-0">
+                                    <motion.div
+                                      variants={itemVariants}
+                                      transition={{ delay: 0 * 0.1 }}
+                                      className="p-8 hover:bg-gray-50/50 transition-colors duration-300 border-r border-gray-100"
+                                    >
+                                      {/* Section Header */}
+                                      <div className="flex items-center mb-6">
+                                        <div 
+                                          className="w-12 h-12 rounded-xl flex items-center justify-center mr-4 text-xl"
+                                          style={{ backgroundColor: `#75BF4415` }}
+                                        >
+                                          🏠
+                                        </div>
+                                        <div>
+                                          <h4 
+                                            className="text-xl font-semibold [font-family:'Fahkwang',Helvetica] mb-1"
+                                            style={{ color: '#75BF44' }}
+                                          >
+                                            Residential
+                                          </h4>
+                                          <p className="text-sm text-[#626161] [font-family:'Fahkwang',Helvetica]">
+                                            Transform your home into a sanctuary
+                                          </p>
+                                        </div>
+                                      </div>
+
+                                      {/* Section Links */}
+                                      <div className="space-y-3">
+                                        {[
+                                          { name: "Living Room Design", href: "/residential-interior#living-room" },
+                                          { name: "Bedroom Design", href: "/residential-interior#bedroom" },
+                                          { name: "Kitchen Design", href: "/residential-interior#kitchen" },
+                                          { name: "Bathroom Design", href: "/residential-interior#bathroom" },
+                                          { name: "Home Office", href: "/residential-interior#home-office" },
+                                          { name: "View All Residential", href: "/residential-interior", featured: true }
+                                        ].map((link, linkIndex) => (
+                                          <motion.button
+                                            key={linkIndex}
+                                            role="menuitem"
+                                            variants={itemVariants}
+                                            transition={{ delay: (0 * 0.1) + (linkIndex * 0.05) }}
+                                            onClick={() => navigate(link.href)}
+                                            className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-300 [font-family:'Fahkwang',Helvetica] relative group overflow-hidden ${
+                                              link.featured 
+                                                ? 'bg-gradient-to-r from-primary/10 to-secondary/10 text-[#01190c] font-medium border border-primary/20 hover:border-primary/40 hover:shadow-md' 
+                                                : 'text-[#626161] hover:text-[#01190c] hover:bg-gray-100/80'
+                                            }`}
+                                          >
+                                            <span className="relative z-10 text-sm">
+                                              {link.name}
+                                            </span>
+                                            {link.featured && (
+                                              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-all duration-700 ease-out" />
+                                            )}
+                                          </motion.button>
+                                        ))}
+                                      </div>
+                                    </motion.div>
+
+                                    <motion.div
+                                      variants={itemVariants}
+                                      transition={{ delay: 1 * 0.1 }}
+                                      className="p-8 hover:bg-gray-50/50 transition-colors duration-300 border-r border-gray-100"
+                                    >
+                                      {/* Section Header */}
+                                      <div className="flex items-center mb-6">
+                                        <div 
+                                          className="w-12 h-12 rounded-xl flex items-center justify-center mr-4 text-xl"
+                                          style={{ backgroundColor: `#EE542815` }}
+                                        >
+                                          🏢
+                                        </div>
+                                        <div>
+                                          <h4 
+                                            className="text-xl font-semibold [font-family:'Fahkwang',Helvetica] mb-1"
+                                            style={{ color: '#EE5428' }}
+                                          >
+                                            Commercial
+                                          </h4>
+                                          <p className="text-sm text-[#626161] [font-family:'Fahkwang',Helvetica]">
+                                            Create inspiring workspaces
+                                          </p>
+                                        </div>
+                                      </div>
+
+                                      {/* Section Links */}
+                                      <div className="space-y-3">
+                                        {[
+                                          { name: "Office Design", href: "/commercial-interior#office" },
+                                          { name: "Retail Spaces", href: "/commercial-interior#retail" },
+                                          { name: "Restaurant Design", href: "/commercial-interior#restaurant" },
+                                          { name: "Hotel Interiors", href: "/commercial-interior#hotel" },
+                                          { name: "Corporate Spaces", href: "/commercial-interior#corporate" },
+                                          { name: "View All Commercial", href: "/commercial-interior", featured: true }
+                                        ].map((link, linkIndex) => (
+                                          <motion.button
+                                            key={linkIndex}
+                                            role="menuitem"
+                                            variants={itemVariants}
+                                            transition={{ delay: (1 * 0.1) + (linkIndex * 0.05) }}
+                                            onClick={() => navigate(link.href)}
+                                            className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-300 [font-family:'Fahkwang',Helvetica] relative group overflow-hidden ${
+                                              link.featured 
+                                                ? 'bg-gradient-to-r from-primary/10 to-secondary/10 text-[#01190c] font-medium border border-primary/20 hover:border-primary/40 hover:shadow-md' 
+                                                : 'text-[#626161] hover:text-[#01190c] hover:bg-gray-100/80'
+                                            }`}
+                                          >
+                                            <span className="relative z-10 text-sm">
+                                              {link.name}
+                                            </span>
+                                            {link.featured && (
+                                              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-all duration-700 ease-out" />
+                                            )}
+                                          </motion.button>
+                                        ))}
+                                      </div>
+                                    </motion.div>
+
+                                    <motion.div
+                                      variants={itemVariants}
+                                      transition={{ delay: 2 * 0.1 }}
+                                      className="p-8 hover:bg-gray-50/50 transition-colors duration-300"
+                                    >
+                                      {/* Section Header */}
+                                      <div className="flex items-center mb-6">
+                                        <div 
+                                          className="w-12 h-12 rounded-xl flex items-center justify-center mr-4 text-xl"
+                                          style={{ backgroundColor: `#4F46E515` }}
+                                        >
+                                          📐
+                                        </div>
+                                        <div>
+                                          <h4 
+                                            className="text-xl font-semibold [font-family:'Fahkwang',Helvetica] mb-1"
+                                            style={{ color: '#4F46E5' }}
+                                          >
+                                            Architectural
+                                          </h4>
+                                          <p className="text-sm text-[#626161] [font-family:'Fahkwang',Helvetica]">
+                                            Expert architectural solutions
+                                          </p>
+                                        </div>
+                                      </div>
+
+                                      {/* Section Links */}
+                                      <div className="space-y-3">
+                                        {[
+                                          { name: "Building Design", href: "/architectural-consultancy#building" },
+                                          { name: "Space Planning", href: "/architectural-consultancy#planning" },
+                                          { name: "3D Visualization", href: "/architectural-consultancy#visualization" },
+                                          { name: "Technical Drawings", href: "/architectural-consultancy#drawings" },
+                                          { name: "Project Management", href: "/architectural-consultancy#management" },
+                                          { name: "View All Services", href: "/architectural-consultancy", featured: true }
+                                        ].map((link, linkIndex) => (
+                                          <motion.button
+                                            key={linkIndex}
+                                            role="menuitem"
+                                            variants={itemVariants}
+                                            transition={{ delay: (2 * 0.1) + (linkIndex * 0.05) }}
+                                            onClick={() => navigate(link.href)}
+                                            className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-300 [font-family:'Fahkwang',Helvetica] relative group overflow-hidden ${
+                                              link.featured 
+                                                ? 'bg-gradient-to-r from-primary/10 to-secondary/10 text-[#01190c] font-medium border border-primary/20 hover:border-primary/40 hover:shadow-md' 
+                                                : 'text-[#626161] hover:text-[#01190c] hover:bg-gray-100/80'
+                                            }`}
+                                          >
+                                            <span className="relative z-10 text-sm">
+                                              {link.name}
+                                            </span>
+                                            {link.featured && (
+                                              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-all duration-700 ease-out" />
+                                            )}
+                                          </motion.button>
+                                        ))}
+                                      </div>
+                                    </motion.div>
+                                  </div>
+                                </div>
+
+                                {/* Mega Menu Footer */}
+                                <div className="bg-gray-50/50 px-8 py-6 border-t border-gray-100">
+                                  <div className="max-w-7xl mx-auto">
+                                    <div className="flex items-center justify-between">
+                                      <div className="text-sm text-[#626161] [font-family:'Fahkwang',Helvetica]">
+                                        Need help choosing? <span className="text-primary font-medium">Contact our experts</span>
+                                      </div>
+                                      <button
+                                        onClick={() => navigate('/contact')}
+                                        className="px-6 py-3 bg-primary text-white rounded-lg text-sm font-medium [font-family:'Fahkwang',Helvetica] hover:bg-primary-hover transition-all duration-300 hover:scale-105"
+                                      >
+                                        Get Consultation
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
                             </motion.div>
-                          </motion.div>
+                          ) : (
+                            <motion.div
+                              variants={submenuVariants}
+                              initial="hidden"
+                              animate="visible"
+                              exit="hidden"
+                              className="absolute top-full left-0 mt-2 min-w-[200px] bg-[#1b1b1b] rounded-lg shadow-2xl overflow-hidden z-50 border border-[#333333]"
+                              style={{
+                                boxShadow: "0 20px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(0, 0, 0, 0.3)"
+                              }}
+                            >
+                              <motion.div className="py-2">
+                                {item.subItems.map((subItem, subIndex) => (
+                                  <motion.button
+                                    key={subIndex}
+                                    variants={itemVariants}
+                                    transition={{ delay: subIndex * 0.1 }}
+                                    className="w-full px-4 py-3 text-left text-sm text-white hover:text-primary transition-colors duration-300 [font-family:'Fahkwang',Helvetica] relative group overflow-hidden"
+                                    onClick={() => navigate(subItem.href)}
+                                  >
+                                    <span className="relative z-10">{subItem.name}</span>
+                                  </motion.button>
+                                ))}
+                              </motion.div>
+                            </motion.div>
+                          )
                         )}
                       </AnimatePresence>
                     </div>
