@@ -153,7 +153,7 @@ export const HeroImageSlider: React.FC<HeroImageSliderProps> = ({
     center: {
       opacity: 1,
       scale: 1,
-    }),
+    },
     exit: () => ({
       opacity: 0,
       scale: 1.2,
