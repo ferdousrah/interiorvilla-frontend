@@ -207,7 +207,7 @@ export const HeroImageSlider: React.FC<HeroImageSliderProps> = ({
       scale: 1,
       rotateX: 0,
       filter: 'blur(0px)',
-    }),
+    },
     exit: (direction: number) => ({
       opacity: 0,
       y: direction < 0 ? 80 : -80,
