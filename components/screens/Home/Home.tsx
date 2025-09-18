@@ -457,33 +457,45 @@ const Home = (): JSX.Element => {
           } transition-all duration-700 ease-out`}
           style={{
             height: (isScrolled && isScrollingUp) ? "60px" : "90px",
-            backgroundColor: (isScrolled && isScrollingUp) ? "rgba(27, 27, 27, 0.95)" : "transparent",
-            backdropFilter: (isScrolled && isScrollingUp) ? "blur(20px)" : "none",
-            boxShadow: (isScrolled && isScrollingUp) ? "0 8px 32px rgba(0, 0, 0, 0.1)" : "none",
+            backgroundColor: (isScrolled && isScrollingUp) ? "rgba(27, 27, 27, 0.95)" : "rgba(0, 0, 0, 0.4)",
+            backdropFilter: (isScrolled && isScrollingUp) ? "blur(20px)" : "blur(10px)",
+            boxShadow: (isScrolled && isScrollingUp) ? "0 8px 32px rgba(0, 0, 0, 0.1)" : "0 4px 20px rgba(0, 0, 0, 0.3)",
             transform: (isScrolled && isScrollingUp) ? "translateY(0)" : isScrolled ? "translateY(-100%)" : "translateY(0)"
           }}
         >
           <div className="container mx-auto px-4 relative flex items-center justify-between h-full">
+            {/* Enhanced background for better visibility */}
+            <div className="absolute inset-0 bg-gradient-to-r from-black/30 via-black/20 to-black/30 backdrop-blur-sm rounded-lg"></div>
+            
             <Link to="/" aria-label="Interior Villa Home">
               <img
                 ref={logoRef}
-                className="w-52 h-[41px] object-cover z-10 cursor-pointer logo-container"
+                className="w-52 h-[41px] object-cover z-10 cursor-pointer logo-container relative"
                 alt="Interior villa dark"
                 src="/interior-villa-dark.png"
+                style={{
+                  filter: 'drop-shadow(0 2px 8px rgba(0, 0, 0, 0.5))',
+                }}
               />
             </Link>
             
             <div 
               ref={menuContainerRef}
               className={`flex items-center menu-container ${
-                !(isScrolled && isScrollingUp) && 'bg-white-fade rounded-[50px] backdrop-blur-[5px] px-4'
+                !(isScrolled && isScrollingUp) && 'bg-black/30 rounded-[50px] backdrop-blur-[10px] px-4 border border-white/20'
               }`}
-              style={{ minWidth: "fit-content" }}
+              style={{ 
+                minWidth: "fit-content",
+                boxShadow: !(isScrolled && isScrollingUp) ? '0 8px 32px rgba(0, 0, 0, 0.3)' : 'none'
+              }}
             >
               <div className="flex items-center justify-end h-full">
                 <button 
                   aria-label="Toggle mobile menu"
-                  className="lg:hidden text-white transition-all duration-300 hover:scale-110 z-50 relative"
+                  className="lg:hidden text-white transition-all duration-300 hover:scale-110 z-50 relative bg-black/20 rounded-full p-2 backdrop-blur-sm border border-white/20"
+                  style={{
+                    filter: 'drop-shadow(0 2px 8px rgba(0, 0, 0, 0.5))',
+                  }}
                   onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                 >
                   <motion.div
@@ -528,12 +540,14 @@ const Home = (): JSX.Element => {
                             variant={item.active ? "default" : "ghost"}
                             className={`min-w-[108px] px-6 rounded-[50px] whitespace-nowrap transition-all duration-300 hover:bg-primary hover:text-white hover:scale-105 hover:shadow-lg ${
                               item.active
-                                ? "bg-primary text-white shadow-lg"
-                                : "bg-transparent text-[#c6c6c6] hover:shadow-[0_0_20px_rgba(117,191,68,0.3)]"
+                                ? "bg-primary text-white shadow-lg border border-primary/50"
+                                : "bg-black/20 text-white hover:shadow-[0_0_20px_rgba(117,191,68,0.3)] border border-white/30 backdrop-blur-sm"
                             }`}
                             style={{
                              height: (isScrolled && isScrollingUp) ? "36px" : "38px",
-                             fontSize: (isScrolled && isScrollingUp) ? "13px" : "14px"
+                             fontSize: (isScrolled && isScrollingUp) ? "13px" : "14px",
+                             textShadow: '0 1px 4px rgba(0, 0, 0, 0.5)',
+                             filter: 'drop-shadow(0 2px 6px rgba(0, 0, 0, 0.3))'
                             }}
                             onClick={() => {
                               window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
