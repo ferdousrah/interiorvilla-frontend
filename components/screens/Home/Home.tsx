@@ -17,10 +17,8 @@ import { X, ChevronDown, Home as HomeIcon, User, Briefcase, FolderOpen, BookOpen
 import { Link, useNavigate } from "react-router-dom";
 import { LazyComponent } from "../../ui/lazy-component";
 
-// Lazy load heavy components
-const GLBModelViewer = React.lazy(() => 
-  import("../../ui/glb-model-viewer").then(m => ({ default: m.GLBModelViewer }))
-);
+// Import the new image slider
+import { HeroImageSlider } from "../../ui/hero-image-slider";
 
 // Lazy load GSAP only when needed
 const loadGSAP = async () => {
@@ -440,18 +438,14 @@ const Home = (): JSX.Element => {
       <CustomCursor className="custom-cursor" />
       
       <div ref={heroContainerRef} className="w-full relative overflow-hidden">
-        <section className="w-full h-[800px] bg-gradient-to-br from-black via-gray-900 to-black">
-          <LazyComponent fallback={
-            <div className="w-full h-full bg-gradient-to-br from-gray-900 via-black to-gray-800 flex items-center justify-center">
-              <div className="text-center">
-                <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                <div className="text-white text-lg font-medium [font-family:'Fahkwang',Helvetica]">Loading 3D Experience</div>
-              </div>
-            </div>
-          }>
-            <GLBModelViewer modelPath="/3dmodel/scene.gltf" />
-
-          </LazyComponent>
+        <section className="w-full h-[800px] relative">
+          <HeroImageSlider 
+            className="w-full h-full"
+            autoPlay={true}
+            autoPlayInterval={6000}
+            showControls={true}
+            showIndicators={true}
+          />
         </section>
 
         <header 
