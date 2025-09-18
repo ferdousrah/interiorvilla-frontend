@@ -114,36 +114,57 @@ export const HeroImageSlider: React.FC<HeroImageSliderProps> = ({
     enter: (direction: number) => ({
       x: direction > 0 ? '100%' : '-100%',
       opacity: 0,
-      scale: 1.1,
-      filter: 'blur(10px)',
+      scale: 1.2,
+      rotateY: direction > 0 ? 15 : -15,
+      rotateX: 5,
+      filter: 'blur(20px) brightness(0.7) saturate(1.3)',
+      transformOrigin: 'center center',
     }),
     center: {
       x: 0,
       opacity: 1,
       scale: 1,
-      filter: 'blur(0px)',
+      rotateY: 0,
+      rotateX: 0,
+      filter: 'blur(0px) brightness(1) saturate(1)',
+      transformOrigin: 'center center',
     },
     exit: (direction: number) => ({
       x: direction < 0 ? '100%' : '-100%',
       opacity: 0,
-      scale: 0.9,
-      filter: 'blur(5px)',
+      scale: 0.8,
+      rotateY: direction < 0 ? 15 : -15,
+      rotateX: -5,
+      filter: 'blur(15px) brightness(1.2) saturate(0.8)',
+      transformOrigin: 'center center',
     }),
   };
 
   const overlayVariants = {
-    enter: {
+    enter: (direction: number) => ({
       opacity: 0,
-      y: 50,
-    },
+      y: direction > 0 ? 80 : -80,
+      x: direction > 0 ? 30 : -30,
+      scale: 0.9,
+      rotateX: 10,
+      filter: 'blur(8px)',
+    }),
     center: {
       opacity: 1,
       y: 0,
+      x: 0,
+      scale: 1,
+      rotateX: 0,
+      filter: 'blur(0px)',
     },
-    exit: {
+    exit: (direction: number) => ({
       opacity: 0,
-      y: -50,
-    },
+      y: direction < 0 ? 80 : -80,
+      x: direction < 0 ? 30 : -30,
+      scale: 1.1,
+      rotateX: -10,
+      filter: 'blur(6px)',
+    }),
   };
 
   return (
@@ -159,50 +180,105 @@ export const HeroImageSlider: React.FC<HeroImageSliderProps> = ({
             animate="center"
             exit="exit"
             transition={{
-              x: { type: "spring", stiffness: 300, damping: 30 },
-              opacity: { duration: 0.6 },
-              scale: { duration: 0.8 },
-              filter: { duration: 0.4 },
+              x: { type: "spring", stiffness: 200, damping: 25 },
+              opacity: { duration: 0.8, ease: "easeInOut" },
+              scale: { duration: 1.0, ease: [0.25, 0.46, 0.45, 0.94] },
+              rotateY: { duration: 0.9, ease: "easeOut" },
+              rotateX: { duration: 0.7, ease: "easeInOut" },
+              filter: { duration: 0.6, ease: "easeOut" },
             }}
             className="absolute inset-0 w-full h-full"
+            style={{
+              transformStyle: 'preserve-3d',
+              perspective: '1000px',
+            }}
           >
             <img
               src={images[currentIndex].src}
               alt={images[currentIndex].alt}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover will-change-transform"
               style={{
                 imageRendering: 'high-quality',
+                transformStyle: 'preserve-3d',
+                backfaceVisibility: 'hidden',
               }}
             />
             
-            {/* Gradient Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-transparent" />
+            {/* Dynamic Gradient Overlay with Animation */}
+            <motion.div 
+              className="absolute inset-0"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              style={{
+                background: `linear-gradient(
+                  ${45 + (currentIndex * 15)}deg, 
+                  rgba(0,0,0,0.7) 0%, 
+                  rgba(0,0,0,0.4) 30%, 
+                  rgba(0,0,0,0.2) 60%, 
+                  transparent 100%
+                )`
+              }}
+            />
+            
+            {/* Animated Light Rays */}
+            <motion.div
+              className="absolute inset-0 pointer-events-none"
+              initial={{ opacity: 0, rotate: -10 }}
+              animate={{ opacity: 0.1, rotate: 10 }}
+              transition={{ duration: 2, ease: "easeInOut", repeat: Infinity, repeatType: "reverse" }}
+              style={{
+                background: `conic-gradient(
+                  from ${currentIndex * 60}deg at 70% 30%, 
+                  transparent 0deg, 
+                  rgba(255,255,255,0.1) 45deg, 
+                  transparent 90deg, 
+                  rgba(255,255,255,0.05) 135deg, 
+                  transparent 180deg
+                )`
+              }}
+            />
             
             {/* Animated Text Overlay */}
             <AnimatePresence mode="wait">
               <motion.div
                 key={`text-${currentIndex}`}
+                custom={direction}
                 variants={overlayVariants}
                 initial="enter"
                 animate="center"
                 exit="exit"
                 transition={{
-                  duration: 0.8,
-                  delay: 0.3,
-                  ease: "easeOut"
+                  duration: 1.0,
+                  delay: 0.4,
+                  ease: [0.25, 0.46, 0.45, 0.94],
+                  staggerChildren: 0.1
                 }}
                 className="absolute inset-0 flex items-center justify-start"
+                style={{
+                  transformStyle: 'preserve-3d',
+                  perspective: '1000px',
+                }}
               >
                 <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
                   <div className="text-left text-white max-w-2xl">
                     {images[currentIndex].title && (
-                      <motion.h1 
-                        initial={{ opacity: 0, x: -50 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 1, delay: 0.5 }}
+                      <motion.h1
+                        initial={{ opacity: 0, x: -80, y: 30, rotateX: -15, scale: 0.9 }}
+                        animate={{ opacity: 1, x: 0, y: 0, rotateX: 0, scale: 1 }}
+                        exit={{ opacity: 0, x: 80, y: -30, rotateX: 15, scale: 1.1 }}
+                        transition={{ 
+                          duration: 1.2, 
+                          delay: 0.6,
+                          ease: [0.25, 0.46, 0.45, 0.94],
+                          type: "spring",
+                          stiffness: 100,
+                          damping: 15
+                        }}
                         className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold [font-family:'Fahkwang',Helvetica] mb-4 leading-tight"
                         style={{
                           textShadow: '0 4px 20px rgba(0, 0, 0, 0.5)',
+                          transformStyle: 'preserve-3d',
                         }}
                       >
                         {images[currentIndex].title}
@@ -210,18 +286,51 @@ export const HeroImageSlider: React.FC<HeroImageSliderProps> = ({
                     )}
                     
                     {images[currentIndex].subtitle && (
-                      <motion.p 
-                        initial={{ opacity: 0, x: -30 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.8, delay: 0.8 }}
+                      <motion.p
+                        initial={{ opacity: 0, x: -60, y: 20, scale: 0.95 }}
+                        animate={{ opacity: 1, x: 0, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, x: 60, y: -20, scale: 1.05 }}
+                        transition={{ 
+                          duration: 1.0, 
+                          delay: 0.9,
+                          ease: [0.25, 0.46, 0.45, 0.94],
+                          type: "spring",
+                          stiffness: 120,
+                          damping: 20
+                        }}
                         className="text-lg sm:text-xl md:text-2xl [font-family:'Fahkwang',Helvetica] text-white/90 font-light"
                         style={{
                           textShadow: '0 2px 10px rgba(0, 0, 0, 0.5)',
+                          transformStyle: 'preserve-3d',
                         }}
                       >
                         {images[currentIndex].subtitle}
                       </motion.p>
                     )}
+                    
+                    {/* Animated Call-to-Action Button */}
+                    <motion.div
+                      initial={{ opacity: 0, y: 40, scale: 0.8 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -40, scale: 1.2 }}
+                      transition={{ 
+                        duration: 0.8, 
+                        delay: 1.2,
+                        ease: "backOut",
+                        type: "spring",
+                        stiffness: 150,
+                        damping: 25
+                      }}
+                      className="mt-8"
+                    >
+                      <button
+                        onClick={() => navigate('/portfolio')}
+                        className="group relative px-8 py-4 bg-primary/90 backdrop-blur-md text-white rounded-full font-medium [font-family:'Fahkwang',Helvetica] transition-all duration-500 hover:bg-primary hover:scale-110 hover:shadow-2xl overflow-hidden"
+                      >
+                        <span className="relative z-10">Explore Our Work</span>
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-all duration-700 ease-out" />
+                      </button>
+                    </motion.div>
                   </div>
                 </div>
               </motion.div>
@@ -268,53 +377,75 @@ export const HeroImageSlider: React.FC<HeroImageSliderProps> = ({
 
       {/* Slide Indicators */}
       {showIndicators && (
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex space-x-3">
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex space-x-3 bg-black/20 backdrop-blur-md rounded-full px-4 py-2">
           {images.map((_, index) => (
-            <button
+            <motion.button
               key={index}
               onClick={() => goToSlide(index)}
+              whileHover={{ scale: 1.3 }}
+              whileTap={{ scale: 0.9 }}
               className={`w-3 h-3 rounded-full transition-all duration-300 ${
                 index === currentIndex
-                  ? 'bg-white scale-125 shadow-lg'
+                  ? 'bg-primary shadow-lg shadow-primary/50'
                   : 'bg-white/40 hover:bg-white/60 hover:scale-110'
               }`}
               aria-label={`Go to slide ${index + 1}`}
-            />
+            >
+              {index === currentIndex && (
+                <motion.div
+                  className="absolute inset-0 bg-primary rounded-full"
+                  layoutId="activeIndicator"
+                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                />
+              )}
+            </motion.button>
           ))}
         </div>
       )}
 
       {/* Progress Bar */}
       {autoPlay && isPlaying && (
-        <div className="absolute bottom-0 left-0 w-full h-1 bg-white/20 z-20">
+        <div className="absolute bottom-0 left-0 w-full h-1 bg-white/20 z-20 overflow-hidden">
           <motion.div
             key={currentIndex}
-            className="h-full bg-primary"
+            className="h-full bg-gradient-to-r from-primary via-secondary to-primary relative"
             initial={{ width: '0%' }}
             animate={{ width: '100%' }}
             transition={{ duration: autoPlayInterval / 1000, ease: 'linear' }}
-          />
+          >
+            {/* Animated shine effect on progress bar */}
+            <motion.div
+              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+              animate={{ x: ['-100%', '100%'] }}
+              transition={{ duration: 2, ease: 'easeInOut', repeat: Infinity }}
+            />
+          </motion.div>
         </div>
       )}
 
       {/* Floating Elements for Visual Interest */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+      <div className="absolute inset-0 pointer-events-none overflow-hidden z-10">
         {/* Animated particles */}
-        {Array.from({ length: 8 }).map((_, i) => (
+        {Array.from({ length: 12 }).map((_, i) => (
           <motion.div
             key={i}
-            className="absolute w-2 h-2 bg-white/20 rounded-full"
+            className="absolute rounded-full"
             style={{
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
+              width: `${Math.random() * 6 + 2}px`,
+              height: `${Math.random() * 6 + 2}px`,
+              backgroundColor: i % 3 === 0 ? 'rgba(117, 191, 68, 0.3)' : i % 3 === 1 ? 'rgba(238, 84, 40, 0.3)' : 'rgba(255, 255, 255, 0.2)',
             }}
             animate={{
-              y: [0, -30, 0],
-              opacity: [0.2, 0.8, 0.2],
-              scale: [1, 1.5, 1],
+              y: [0, -50, 0],
+              x: [0, Math.random() * 20 - 10, 0],
+              opacity: [0.2, 0.9, 0.2],
+              scale: [1, 2, 1],
+              rotate: [0, 360, 720],
             }}
             transition={{
-              duration: Math.random() * 4 + 3,
+              duration: Math.random() * 6 + 4,
               repeat: Infinity,
               delay: Math.random() * 2,
               ease: "easeInOut",
@@ -322,16 +453,78 @@ export const HeroImageSlider: React.FC<HeroImageSliderProps> = ({
           />
         ))}
         
-        {/* Geometric shapes */}
-        <div className="absolute top-20 right-20 w-16 h-16 border-2 border-white/10 rounded-lg rotate-45 animate-pulse" />
-        <div className="absolute bottom-32 left-16 w-12 h-12 border border-white/15 rounded-full animate-pulse" style={{ animationDelay: '1s' }} />
-        <div className="absolute top-1/3 left-1/4 w-8 h-8 bg-primary/20 rounded-full animate-pulse" style={{ animationDelay: '2s' }} />
+        {/* Enhanced Geometric shapes with complex animations */}
+        <motion.div 
+          className="absolute top-20 right-20 w-16 h-16 border-2 border-white/15 rounded-lg"
+          animate={{ 
+            rotate: [0, 180, 360],
+            scale: [1, 1.2, 1],
+            borderColor: ['rgba(255,255,255,0.15)', 'rgba(117,191,68,0.3)', 'rgba(238,84,40,0.3)', 'rgba(255,255,255,0.15)']
+          }}
+          transition={{ duration: 8, ease: "easeInOut", repeat: Infinity }}
+        />
+        <motion.div 
+          className="absolute bottom-32 left-16 w-12 h-12 border border-white/20 rounded-full"
+          animate={{ 
+            scale: [1, 1.5, 1],
+            opacity: [0.3, 0.8, 0.3],
+            borderWidth: ['1px', '3px', '1px']
+          }}
+          transition={{ duration: 4, ease: "easeInOut", repeat: Infinity, delay: 1 }}
+        />
+        <motion.div 
+          className="absolute top-1/3 left-1/4 w-8 h-8 bg-primary/20 rounded-full"
+          animate={{ 
+            y: [0, -20, 0],
+            scale: [1, 1.3, 1],
+            backgroundColor: ['rgba(117,191,68,0.2)', 'rgba(238,84,40,0.3)', 'rgba(117,191,68,0.2)']
+          }}
+          transition={{ duration: 6, ease: "easeInOut", repeat: Infinity, delay: 2 }}
+        />
+        
+        {/* Floating orbs with complex paths */}
+        {Array.from({ length: 4 }).map((_, i) => (
+          <motion.div
+            key={`orb-${i}`}
+            className="absolute w-4 h-4 rounded-full"
+            style={{
+              background: `radial-gradient(circle, ${i % 2 === 0 ? 'rgba(117,191,68,0.4)' : 'rgba(238,84,40,0.4)'} 0%, transparent 70%)`,
+              left: `${20 + i * 20}%`,
+              top: `${30 + i * 15}%`,
+            }}
+            animate={{
+              x: [0, 100, -50, 0],
+              y: [0, -80, 60, 0],
+              scale: [1, 1.5, 0.8, 1],
+              opacity: [0.4, 0.8, 0.3, 0.4],
+            }}
+            transition={{
+              duration: 15 + i * 2,
+              ease: "easeInOut",
+              repeat: Infinity,
+              delay: i * 1.5,
+            }}
+          />
+        ))}
       </div>
 
       {/* Slide Counter */}
-      <div className="absolute top-6 right-6 z-20 bg-black/30 backdrop-blur-md rounded-full px-4 py-2 text-white text-sm [font-family:'Fahkwang',Helvetica]">
-        {currentIndex + 1} / {images.length}
-      </div>
+      <motion.div 
+        className="absolute top-6 right-6 z-20 bg-black/40 backdrop-blur-md rounded-full px-4 py-2 text-white text-sm [font-family:'Fahkwang',Helvetica] border border-white/20"
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5, delay: 1.5 }}
+      >
+        <motion.span
+          key={currentIndex}
+          initial={{ y: 10, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: -10, opacity: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          {currentIndex + 1} / {images.length}
+        </motion.span>
+      </motion.div>
     </div>
   );
 };
