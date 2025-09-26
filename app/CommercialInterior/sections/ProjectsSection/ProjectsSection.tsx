@@ -45,6 +45,7 @@ interface Project {
   id: number;
   category: string;
   title: string;
+  slug: string;
   description: string;
   image: string; // resolved featuredImage (.webp)
   color: string;
@@ -78,7 +79,7 @@ export const ProjectsSection = (): JSX.Element => {
     (async () => {
       try {
         const res = await fetch(
-          `https://cms.interiorvillabd.com/api/projects?where[category][equals]=2&limit=5&sort=position`,
+          `https://interiorvillabd.com/api/projects?where[category][equals]=2&limit=5&sort=position`,
           { cache: "no-store" }
         );
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -91,6 +92,7 @@ export const ProjectsSection = (): JSX.Element => {
             doc?.category?.name ||
             (typeof doc?.category === "string" ? doc.category : "Commercial Interior"),
           title: doc?.title || `Project ${i + 1}`,
+          slug: doc?.slug || "",   // 👈 FIX: add slug from API
           description: doc?.shortDescription || doc?.description || "",
           image: getFeaturedImageUrl(doc?.featuredImage), // <-- auto .webp here
           color: doc?.color || palette[i % palette.length],
@@ -309,7 +311,7 @@ export const ProjectsSection = (): JSX.Element => {
     });
   };
 
-  const handleViewProject = (id: number) => navigate(`/project-details/${id}`);
+  const handleViewProject = (slug: string) => navigate(`/portfolio/project-details/${slug}`);
   const handleExploreAllProjects = () => navigate("/portfolio");
 
   return (
@@ -368,7 +370,7 @@ export const ProjectsSection = (): JSX.Element => {
               {/* Main card */}
               <div
                 className="w-full rounded-2xl sm:rounded-3xl overflow-hidden relative mx-auto cursor-pointer"
-                onClick={() => handleViewProject(project.id)}
+                onClick={() => handleViewProject(project.slug)}
                 style={{
                   width: "90%",
                   maxWidth:
@@ -411,7 +413,7 @@ export const ProjectsSection = (): JSX.Element => {
                     </p>
 
                     <button
-                      onClick={(e) => { e.stopPropagation(); handleViewProject(project.id); }}
+                      onClick={(e) => { e.stopPropagation(); handleViewProject(project.slug); }}
                       className="group inline-flex items-center px-4 py-2 sm:px-6 sm:py-3 rounded-full text-white font-semibold transition-all duration-300 hover:scale-105 hover:shadow-xl w-fit relative overflow-hidden"
                       style={{ background: "rgba(255, 255, 255, 0.2)" }}
                       onMouseEnter={(e) => {

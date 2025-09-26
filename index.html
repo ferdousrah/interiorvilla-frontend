@@ -3,199 +3,77 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    
-    <!-- Preconnect to external domains -->
+
+    <!-- Preconnect -->
     <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://cms.interiorvillabd.com" crossorigin>
-    
-    <!-- Critical CSS inlined -->
+
+    <!-- Critical CSS -->
     <style>
-      /* Critical above-the-fold styles */
-      body { 
-        margin: 0; 
-        font-family: system-ui, -apple-system, sans-serif;
-        font-display: swap;
-        background: white;
-        color: #1a1a1a;
-      }
-      
-      /* Critical Tailwind base styles */
-      *, ::before, ::after {
-        box-sizing: border-box;
-        border-width: 0;
-        border-style: solid;
-        border-color: #e5e7eb;
-      }
-      
-      /* Critical utility classes */
-      .flex { display: flex; }
-      .items-center { align-items: center; }
-      .justify-center { justify-content: center; }
-      .justify-between { justify-content: space-between; }
-      .w-full { width: 100%; }
-      .h-full { height: 100%; }
-      .relative { position: relative; }
-      .absolute { position: absolute; }
-      .fixed { position: fixed; }
-      .inset-0 { top: 0; right: 0; bottom: 0; left: 0; }
-      .z-10 { z-index: 10; }
-      .z-50 { z-index: 50; }
-      .bg-white { background-color: #ffffff; }
-      .bg-black { background-color: #000000; }
-      .text-white { color: #ffffff; }
-      .text-black { color: #000000; }
-      .rounded-lg { border-radius: 0.5rem; }
-      .rounded-full { border-radius: 9999px; }
-      .px-4 { padding-left: 1rem; padding-right: 1rem; }
-      .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
-      .mb-4 { margin-bottom: 1rem; }
-      .transition-all { transition-property: all; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 150ms; }
-      .duration-300 { transition-duration: 300ms; }
-      .ease-out { transition-timing-function: cubic-bezier(0, 0, 0.2, 1); }
-      .hover\:scale-105:hover { transform: scale(1.05); }
-      .hover\:bg-primary:hover { background-color: #75BF44; }
-      .cursor-pointer { cursor: pointer; }
-      .overflow-hidden { overflow: hidden; }
-      .object-cover { object-fit: cover; }
-      .container { width: 100%; margin-left: auto; margin-right: auto; padding-left: 1rem; padding-right: 1rem; }
-      
-      /* Header critical styles */
-      .header-scrolled {
-        height: 60px !important;
-        background-color: rgba(27, 27, 27, 0.95) !important;
-        backdrop-filter: blur(20px) !important;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
-        transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1) !important;
-      }
-      
-      .logo-scrolled {
-        transform: scale(0.8) !important;
-        transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1) !important;
-      }
-      
-      .menu-scrolled {
-        height: 50px !important;
-        padding: 0 16px !important;
-        transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1) !important;
-      }
-      
-      .loading-screen { 
-        position: fixed; 
-        inset: 0; 
-        background: #fff; 
-        display: flex; 
-        align-items: center; 
-        justify-content: center; 
-        z-index: 9999; 
-      }
-      .loading-spinner { 
-        width: 40px; 
-        height: 40px; 
-        border: 3px solid #f3f3f3; 
-        border-top: 3px solid #75BF44; 
-        border-radius: 50%; 
-        animation: spin 1s linear infinite; 
-      }
-      @keyframes spin { 
-        0% { transform: rotate(0deg); } 
-        100% { transform: rotate(360deg); } 
-      }
-      /* Prevent layout shift */
-      img { 
-        max-width: 100%; 
-        height: auto; 
-        font-size: 0;
-      }
-      .hero-container { 
-        min-height: 60vh; 
-        contain: layout style paint;
-        background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-      }
-      
-      /* Critical font loading */
-      @font-face {
-        font-family: 'Fahkwang';
-        font-style: normal;
-        font-weight: 400;
-        font-display: swap;
-        src: url('https://fonts.gstatic.com/s/fahkwang/v16/k3kSo8kMI4pglOEVLlVOJbQNqGs.woff2') format('woff2');
-        unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-      }
-      /* Reduce CLS */
-      .aspect-ratio-16-9 { aspect-ratio: 16/9; }
-      .aspect-ratio-4-3 { aspect-ratio: 4/3; }
-      
-      /* Primary colors */
-      :root {
-        --primary: #75BF44;
-        --secondary: #EE5428;
-        --primary-hover: #68AB3C;
-        --secondary-hover: #D64C24;
-      }
+      body { margin:0; font-family:system-ui,-apple-system,sans-serif; background:white; color:#1a1a1a; }
+      *,::before,::after { box-sizing:border-box; border-width:0; border-style:solid; border-color:#e5e7eb; }
+      .loading-screen { position:fixed; inset:0; background:#fff; display:flex; align-items:center; justify-content:center; z-index:9999; }
+      .loading-spinner { width:40px; height:40px; border:3px solid #f3f3f3; border-top:3px solid #75BF44; border-radius:50%; animation:spin 1s linear infinite; }
+      @keyframes spin { 0%{transform:rotate(0deg);} 100%{transform:rotate(360deg);} }
+      img { max-width:100%; height:auto; font-size:0; }
+      :root { --primary:#75BF44; --secondary:#EE5428; --primary-hover:#68AB3C; --secondary-hover:#D64C24; }
     </style>
-    
-    <title>Interior Villa - Premium Interior Design Services in Bangladesh</title>
-    <meta name="description" content="Transform your space with Interior Villa's expert interior design services. Specializing in residential, commercial, and architectural consultancy in Bangladesh. 9+ years of experience, 1000+ projects completed." />
-    <meta name="keywords" content="interior design, Bangladesh, residential interior, commercial interior, architectural consultancy, home design, office design, interior decorator, Dhaka" />
-    <meta name="author" content="Interior Villa" />
+
+    <!-- Global fallback SEO -->
+    <title>Interior Villa</title>
+    <meta name="description" content="Interior Villa – Premium interior design services in Bangladesh." />
     <meta name="robots" content="index, follow" />
     <meta name="theme-color" content="#75BF44" />
-    
-    <!-- Open Graph Meta Tags -->
-    <meta property="og:title" content="Interior Villa - Premium Interior Design Services in Bangladesh" />
-    <meta property="og:description" content="Transform your space with Interior Villa's expert interior design services. Specializing in residential, commercial, and architectural consultancy." />
-    <meta property="og:image" content="/interior-villa-og-image.jpg" />
-    <meta property="og:url" content="https://interiorvillabd.com" />
-    <meta property="og:type" content="website" />
+
+    <!-- Open Graph fallback -->
     <meta property="og:site_name" content="Interior Villa" />
-    
-    <!-- Twitter Card Meta Tags -->
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="/interior-villa-og-image.jpg" />
+
+    <!-- Twitter fallback -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Interior Villa - Premium Interior Design Services" />
-    <meta name="twitter:description" content="Transform your space with expert interior design services in Bangladesh." />
-    <meta name="twitter:image" content="/interior-villa-og-image.jpg" />
-    
-    <!-- Canonical URL -->
+
+    <!-- Canonical fallback -->
     <link rel="canonical" href="https://interiorvillabd.com" />
-    
-    <!-- Favicon -->
+
+    <!-- Favicons -->
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
-    
-    <!-- Preload critical resources -->
+
+    <!-- Preload -->
     <link rel="preload" href="/interior-villa-dark.png" as="image" fetchpriority="high" />
-    
-    <!-- Preload critical fonts with better performance -->
-    <!--<link rel="preload" href="https://fonts.gstatic.com/s/fahkwang/v16/k3kSo8kMI4pglOEVLlVOJbQNqGs.woff2" as="font" type="font/woff2" crossorigin="anonymous">-->
-    
+
     <!-- Resource hints -->
     <link rel="dns-prefetch" href="//fonts.googleapis.com" />
     <link rel="dns-prefetch" href="//fonts.gstatic.com" />
     <link rel="dns-prefetch" href="//cms.interiorvillabd.com" />
     <link rel="dns-prefetch" href="//interiorvillabd.com" />
 
-    <!-- Google tag (gtag.js) -->
+    <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-GJYR6D7RKN"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
-
       gtag('config', 'G-GJYR6D7RKN');
     </script>
-        
-    <!-- Structured Data -->
+
+    <!-- Global Structured Data -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "Organization",
       "name": "Interior Villa",
-      "description": "Premium interior design services in Bangladesh specializing in residential, commercial, and architectural consultancy.",
       "url": "https://interiorvillabd.com",
       "logo": "https://interiorvillabd.com/interior-villa-dark.png",
+      "sameAs": [
+        "https://facebook.com/interiorvillabd",
+        "https://instagram.com/interiorvillabd",
+        "https://linkedin.com/company/interiorvillabd"
+      ],
       "contactPoint": {
         "@type": "ContactPoint",
         "telephone": "+88-01748981590",
@@ -209,42 +87,41 @@
         "postalCode": "1207",
         "addressCountry": "BD"
       },
-      "sameAs": [
-        "https://facebook.com/interiorvillabd",
-        "https://instagram.com/interiorvillabd",
-        "https://linkedin.com/company/interiorvillabd"
-      ],
       "foundingDate": "2015",
-      "numberOfEmployees": "25-50",
-      "areaServed": "Bangladesh",
-      "serviceType": [
-        "Residential Interior Design",
-        "Commercial Interior Design", 
-      src: url('https://fonts.gstatic.com/s/fahkwang/v16/k3kSo8kMI4pglOEVLlVOJbQNqGs.woff2') format('woff2'),
-           url('https://fonts.googleapis.com/css2?family=Fahkwang:wght@300;400;500;600;700&display=swap') format('truetype');
-      ]
+      "numberOfEmployees": "25-50"
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "url": "https://interiorvillabd.com",
+      "name": "Interior Villa",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://interiorvillabd.com/search?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
     }
     </script>
   </head>
   <body>
-    <!-- Skip link for accessibility -->
     <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-primary text-white px-4 py-2 rounded-md z-50">
       Skip to main content
     </a>
-    
-    <!-- Loading screen to prevent layout shift -->
+
+    <!-- Loading screen -->
     <div id="loading-screen" class="loading-screen">
       <div class="loading-spinner"></div>
     </div>
-    
+
     <div id="root"></div>
-    
-    <!-- Defer non-critical scripts -->
+
+    <!-- App entry -->
     <script type="module" src="/src/main.jsx"></script>
-    
-    <!-- Load fonts asynchronously to prevent render blocking -->
+
+    <!-- Load fonts async -->
     <script>
-      // Defer CSS loading to prevent render blocking
       function loadCSS(href) {
         const link = document.createElement('link');
         link.rel = 'stylesheet';
@@ -252,38 +129,23 @@
         link.media = 'print';
         link.onload = function() { this.media = 'all'; };
         document.head.appendChild(link);
-        
-        // Fallback
-        setTimeout(function() {
-          if (link.media === 'print') {
-            link.media = 'all';
-          }
-        }, 100);
+        setTimeout(() => { if (link.media === 'print') link.media = 'all'; }, 100);
       }
-      
-      // Load fonts and main CSS after critical render
-      requestAnimationFrame(function() {
+      requestAnimationFrame(() => {
         loadCSS('https://fonts.googleapis.com/css2?family=Fahkwang:wght@300;400;500;600;700&display=swap');
       });
     </script>
-    
-    <!-- Remove loading screen after app loads -->
+
+    <!-- Remove loading screen -->
     <script>
-      // Optimize loading screen removal
       const removeLoadingScreen = () => {
         const loadingScreen = document.getElementById('loading-screen');
         if (loadingScreen) {
           loadingScreen.style.opacity = '0';
           loadingScreen.style.transition = 'opacity 0.3s ease-out';
-          setTimeout(() => {
-            loadingScreen.remove();
-            // Trigger layout recalculation
-            document.body.offsetHeight;
-          }, 300);
+          setTimeout(() => loadingScreen.remove(), 300);
         }
       };
-
-      // Remove loading screen when DOM is ready
       if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', removeLoadingScreen);
       } else {

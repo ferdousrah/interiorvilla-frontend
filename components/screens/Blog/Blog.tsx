@@ -6,6 +6,8 @@ import {
   BlogGridSection
 } from "./sections";
 
+import { PageHero } from "../../ui/PageHero";
+
 const Blog = (): JSX.Element => {
   return (
     <main className="flex flex-col w-full items-start relative bg-white overflow-x-hidden min-h-screen">
@@ -13,7 +15,14 @@ const Blog = (): JSX.Element => {
       <CustomCursor className="custom-cursor" />
       
       {/* Hero Section */}
-      <HeroSection />
+      <PageHero
+        title="Blog"
+        bgImage="/image.png"
+        breadcrumbs={[
+          { label: "Home", href: "/" },
+          { label: "Blog", isActive: true },
+        ]}
+      />      
 
       {/* Main Content Container */}
       <section className="w-full">

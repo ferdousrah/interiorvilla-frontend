@@ -15,6 +15,7 @@ interface Project {
   id: number | string;
   category: string;
   title: string;
+  slug: string;
   description: string;
   image: string;
   imageAlt: string;        // ← new
@@ -38,7 +39,7 @@ interface ProjectsApiResponse {
 /** If your CMS is reverse-proxied through the site domain, keep this.
  *  If not, switch to: https://cms.interiorvillabd.com
  */
-const CMS_ORIGIN = "https://cms.interiorvillabd.com";
+const CMS_ORIGIN = "https://interiorvillabd.com";
 
 // Build absolute URLs when API returns "/api/media/file/..."
 const absolutize = (u: string) =>
@@ -63,16 +64,22 @@ type Media = {
 };
 
 /** Prefer best size, fallback to original */
-const getBestImageUrl = (img?: Media | null): string => {
+const getMediumImageUrl = (img?: Media | null): string => {
   if (!img) return "/placeholder.webp";
-  const order = ["large", "xlarge", "medium", "small", "og", "square", "thumbnail", "card"];
-  for (const key of order) {
-    const u = img.sizes?.[key]?.url;
-    if (u) return absolutize(u);
-  }
-  if (img.url) return absolutize(img.url);
-  return "/placeholder.webp";
+
+  // Try medium size first
+  let url = img.sizes?.medium?.url || img.url;
+  if (!url) return "/placeholder.webp";
+
+  const abs = absolutize(url);
+
+  // Swap to .webp if possible, keeping ?v=...
+  const webp = abs.replace(/\.(jpg|jpeg|png)(\?.*)?$/i, ".webp$2");
+
+  return webp || abs;
 };
+
+
 
 const getImageAlt = (img: Media | null | undefined, fallback: string) => {
   const fromApi = (img?.alt || "").trim();
@@ -139,8 +146,9 @@ export const OurFeaturedWorksSection = (): JSX.Element => {
               doc?.type ||
               "Project",
             title: doc.title || doc.name || `Project ${i + 1}`,
+            slug: doc?.slug || "",   // 👈 FIX: add slug from API
             description: doc.shortDescription || doc.description || "",
-            image: getBestImageUrl(media),                 // ← size-aware URL
+            image: getMediumImageUrl(media),                 // ← size-aware URL
             imageAlt: getImageAlt(media, doc.title),       // ← proper alt
             color: doc.color || palette[i % palette.length],
             accent: doc.accent || palette[i % palette.length],
@@ -247,8 +255,8 @@ export const OurFeaturedWorksSection = (): JSX.Element => {
   }, []);
 
   const navigate = useNavigate();
-  const handleViewProject = (projectId: number | string) => {
-    navigate(`/project-details/${projectId}`);
+  const handleViewProject = (slug: string | string) => {
+    navigate(`/portfolio/project-details/${slug}`);
   };
 
   const scrollToCard = (index: number) => {
@@ -296,7 +304,7 @@ export const OurFeaturedWorksSection = (): JSX.Element => {
                 role="button"
                 tabIndex={0}
                 onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && handleViewProject(project.id)}
-                onClick={() => handleViewProject(project.id)}
+                onClick={() => handleViewProject(project.slug)}
                 className="w-full rounded-2xl sm:rounded-3xl overflow-hidden relative mx-auto cursor-pointer"
                 style={{
                   width: "90%",
@@ -342,7 +350,7 @@ export const OurFeaturedWorksSection = (): JSX.Element => {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleViewProject(project.id);
+                        handleViewProject(project.slug);
                       }}
                       className="group inline-flex items-center px-4 py-2 sm:px-6 sm:py-3 rounded-full text-white font-semibold transition-all duration-300 hover:scale-105 hover:shadow-xl w-fit relative overflow-hidden"
                       style={{ background: "rgba(255, 255, 255, 0.2)" }}

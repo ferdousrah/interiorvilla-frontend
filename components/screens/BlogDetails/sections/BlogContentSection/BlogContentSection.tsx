@@ -8,7 +8,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const CMS_ORIGIN = "https://cms.interiorvillabd.com";
+const CMS_ORIGIN = "https://interiorvillabd.com";
 
 /* ---------------- Lexical → HTML Renderer ---------------- */
 function renderLexical(node: any): string {

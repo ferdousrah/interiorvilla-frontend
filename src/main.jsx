@@ -1,7 +1,8 @@
-import React from 'react'
-import ReactDOM from 'react-dom/client'
-import App from './App.jsx'
-import '../app/globals.css'
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App.jsx';
+import '../app/globals.css';
+import { HelmetProvider } from 'react-helmet-async';
 
 // Create root with concurrent features
 const root = ReactDOM.createRoot(document.getElementById('root'), {
@@ -9,10 +10,12 @@ const root = ReactDOM.createRoot(document.getElementById('root'), {
   unstable_strictMode: true
 });
 
-// Render app with performance monitoring
+// Render app with HelmetProvider for SEO
 root.render(
   <React.StrictMode>
-    <App />
+    <HelmetProvider>
+      <App />
+    </HelmetProvider>
   </React.StrictMode>
 );
 

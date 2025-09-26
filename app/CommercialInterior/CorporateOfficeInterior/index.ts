@@ -1,0 +1,1 @@
+export { default as CorporateOfficeInterior } from "./CorporateOfficeInterior";

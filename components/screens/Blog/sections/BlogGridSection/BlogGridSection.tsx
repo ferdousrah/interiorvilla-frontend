@@ -21,7 +21,7 @@ interface BlogPost {
   readTime?: string;
 }
 
-const CMS_ORIGIN = "https://cms.interiorvillabd.com";
+const CMS_ORIGIN = "https://interiorvillabd.com";
 const PAGE_SIZE = 3;
 
 export const BlogGridSection = (): JSX.Element => {

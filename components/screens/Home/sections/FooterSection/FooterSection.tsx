@@ -477,9 +477,9 @@ export const FooterSection = (): JSX.Element => {
             <div className="flex items-center gap-4">
               {[
                 { icon: Facebook, name: "Facebook", color: "#1877F2", url: "https://www.facebook.com/interiorvila" },
-                { icon: Twitter, name: "Twitter", color: "#1DA1F2", url: "#" },
+                { icon: Instagram, name: "Instagram", color: "#1DA1F2", url: "https://www.instagram.com/interiorvillabd/" },
                 { icon: Youtube, name: "Youtube", color: "#FF0000", url: "https://www.youtube.com/@InteriorVilla-BD" },
-                { icon: Linkedin, name: "LinkedIn", color: "#0A66C2", url: "#" }
+                { icon: Linkedin, name: "LinkedIn", color: "#0A66C2", url: "https://www.linkedin.com/company/interiorvilla" }
               ].map((social, index) => {
                 const IconComponent = social.icon;
                 return (

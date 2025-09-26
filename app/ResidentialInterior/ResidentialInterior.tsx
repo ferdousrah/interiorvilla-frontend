@@ -9,6 +9,8 @@ import {
   CTASection
 } from "./sections";
 
+import { PageHero } from "../../components/ui/PageHero";
+
 const ResidentialInterior = (): JSX.Element => {
   return (
     <main className="flex flex-col w-full items-start relative bg-white overflow-x-hidden min-h-screen">
@@ -16,7 +18,15 @@ const ResidentialInterior = (): JSX.Element => {
       <CustomCursor className="custom-cursor" />
       
       {/* Hero Section */}
-      <HeroSection />
+      <PageHero
+        title="Residential Interior"
+        bgImage="/image.png"
+        breadcrumbs={[
+          { label: "Home", href: "/" },
+          { label: "Services" },
+          { label: "Residential Interior", isActive: true },
+        ]}
+      />
 
       {/* Main Content Container */}
       <section className="w-full">

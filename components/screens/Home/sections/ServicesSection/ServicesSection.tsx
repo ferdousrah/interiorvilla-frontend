@@ -13,11 +13,11 @@ gsap.registerPlugin(ScrollTrigger, SplitText);
 const services = [
   {
     title: "Residential interior",
-    icon: "/create-an-svg-home-icon.png",
+    icon: "home.png",
     description:
       "Sustainable living. Luxurious design. We specialize in creating intelligent, eco-friendly homes, from single-family residences to multi-housing solutions.",
     iconBg: "#f5fdfd",
-    video: "https://assets.interiorvillabd.com/residential.mp4",
+    video: "/videos/residential.mp4",
     colorTheme: {
       primary: "#4F46E5", // Indigo
       secondary: "#6366F1",
@@ -36,7 +36,7 @@ const services = [
     description:
       "Experience the difference. Our minimalist designs transform your workplace into an inspiring and productive environment, whether it's a factory or a corporate office.",
     iconBg: "#f5fdfd",
-    video: "https://assets.interiorvillabd.com/commercial.mp4",
+    video: "/videos/commercial.mp4",
     colorTheme: {
       primary: "#059669", // Emerald
       secondary: "#10B981",
@@ -493,19 +493,12 @@ export const ServicesSection = (): JSX.Element => {
                           backdropFilter: isHovered ? 'blur(8px)' : 'none' // Reduced blur from 10px to 8px
                         }}
                       >
-                        <PerformanceImage
-                          className="w-11 h-[37px] object-cover"
-                          alt={`${service.title} icon`}
-                          src={service.icon}
-                          loading="eager"
-                          priority={index === 0}
-                          quality={90}
-                          placeholder="empty"
-                          style={{
-                            filter: isHovered ? 'brightness(0) invert(1)' : 'none',
-                            transition: 'filter 1.2s cubic-bezier(0.4, 0, 0.2, 1)'
-                          }}
+                        <img 
+                          src={service.icon} 
+                          alt={`${service.title} icon`} 
+                          className="w-11 h-[37px] object-contain" 
                         />
+
                       </div>
                       <div className="mt-[6px] flex-1">
                         <h3 

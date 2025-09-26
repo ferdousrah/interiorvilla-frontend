@@ -12,7 +12,7 @@ import { useNavigate } from "react-router-dom";
 gsap.registerPlugin(ScrollTrigger, SplitText, ScrollToPlugin);
 
 // ---------- helpers for image URL ----------
-const CMS_ORIGIN = "https://cms.interiorvillabd.com";
+const CMS_ORIGIN = "https://interiorvillabd.com";
 const MEDIA_BASE = `${CMS_ORIGIN}/api/media/file/`;
 
 const absolutize = (u: string) =>
@@ -41,6 +41,7 @@ interface Project {
   id: number;
   category: string;
   title: string;
+  slug: string;
   description: string;
   image: string; // resolved featuredImage (.webp)
   color: string;
@@ -77,7 +78,7 @@ export const ProjectsSection = (): JSX.Element => {
     (async () => {
       try {
         const res = await fetch(
-          `https://cms.interiorvillabd.com/api/projects?where[category][equals]=1&limit=5&sort=position`,
+          `https://interiorvillabd.com/api/projects?where[category][equals]=1&limit=5&sort=position`,
           { cache: "no-store" }
         );
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -90,6 +91,7 @@ export const ProjectsSection = (): JSX.Element => {
             doc?.category?.name ||
             (typeof doc?.category === "string" ? doc.category : "Residential Interior"),
           title: doc?.title || `Project ${i + 1}`,
+          slug: doc?.slug || "",   // 👈 FIX: add slug from API
           description: doc?.shortDescription || doc?.description || "",
           image: getFeaturedImageUrl(doc?.featuredImage), // <-- auto .webp
           color: doc?.color || palette[i % palette.length],
@@ -329,7 +331,7 @@ export const ProjectsSection = (): JSX.Element => {
   };
 
   // >>> ONLY CHANGE: include project id in link <<<
-  const handleViewProject = (id: number) => navigate(`/project-details/${id}`);
+  const handleViewProject = (slug: string) => navigate(`/portfolio/project-details/${slug}`);
   const handleExploreAllProjects = () => navigate("/portfolio");
 
   return (
@@ -388,7 +390,7 @@ export const ProjectsSection = (): JSX.Element => {
               {/* Main card */}
               <div
                 className="w-full rounded-2xl sm:rounded-3xl overflow-hidden relative mx-auto cursor-pointer"
-                onClick={() => handleViewProject(project.id)} // <<< changed
+                onClick={() => handleViewProject(project.slug)} // <<< changed
                 style={{
                   width: "90%",
                   maxWidth:
@@ -428,7 +430,7 @@ export const ProjectsSection = (): JSX.Element => {
                     </p>
 
                     <button
-                      onClick={(e) => { e.stopPropagation(); handleViewProject(project.id); }} // <<< changed
+                      onClick={(e) => { e.stopPropagation(); handleViewProject(project.slug); }} // <<< changed
                       className="group inline-flex items-center px-4 py-2 sm:px-6 sm:py-3 rounded-full text-white font-semibold transition-all duration-300 hover:scale-105 hover:shadow-xl w-fit relative overflow-hidden"
                       style={{ background: "rgba(255, 255, 255, 0.2)" }}
                       onMouseEnter={(e) => {

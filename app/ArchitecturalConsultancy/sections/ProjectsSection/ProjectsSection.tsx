@@ -12,7 +12,7 @@ import { useNavigate, Link } from "react-router-dom"; // <-- added Link
 gsap.registerPlugin(ScrollTrigger, SplitText, ScrollToPlugin);
 
 /* ---------------- Image helpers ---------------- */
-const CMS_ORIGIN = "https://cms.interiorvillabd.com";
+const CMS_ORIGIN = "https://interiorvillabd.com";
 const MEDIA_BASE = `${CMS_ORIGIN}/api/media/file/`;
 
 // Make relative URLs absolute
@@ -47,6 +47,7 @@ interface Project {
   id: number;
   category: string;
   title: string;
+  slug: string;
   description: string;
   image: string; // resolved featuredImage (.webp)
   color: string;
@@ -79,7 +80,7 @@ export const ProjectsSection = (): JSX.Element => {
     (async () => {
       try {
         const res = await fetch(
-          `https://cms.interiorvillabd.com/api/projects?where[category][equals]=3&limit=5`,
+          `https://interiorvillabd.com/api/projects?where[category][equals]=3&limit=5`,
           { cache: "no-store" }
         );
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -92,6 +93,7 @@ export const ProjectsSection = (): JSX.Element => {
             doc?.category?.name ||
             (typeof doc?.category === "string" ? doc.category : "Architectural Consultancy"),
           title: doc?.title || `Project ${i + 1}`,
+          slug: doc?.slug || "",   // 👈 FIX: add slug from API
           description: doc?.shortDescription || doc?.description || "",
           image: getFeaturedImageUrl(doc?.featuredImage), // <-- auto .webp
           color: doc?.color || palette[i % palette.length],
@@ -317,8 +319,8 @@ export const ProjectsSection = (): JSX.Element => {
   };
 
   // changed: accept id and navigate to /project-details/:id
-  const handleViewProject = (id: number) => {
-    navigate(`/project-details/${id}`);
+  const handleViewProject = (slug: string) => {
+    navigate(`/portfolio/project-details/${slug}`);
   };
 
   const handleExploreAllProjects = () => {
@@ -414,7 +416,7 @@ export const ProjectsSection = (): JSX.Element => {
               {/* Main card */}
               <div
                 className="w-full rounded-2xl sm:rounded-3xl overflow-hidden relative mx-auto cursor-pointer"
-                onClick={() => handleViewProject(project.id)}  // <-- go to /project-details/:id
+                onClick={() => handleViewProject(project.slug)}  // <-- go to /project-details/:id
                 style={{
                   width: "90%",
                   maxWidth:

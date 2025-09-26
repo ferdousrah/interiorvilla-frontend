@@ -28,12 +28,16 @@ export const useProject = () => {
   return v;
 };
 
-const CMS_BASE = "https://cms.interiorvillabd.com";
+const CMS_BASE = "https://interiorvillabd.com";
 
 /* ---------------- helpers ---------------- */
 
 const absolutize = (u?: string | null) =>
   u ? (/^https?:\/\//i.test(u) ? u : `${CMS_BASE}${u}`) : "";
+
+const toWebp = (url: string) =>
+  url.replace(/\.(jpe?g|png)(\?[^#]*)?$/i, ".webp$2");
+
 
 function extractMediaUrl(raw: any): string | undefined {
   if (!raw) return;
@@ -76,7 +80,13 @@ function normalizeGalleryItem(raw: any, i: number, fallbackAlt = "media"): Galle
     raw?.title ||
     `${fallbackAlt}-${i + 1}`;
 
-  return { id: String(cand?.id ?? raw?.id ?? i), src: url, alt, type };
+  return {
+    id: String(cand?.id ?? raw?.id ?? i),
+    src: toWebp(url),        // try WebP first
+    alt,
+    type,
+  };
+
 }
 
 /** Pull arrays from many possible places, including nested `gallery.{photos,plans,videos}` */
@@ -199,42 +209,46 @@ function metaPick(project: any, keys: string[]) {
 /* ---------------- provider ---------------- */
 
 export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { id } = useParams();
+  const { slug } = useParams<{ slug?: string }>();
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
   const [proj, setProj] = useState<any | null>(null);
 
   useEffect(() => {
-    if (!id) return;
-    let alive = true;
-    const ac = new AbortController();
+  if (!slug) return;
+  let alive = true;
+  const ac = new AbortController();
 
-    (async () => {
-      setLoading(true);
-      setErr(null);
-      try {
-        const res = await fetch(
-          `https://cms.interiorvillabd.com/api/projects/${id}?depth=1&draft=false`,
-          { signal: ac.signal, cache: "no-store" }
-        );
-        if (!res.ok) throw new Error(`Failed to load project ${id} (HTTP ${res.status})`);
-        const json = await res.json();
-        if (!alive) return;
-        setProj(json?.doc || json || null);
-      } catch (e: any) {
-        if (!alive || e?.name === "AbortError") return;
-        setErr(e?.message || "Failed to load");
-        setProj(null);
-      } finally {
-        alive && setLoading(false);
-      }
-    })();
+  (async () => {
+    setLoading(true);
+    setErr(null);
+    try {
+      const res = await fetch(
+        `${CMS_BASE}/api/projects?where[slug][equals]=${slug}&depth=1&draft=false`,
+        { signal: ac.signal, cache: "no-store" }
+      );
+      if (!res.ok) throw new Error(`Failed to load project ${slug} (HTTP ${res.status})`);
 
-    return () => {
-      alive = false;
-      ac.abort();
-    };
-  }, [id]);
+      const json = await res.json();
+      if (!alive) return;
+
+      // Payload returns { docs: [...] } for collection queries
+      const projectDoc = Array.isArray(json?.docs) ? json.docs[0] : json?.doc || json;
+      setProj(projectDoc || null);
+    } catch (e: any) {
+      if (!alive || e?.name === "AbortError") return;
+      setErr(e?.message || "Failed to load");
+      setProj(null);
+    } finally {
+      alive && setLoading(false);
+    }
+  })();
+
+  return () => {
+    alive = false;
+    ac.abort();
+  };
+}, [slug]);
 
   const value: Ctx = useMemo(() => {
     if (!proj) {

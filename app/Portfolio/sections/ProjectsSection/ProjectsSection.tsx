@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 gsap.registerPlugin(SplitText);
 
 /* ---------------- CMS & image helpers ----------------  */
-const CMS_ORIGIN = "https://cms.interiorvillabd.com";
+const CMS_ORIGIN = "https://interiorvillabd.com";
 const MEDIA_BASE = `${CMS_ORIGIN}/api/media/file/`;
 
 const absolutize = (u: string) =>
@@ -25,25 +25,31 @@ const resolveFeaturedImage = (fi: any): ImgSrcs => {
   const pick = (raw?: string): ImgSrcs => {
     if (!raw) return { primary: placeholder, fallback: placeholder };
     const abs = absolutize(raw);
-    const primary = /\.jpe?g(\?[^#]*)?$/i.test(abs) ? toWebp(abs) : abs;
+    // Try to serve .webp first, fallback to original
+    const primary = abs.replace(/\.(jpg|jpeg|png)(\?.*)?$/i, ".webp$2");
     return { primary, fallback: abs };
   };
 
   if (!fi) return { primary: placeholder, fallback: placeholder };
   if (typeof fi === "string") return pick(fi);
-  if (fi?.url) return pick(fi.url);
-  if (fi?.sizes?.large?.url)  return pick(fi.sizes.large.url);
+
+  // 👇 Force medium first
   if (fi?.sizes?.medium?.url) return pick(fi.sizes.medium.url);
+  if (fi?.sizes?.large?.url)  return pick(fi.sizes.large.url);
   if (fi?.sizes?.card?.url)   return pick(fi.sizes.card.url);
+  if (fi?.url)                return pick(fi.url);
   if (fi?.filename)           return pick(`${MEDIA_BASE}${fi.filename}`);
+
   return { primary: placeholder, fallback: placeholder };
 };
+
 
 /* ---------------- Types ---------------- */
 interface ProjectCard {
   id: number;
   category: string;
   title: string;
+  slug: string;
   description: string;
   image: ImgSrcs;
   year: string;
@@ -71,10 +77,10 @@ const filterOptions = [
 type Filter = typeof filterOptions[number];
 
 const API_BY_FILTER: Record<Filter, string> = {
-  All: `https://cms.interiorvillabd.com/api/projects?sort=position`,
-  "Residential Interior": `https://cms.interiorvillabd.com/api/projects?where[category][equals]=1&sort=position`,
-  "Commercial Interior": `https://cms.interiorvillabd.com/api/projects?where[category][equals]=2&sort=position`,
-  "Architectural Consultancy": `https://cms.interiorvillabd.com/api/projects?where[category][equals]=3&sort=position`,
+  All: `https://interiorvillabd.com/api/projects?sort=position`,
+  "Residential Interior": `https://interiorvillabd.com/api/projects?where[category][equals]=1&sort=position`,
+  "Commercial Interior": `https://interiorvillabd.com/api/projects?where[category][equals]=2&sort=position`,
+  "Architectural Consultancy": `https://interiorvillabd.com/api/projects?where[category][equals]=3&sort=position`,
 };
 
 const PAGE_SIZE = 4;
@@ -138,6 +144,7 @@ export const ProjectsSection = (): JSX.Element => {
             id: Number(doc?.id ?? (pageToLoad - 1) * PAGE_SIZE + i + 1),
             category: categoryText,
             title: doc?.title || doc?.name || `Project ${(pageToLoad - 1) * PAGE_SIZE + i + 1}`,
+            slug: doc?.slug || "",   // 👈 FIX: add slug from API
             description: doc?.shortDescription || doc?.description || "",
             image,
             year: doc?.year || "",
@@ -275,8 +282,8 @@ export const ProjectsSection = (): JSX.Element => {
     [activeFilter]
   );
 
-  const handleProjectClick = (projectId: number) => {
-  navigate(`/project-details/${projectId}`);
+  const handleProjectClick = (slug: string) => {
+  navigate(`/portfolio/project-details/${slug}`);
 };
 
 
@@ -362,7 +369,7 @@ export const ProjectsSection = (): JSX.Element => {
                   className="group cursor-pointer"
                   onMouseEnter={() => setHoveredProject(project.id)}
                   onMouseLeave={() => setHoveredProject(null)}
-                  onClick={() => handleProjectClick(project.id)}
+                  onClick={() => handleProjectClick(project.slug)}
                 >
                   <div className="relative overflow-hidden rounded-3xl aspect-[4/3] transition-all duration-500 ease-out hover:scale-105 hover:shadow-2xl">
                     <img

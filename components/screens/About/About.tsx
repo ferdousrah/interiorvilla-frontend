@@ -10,6 +10,8 @@ import {
   CTASection
 } from "./sections";
 
+import { PageHero } from "../../ui/PageHero";
+
 const About = (): JSX.Element => {
   return (
     <main className="flex flex-col w-full items-start relative bg-white overflow-x-hidden min-h-screen">
@@ -17,7 +19,14 @@ const About = (): JSX.Element => {
       <CustomCursor className="custom-cursor" />
       
       {/* Hero Section */}
-      <HeroSection />
+      <PageHero
+        title="About Us"
+        bgImage="/image.png"
+        breadcrumbs={[
+          { label: "Home", href: "/" },
+          { label: "About Us", href: "/about", isActive: true },
+        ]}
+      />
 
       {/* Main Content Container */}
       <section className="w-full">

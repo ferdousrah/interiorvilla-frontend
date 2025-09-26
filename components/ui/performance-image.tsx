@@ -30,7 +30,7 @@ export const PerformanceImage = React.forwardRef<HTMLImageElement, PerformanceIm
   loading = 'lazy',
   onLoad,
   onError,
-  fallbackSrc = '/placeholder.webp',
+  fallbackSrc = '/../../public/placeholder.webp',
   sizes = '100vw',
   style,
   quality = 75,

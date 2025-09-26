@@ -6,6 +6,8 @@ import {
   ContactSection
 } from "./sections";
 
+import { PageHero } from "../../ui/PageHero";
+
 const Contact = (): JSX.Element => {
   return (
     <main className="flex flex-col w-full items-start relative bg-white overflow-x-hidden min-h-screen">
@@ -13,7 +15,14 @@ const Contact = (): JSX.Element => {
       <CustomCursor className="custom-cursor" />
       
       {/* Hero Section */}
-      <HeroSection />
+      <PageHero
+        title="Contact Us"
+        bgImage="/image.png"
+        breadcrumbs={[
+          { label: "Home", href: "/" },
+          { label: "Contact Us", isActive: true },
+        ]}
+      />
 
       {/* Main Content Container */}
       <section className="w-full">
