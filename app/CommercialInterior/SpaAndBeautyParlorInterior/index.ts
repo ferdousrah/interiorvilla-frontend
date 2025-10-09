@@ -1,0 +1,1 @@
+export { default as SpaAndBeautyParlorInterior } from "./SpaAndBeautyParlorInterior";

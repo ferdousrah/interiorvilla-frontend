@@ -1,0 +1,1 @@
+export { default as ResortInterior } from "./ResortInterior";

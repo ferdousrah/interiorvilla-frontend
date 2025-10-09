@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Preconnect -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cms.interiorvillabd.com" crossorigin>
+    <link rel="preconnect" href="https://interiorvillabd.com" crossorigin>
+    <link rel="dns-prefetch" href="https://interiorvillabd.com">
+    <link rel="dns-prefetch" href="https://cms.interiorvillabd.com">
+
+
+    <!-- Critical CSS -->
+    <style>
+      body { margin:0; font-family:system-ui,-apple-system,sans-serif; background:white; color:#1a1a1a; }
+      *,::before,::after { box-sizing:border-box; border-width:0; border-style:solid; border-color:#e5e7eb; }
+      .loading-screen { position:fixed; inset:0; background:#fff; display:flex; align-items:center; justify-content:center; z-index:9999; }
+      .loading-spinner { width:40px; height:40px; border:3px solid #f3f3f3; border-top:3px solid #75BF44; border-radius:50%; animation:spin 1s linear infinite; }
+      @keyframes spin { 0%{transform:rotate(0deg);} 100%{transform:rotate(360deg);} }
+      img { max-width:100%; height:auto; font-size:0; }
+      :root { --primary:#75BF44; --secondary:#EE5428; --primary-hover:#68AB3C; --secondary-hover:#D64C24; }
+      .skip-link {
+      position: absolute;
+      top: -40px;
+      left: 0;
+      background-color: #75bf44; /* your primary green */
+      color: #ffffff;
+      padding: 10px 16px;
+      font-weight: 600;
+      border-radius: 6px;
+      z-index: 1000;
+      transition: top 0.3s ease;
+      text-decoration: none;
+    }
+    .skip-link:focus {
+      top: 0;
+      outline: 2px solid #fff;
+      outline-offset: 2px;
+    }
+
+    </style>
+
+    <!-- Theme color -->
+    <meta name="theme-color" content="#75BF44" />
+
+    <!-- Favicons -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+
+    <!-- Preload -->
+    <link rel="preload" href="/interior-villa-dark.png" as="image" fetchpriority="high" />
+
+    <!-- Resource hints -->
+    <link rel="dns-prefetch" href="//fonts.googleapis.com" />
+    <link rel="dns-prefetch" href="//fonts.gstatic.com" />
+    <link rel="dns-prefetch" href="//cms.interiorvillabd.com" />
+    <link rel="dns-prefetch" href="//interiorvillabd.com" />
+
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-GJYR6D7RKN"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-GJYR6D7RKN');
+    </script>
+
+    <!-- Global Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Interior Villa",
+      "url": "https://interiorvillabd.com",
+      "logo": "https://interiorvillabd.com/interior-villa-dark.png",
+      "sameAs": [
+        "https://facebook.com/interiorvillabd",
+        "https://instagram.com/interiorvillabd",
+        "https://linkedin.com/company/interiorvillabd"
+      ],
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "telephone": "+88-01748981590",
+        "contactType": "customer service",
+        "email": "info@interiorvillabd.com"
+      },
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "18/10-A, Block-F, Ring Road, Mohammadpur",
+        "addressLocality": "Dhaka",
+        "postalCode": "1207",
+        "addressCountry": "BD"
+      },
+      "foundingDate": "2015",
+      "numberOfEmployees": "25-50"
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "url": "https://interiorvillabd.com",
+      "name": "Interior Villa",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://interiorvillabd.com/search?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+  </head>
+  <body>
+    <a href="#main-content" class="sr-only skip-link focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-primary text-white px-4 py-2 rounded-md z-50">
+      Skip to main content
+    </a>
+
+    <!-- Loading screen -->
+    <div id="loading-screen" class="loading-screen">
+      <div class="loading-spinner"></div>
+    </div>
+
+    <div id="root"></div>
+
+    <!-- App entry -->
+    <script type="module" src="/src/main.jsx"></script>
+
+    <!-- Load fonts async -->
+    <script>
+      function loadCSS(href) {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = href;
+        link.media = 'print';
+        link.onload = function() { this.media = 'all'; };
+        document.head.appendChild(link);
+        setTimeout(() => { if (link.media === 'print') link.media = 'all'; }, 100);
+      }
+      requestAnimationFrame(() => {
+        loadCSS('https://fonts.googleapis.com/css2?family=Fahkwang:wght@300;400;500;600;700&display=swap');
+      });
+    </script>
+
+    <!-- Remove loading screen -->
+    <script>
+      const removeLoadingScreen = () => {
+        const loadingScreen = document.getElementById('loading-screen');
+        if (loadingScreen) {
+          loadingScreen.style.opacity = '0';
+          loadingScreen.style.transition = 'opacity 0.3s ease-out';
+          setTimeout(() => loadingScreen.remove(), 300);
+        }
+      };
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', removeLoadingScreen);
+      } else {
+        removeLoadingScreen();
+      }
+    </script>
+  </body>
+</html>
