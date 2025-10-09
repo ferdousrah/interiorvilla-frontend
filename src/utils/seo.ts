@@ -1,6 +1,6 @@
 // SEO utility functions for dynamic meta tag management
 
-interface SEOData {
+export interface SEOData {
   title: string;
   description: string;
   keywords?: string;
