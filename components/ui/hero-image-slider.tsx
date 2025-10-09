@@ -210,9 +210,9 @@ export const HeroImageSlider: React.FC<HeroImageSliderProps> = ({
   };
 
   const heightMap = {
-    small: 'h-[40vh] sm:h-[50vh]',
-    medium: 'h-[60vh] sm:h-[70vh]',
-    large: 'h-[80vh] sm:h-[90vh]',
+    small: 'h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px]',
+    medium: 'h-[400px] sm:h-[500px] md:h-[600px] lg:h-[700px]',
+    large: 'h-[500px] sm:h-[600px] md:h-[700px] lg:h-[800px] xl:h-[900px]',
     full: 'h-screen',
   };
 
@@ -252,7 +252,7 @@ export const HeroImageSlider: React.FC<HeroImageSliderProps> = ({
             priority={currentIndex === 0}
             loading={currentIndex === 0 ? 'eager' : 'lazy'}
             fallbackSrc={slide.fallbackSrc}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover object-center"
           />
 
           {/* Dynamic overlay */}
@@ -270,12 +270,12 @@ export const HeroImageSlider: React.FC<HeroImageSliderProps> = ({
           </AnimatePresence>
 
           {/* Text content */}
-          <div className="absolute inset-0 flex items-center justify-start px-8 sm:px-12 md:px-20">
-            <div className="text-white max-w-3xl">
+          <div className="absolute inset-0 flex items-center justify-start px-4 sm:px-8 md:px-12 lg:px-20">
+            <div className="text-white max-w-full sm:max-w-2xl md:max-w-3xl lg:max-w-4xl">
               {slide.title && (
                 <h1
                   ref={titleRef}
-                  className="text-4xl sm:text-5xl md:text-6xl font-bold mb-4 leading-tight hero-slide-title"
+                  className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold mb-2 sm:mb-3 md:mb-4 leading-tight hero-slide-title"
                 >
                   {slide.title}
                 </h1>
@@ -287,7 +287,7 @@ export const HeroImageSlider: React.FC<HeroImageSliderProps> = ({
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4, duration: 0.8, ease: 'power2.out' }}
-                  className="text-lg sm:text-xl hero-slide-subtitle text-white/90"
+                  className="text-sm sm:text-base md:text-lg lg:text-xl hero-slide-subtitle text-white/90"
                 >
                   {slide.subtitle}
                 </motion.p>
@@ -303,16 +303,16 @@ export const HeroImageSlider: React.FC<HeroImageSliderProps> = ({
           <button
             onClick={goToPrevious}
             aria-label="Previous slide"
-            className="absolute left-4 top-1/2 -translate-y-1/2 z-20 text-white p-2 rounded-full hero-slide-control focus-visible:ring-2 focus-visible:ring-primary"
+            className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-20 text-white p-1.5 sm:p-2 rounded-full hero-slide-control focus-visible:ring-2 focus-visible:ring-primary"
           >
-            <ChevronLeft className="w-7 h-7" aria-hidden="true" />
+            <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7" aria-hidden="true" />
           </button>
           <button
             onClick={goToNext}
             aria-label="Next slide"
-            className="absolute right-4 top-1/2 -translate-y-1/2 z-20 text-white p-2 rounded-full hero-slide-control focus-visible:ring-2 focus-visible:ring-primary"
+            className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-20 text-white p-1.5 sm:p-2 rounded-full hero-slide-control focus-visible:ring-2 focus-visible:ring-primary"
           >
-            <ChevronRight className="w-7 h-7" aria-hidden="true" />
+            <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7" aria-hidden="true" />
           </button>
         </>
       )}
@@ -322,21 +322,21 @@ export const HeroImageSlider: React.FC<HeroImageSliderProps> = ({
         <button
           onClick={togglePlayPause}
           aria-label={isPlaying ? 'Pause slideshow' : 'Play slideshow'}
-          className="absolute bottom-6 left-6 z-20 w-10 h-10 flex items-center justify-center rounded-full hero-slide-control text-white"
+          className="absolute bottom-4 left-4 sm:bottom-6 sm:left-6 z-20 w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-full hero-slide-control text-white"
         >
-          {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
+          {isPlaying ? <Pause className="w-4 h-4 sm:w-5 sm:h-5" /> : <Play className="w-4 h-4 sm:w-5 sm:h-5" />}
         </button>
       )}
 
       {/* Indicators */}
       {showIndicators && (
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-3 z-20">
+        <div className="absolute bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 flex gap-2 sm:gap-3 z-20">
           {slides.map((s, i) => (
             <button
               key={i}
               onClick={() => goToSlide(i)}
               aria-label={`Go to slide ${i + 1}: ${s.title || 'Untitled slide'}`}
-              className={`w-3 h-3 rounded-full transition-all focus-visible:ring-2 focus-visible:ring-primary ${
+              className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full transition-all focus-visible:ring-2 focus-visible:ring-primary ${
                 i === currentIndex ? 'bg-primary scale-125' : 'bg-white/60 hover:bg-white/80'
               }`}
             />
