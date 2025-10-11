@@ -150,15 +150,27 @@ app.get('/api/offices', (req, res) => {
 app.use(express.static(path.join(__dirname, 'dist')));
 
 // SSR middleware for SEO meta tags injection
-app.get('*', async (req, res) => {
+app.get('*', async (req, res, next) => {
   try {
-    // Read the built index.html file
-    const indexPath = path.join(__dirname, 'dist', 'index.html');
-    let html = readFileSync(indexPath, 'utf-8');
+    // Skip API routes
+    if (req.path.startsWith('/api/')) {
+      return next();
+    }
 
-    // Skip SEO injection for static assets
-    if (req.path.match(/\.(js|css|png|jpg|jpeg|gif|svg|ico|webp|woff|woff2|ttf|eot|json|xml|txt)$/i)) {
-      return res.sendFile(indexPath);
+    // Skip static assets - let express.static handle them
+    if (req.path.match(/\.(js|css|png|jpg|jpeg|gif|svg|ico|webp|woff|woff2|ttf|eot|json|xml|txt|map)$/i)) {
+      return next();
+    }
+
+    // Check if dist/index.html exists
+    const indexPath = path.join(__dirname, 'dist', 'index.html');
+    let html;
+
+    try {
+      html = readFileSync(indexPath, 'utf-8');
+    } catch (readError) {
+      console.error('Error reading index.html:', readError);
+      return res.status(500).send('Build not found. Please run: npm run build');
     }
 
     // Fetch SEO data for the current route
@@ -180,11 +192,16 @@ app.get('*', async (req, res) => {
     }
 
     // Send the modified HTML
+    res.setHeader('Content-Type', 'text/html');
     res.send(html);
   } catch (error) {
     console.error('Error in SSR middleware:', error);
     // Fallback to sending the original file
-    res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+    try {
+      res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+    } catch (sendError) {
+      res.status(500).send('Error loading page. Please run: npm run build');
+    }
   }
 });
 
