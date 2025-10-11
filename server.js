@@ -150,7 +150,7 @@ app.get('/api/offices', (req, res) => {
 app.use(express.static(path.join(__dirname, 'dist')));
 
 // SSR middleware for SEO meta tags injection
-app.get('*', async (req, res, next) => {
+app.use(async (req, res, next) => {
   try {
     // Skip API routes
     if (req.path.startsWith('/api/')) {
