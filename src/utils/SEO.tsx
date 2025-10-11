@@ -1,4 +1,5 @@
 // utils/SEO.tsx
+// utils/SEO.tsx
 import React from "react";
 import { Helmet } from "react-helmet-async";
 
@@ -9,7 +10,7 @@ interface SEOProps {
   image?: string;
   url?: string;
   type?: string;
-  extraJsonLd?: string | object; // ✅ accept raw string or object
+  extraJsonLd?: string | object;
 }
 
 const SEO: React.FC<SEOProps> = ({
@@ -21,12 +22,17 @@ const SEO: React.FC<SEOProps> = ({
   type = "website",
   extraJsonLd,
 }) => {
-  // Normalize extraJsonLd (handle string <script>...</script> from Payload)
-  let jsonLdContent: object | null = null;
+  // ✅ Fallback canonical using current location
+  const canonicalUrl =
+    url ||
+    (typeof window !== "undefined"
+      ? window.location.href.split("?")[0]
+      : undefined);
 
+  // Normalize JSON-LD data
+  let jsonLdContent: object | null = null;
   if (typeof extraJsonLd === "string") {
     try {
-      // Strip <script> tags if present
       const clean = extraJsonLd.replace(/<script[^>]*>|<\/script>/g, "").trim();
       jsonLdContent = JSON.parse(clean);
     } catch (err) {
@@ -35,29 +41,32 @@ const SEO: React.FC<SEOProps> = ({
   } else if (typeof extraJsonLd === "object") {
     jsonLdContent = extraJsonLd;
   }
+  
 
   return (
     <Helmet>
-      {/* Primary Meta */}
+      {/* ✅ Title & Canonical */}
       <title>{title}</title>
+      {canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
+
+      {/* ✅ Primary Meta */}
       <meta name="description" content={description} />
       {keywords && <meta name="keywords" content={keywords} />}
-      {url && <link rel="canonical" href={url} />}
 
-      {/* Open Graph */}
+      {/* ✅ Open Graph */}
       <meta property="og:title" content={title} />
       <meta property="og:description" content={description} />
       {image && <meta property="og:image" content={image} />}
-      {url && <meta property="og:url" content={url} />}
+      {canonicalUrl && <meta property="og:url" content={canonicalUrl} />}
       <meta property="og:type" content={type} />
 
-      {/* Twitter */}
+      {/* ✅ Twitter */}
+      <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={title} />
       <meta name="twitter:description" content={description} />
       {image && <meta name="twitter:image" content={image} />}
-      <meta name="twitter:card" content="summary_large_image" />
 
-      {/* Structured Data */}
+      {/* ✅ Structured Data */}
       {jsonLdContent && (
         <script type="application/ld+json">
           {JSON.stringify(jsonLdContent)}
@@ -68,6 +77,7 @@ const SEO: React.FC<SEOProps> = ({
 };
 
 export default SEO;
+
 
 
 /* -----------------------------------------------

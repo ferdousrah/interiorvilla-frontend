@@ -1,7 +1,7 @@
 // components/screens/Home/sections/OurFeaturedWorksSection/OurFeaturedWorksSection.tsx
 'use client'
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -29,16 +29,12 @@ interface ProjectsApiResponse {
   totalDocs?: number;
 }
 
-/** If your CMS is reverse-proxied through the site domain, keep this.
- *  If not, switch to: https://cms.interiorvillabd.com
- */
 const CMS_ORIGIN = "https://interiorvillabd.com";
 
 // Build absolute URLs when API returns "/api/media/file/..."
 const absolutize = (u?: string | null): string => {
   if (!u) return '/placeholder.webp';
   if (/^https?:\/\//i.test(u)) return u;
-  const CMS_ORIGIN = 'https://interiorvillabd.com'; // adjust if using local dev domain
   return new URL(u, CMS_ORIGIN).href;
 };
 
@@ -55,7 +51,6 @@ type Media = {
     large?: MediaSize;
     xlarge?: MediaSize;
     og?: MediaSize;
-    // some setups add custom sizes like "card"
     [k: string]: MediaSize | undefined;
   };
 };
@@ -83,31 +78,36 @@ const getOptimizedImageUrl = (img?: Media | null): string => {
   return abs.replace(/\.(jpg|jpeg|png)(\?.*)?$/i, ".webp$2");
 };
 
-
-/**
- * Get the URL for Payload's pre-generated blur placeholder.
- */
 const getBlurPlaceholderUrl = (img?: any | null): string | undefined => {
   const blurUrl = img?.sizes?.blur?.url;
   return blurUrl ? absolutize(blurUrl) : undefined;
 };
 
-
-/**
- * Generate accessible, SEO-friendly alt text.
- */
 const getImageAlt = (img?: any | null, fallback?: string): string => {
   const altText = img?.alt?.trim?.();
   if (altText && altText.length > 0) return altText;
   return fallback || 'Project image';
 };
 
-/* ---------- Palette ---------- */
-const palette = [
-  "#50852d", "#599432", "#62a337", "#6db53e",
-  "#437724", "#72bd45", "#3c6a20", "#7bc54a"
-];
+/* ---------- Image Preloader Utility ---------- */
+const preloadImage = (src: string): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    if (!src) {
+      resolve();
+      return;
+    }
+    
+    const img = new Image();
+    img.decoding = 'async';
+    img.fetchPriority = 'high';
+    
+    img.onload = () => resolve();
+    img.onerror = () => resolve(); // Resolve anyway to not block
+    img.src = src;
+  });
+};
 
+/* ---------- Boundary Error Handler ---------- */
 class Boundary extends React.Component<{ children: React.ReactNode }, { err?: string }> {
   constructor(props: any) {
     super(props);
@@ -147,21 +147,34 @@ export const OurFeaturedWorksSection = (): JSX.Element => {
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [projects, setProjects] = useState<Project[]>([]);
+  const [imagesPreloaded, setImagesPreloaded] = useState(false);
   const [windowWidth, setWindowWidth] = useState(
     typeof window !== "undefined" ? window.innerWidth : 1200
   );
 
+  // ============================================
+  // OPTIMIZATION 1: Fetch + Preload Immediately
+  // ============================================
   useEffect(() => {
     if (typeof window === "undefined") return;
 
     let cancelled = false;
+    
     (async () => {
       try {
-        const res = await fetch(
+        // Start fetching immediately
+        const fetchPromise = fetch(
           `${CMS_ORIGIN}/api/projects?where[featuredOnHome][equals]=true&sort=position`,
-          { cache: "no-store" }
+          { 
+            cache: "no-store",
+            // Add priority hint for faster fetch
+            priority: 'high' as any
+          }
         );
+
+        const res = await fetchPromise;
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        
         const data: ProjectsApiResponse = await res.json();
 
         const mapped: Project[] = (data.docs || []).map((doc: any, i: number) => {
@@ -181,24 +194,91 @@ export const OurFeaturedWorksSection = (): JSX.Element => {
           };
         });
 
-        if (!cancelled) setProjects(mapped);
+        if (cancelled) return;
+        
+        // Set projects immediately for instant render with blur placeholders
+        setProjects(mapped);
+
+        // ============================================
+        // OPTIMIZATION 2: Aggressive Image Preloading
+        // ============================================
+        // Preload first 3 images immediately (visible cards)
+        const priorityImages = mapped.slice(0, 3).map(p => p.image);
+        const priorityPreloads = priorityImages.map(src => preloadImage(src));
+        
+        // Preload remaining images in background
+        const remainingImages = mapped.slice(3).map(p => p.image);
+        const remainingPreloads = remainingImages.map(src => preloadImage(src));
+
+        // Wait for priority images, then mark as loaded
+        await Promise.all(priorityPreloads);
+        if (!cancelled) {
+          setImagesPreloaded(true);
+          
+          // Continue loading remaining in background
+          Promise.all(remainingPreloads).catch(err => 
+            console.warn('Background image preload failed:', err)
+          );
+        }
+
       } catch (e) {
         console.error("Failed to fetch projects:", e);
-        if (!cancelled) setProjects([]);
+        if (!cancelled) {
+          setProjects([]);
+          setImagesPreloaded(true);
+        }
       }
     })();
+
     return () => { cancelled = true; };
   }, []);
 
+  // ============================================
+  // OPTIMIZATION 3: Debounced Resize Handler
+  // ============================================
   useEffect(() => {
-    const handleResize = () => setWindowWidth(window.innerWidth);
+    let timeoutId: NodeJS.Timeout;
+    
+    const handleResize = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        setWindowWidth(window.innerWidth);
+      }, 150);
+    };
+    
     window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    return () => {
+      clearTimeout(timeoutId);
+      window.removeEventListener("resize", handleResize);
+    };
   }, []);
 
+  // ============================================
+  // OPTIMIZATION 4: Memoized Card Sizes
+  // ============================================
+  const cardSizes = useMemo(() => {
+    return projects.map((_, index) => ({
+      maxWidth:
+        windowWidth < 640
+          ? "100%"
+          : windowWidth < 1024
+          ? "600px"
+          : `${1200 + index * 40}px`,
+      height:
+        windowWidth < 640 ? "70vh" : windowWidth < 1024 ? "60vh" : "80vh",
+      minHeight: windowWidth < 640 ? "500px" : "600px",
+    }));
+  }, [projects.length, windowWidth]);
+
+  // ============================================
+  // GSAP Scroll Animation
+  // ============================================
   useEffect(() => {
     if (!sectionRef.current || !containerRef.current || projects.length === 0) return;
+    
     let ctx: gsap.Context | undefined;
+    let lastIndex = -1;
+    
     try {
       ctx = gsap.context(() => {
         const cards = cardRefs.current.filter(Boolean) as HTMLDivElement[];
@@ -235,7 +315,12 @@ export const OurFeaturedWorksSection = (): JSX.Element => {
             const progress = self.progress;
             const total = projects.length;
             const activeIndex = Math.min(Math.floor(progress * total), total - 1);
-            if (activeIndex !== currentIndex) setCurrentIndex(activeIndex);
+            
+            // Only update state when index changes
+            if (activeIndex !== lastIndex) {
+              lastIndex = activeIndex;
+              setCurrentIndex(activeIndex);
+            }
 
             cards.forEach((card, index) => {
               gsap.set(card, { zIndex: 100 + index });
@@ -265,27 +350,28 @@ export const OurFeaturedWorksSection = (): JSX.Element => {
           }
         });
 
-        setTimeout(() => ScrollTrigger.refresh(), 0);
+        // Refresh after images load
+        if (imagesPreloaded) {
+          setTimeout(() => ScrollTrigger.refresh(), 100);
+        }
       }, sectionRef);
     } catch (err) {
       console.error("GSAP init failed:", err);
     }
+    
     return () => ctx?.revert();
-  }, [projects, currentIndex]);
+  }, [projects, imagesPreloaded]);
 
-  useEffect(() => {
-    const images = document.querySelectorAll("img");
-    const refresh = () => ScrollTrigger.refresh();
-    images.forEach((img) => img.addEventListener("load", refresh));
-    return () => images.forEach((img) => img.removeEventListener("load", refresh));
-  }, []);
-
+  // ============================================
+  // Navigation Handler
+  // ============================================
   const navigate = useNavigate();
-  const handleViewProject = (slug: string | string) => {
+  const handleViewProject = useCallback((slug: string) => {
+    if (!slug) return;
     navigate(`/portfolio/project-details/${slug}`);
-  };
+  }, [navigate]);
 
-  const scrollToCard = (index: number) => {
+  const scrollToCard = useCallback((index: number) => {
     const sectionScrollHeight = (projects.length * 400 * window.innerHeight) / 100;
     const targetScroll =
       (sectionRef.current?.offsetTop ?? 0) + (index / projects.length) * sectionScrollHeight;
@@ -294,7 +380,7 @@ export const OurFeaturedWorksSection = (): JSX.Element => {
     } catch {
       window.scrollTo({ top: targetScroll, behavior: "smooth" });
     }
-  };
+  }, [projects.length]);
 
   return (
     <Boundary>
@@ -311,114 +397,125 @@ export const OurFeaturedWorksSection = (): JSX.Element => {
             <div className="text-center text-gray-600">Loading projects…</div>
           )}
 
-          {projects.map((project, index) => (
-            <div
-              key={project.id}
-              ref={(el) => (cardRefs.current[index] = el)}
-              className="absolute flex items-center justify-center p-1 sm:p-2 md:p-4 lg:p-6"
-              style={{
-                zIndex: 100 + index,
-                willChange: "transform",
-                width: "100%",
-                height: "100%",
-                top: 0,
-                left: 0,
-              }}
-            >
-              {/* IMPORTANT: pass the ID to the handler */}
+          {projects.map((project, index) => {
+            const sizes = cardSizes[index] || {};
+            
+            return (
               <div
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && handleViewProject(project.id)}
-                onClick={() => handleViewProject(project.slug)}
-                className="w-full rounded-2xl sm:rounded-3xl overflow-hidden relative mx-auto cursor-pointer"
+                key={project.id}
+                ref={(el) => (cardRefs.current[index] = el)}
+                className="absolute flex items-center justify-center p-1 sm:p-2 md:p-4 lg:p-6"
                 style={{
-                  width: "90%",
-                  maxWidth:
-                    windowWidth < 640
-                      ? "100%"
-                      : windowWidth < 1024
-                      ? "600px"
-                      : `${1200 + index * 40}px`,
-                  height:
-                    windowWidth < 640 ? "70vh" : windowWidth < 1024 ? "60vh" : "80vh",
-                  minHeight: windowWidth < 640 ? "500px" : "600px",
-                  background: project.color,
-                  transform: "translateZ(0)",
+                  zIndex: 100 + index,
                   willChange: "transform",
+                  width: "100%",
+                  height: "100%",
+                  top: 0,
+                  left: 0,
                 }}
               >
-                <div className="flex flex-col lg:flex-row h-full">
-                  <div className="w-full lg:w-2/5 p-4 sm:p-6 md:p-8 lg:p-10 flex flex-col justify-center relative z-10 flex-shrink-0">
-                    <div className="mb-3 md:mb-4">
-                      <span
-                        className="inline-block px-2 py-1 sm:px-3 sm:py-1.5 rounded-full text-xs font-semibold text-green-800"
-                        style={{ background: "rgba(255, 255, 255, 0.9)" }}
+                <div
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`View ${project.title} project details`}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      handleViewProject(project.slug);
+                    }
+                  }}
+                  onClick={() => handleViewProject(project.slug)}
+                  className="w-full rounded-2xl sm:rounded-3xl overflow-hidden relative mx-auto cursor-pointer"
+                  style={{
+                    width: "90%",
+                    maxWidth: sizes.maxWidth,
+                    height: sizes.height,
+                    minHeight: sizes.minHeight,
+                    background: project.color,
+                    transform: "translateZ(0)",
+                    willChange: "transform",
+                  }}
+                >
+                  <div className="flex flex-col lg:flex-row h-full">
+                    <div className="w-full lg:w-2/5 p-4 sm:p-6 md:p-8 lg:p-10 flex flex-col justify-center relative z-10 flex-shrink-0">
+                      <div className="mb-3 md:mb-4">
+                        <span
+                          className="inline-block px-2 py-1 sm:px-3 sm:py-1.5 rounded-full text-xs font-semibold text-green-800"
+                          style={{ background: "rgba(255, 255, 255, 0.9)" }}
+                        >
+                          {project.category}
+                        </span>
+                      </div>
+
+                      <h2
+                        className="text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl font-bold text-white mb-3 md:mb-4 leading-tight"
+                        style={{ textShadow: "0 2px 10px rgba(0, 0, 0, 0.3)" }}
                       >
-                        {project.category}
-                      </span>
-                    </div>
+                        {project.title}
+                      </h2>
 
-                    <h2
-                      className="text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl font-bold text-white mb-3 md:mb-4 leading-tight"
-                      style={{ textShadow: "0 2px 10px rgba(0, 0, 0, 0.3)" }}
-                    >
-                      {project.title}
-                    </h2>
+                      <p
+                        className="text-sm sm:text-base md:text-base text-white mb-4 md:mb-6 leading-relaxed"
+                        style={{ textShadow: "0 1px 6px rgba(255, 255, 255, 0.2)" }}
+                      >
+                        {project.description}
+                      </p>
 
-                    <p
-                      className="text-sm sm:text-base md:text-base text-white mb-4 md:mb-6 leading-relaxed"
-                      style={{ textShadow: "0 1px 6px rgba(255, 255, 255, 0.2)" }}
-                    >
-                      {project.description}
-                    </p>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleViewProject(project.slug);
+                        }}
+                        className="group inline-flex items-center px-4 py-2 sm:px-6 sm:py-3 rounded-full text-white font-semibold transition-all duration-300 hover:scale-105 hover:shadow-xl w-fit relative overflow-hidden"
+                        style={{ background: "rgba(255, 255, 255, 0.2)" }}
+                      >
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-all duration-700 ease-out" />
+                        <span className="mr-2 text-xs sm:text-sm">View Project</span>
+                        <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 transition-transform duration-300 group-hover:translate-x-1" />
+                      </button>
 
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleViewProject(project.slug);
-                      }}
-                      className="group inline-flex items-center px-4 py-2 sm:px-6 sm:py-3 rounded-full text-white font-semibold transition-all duration-300 hover:scale-105 hover:shadow-xl w-fit relative overflow-hidden"
-                      style={{ background: "rgba(255, 255, 255, 0.2)" }}
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-all duration-700 ease-out" />
-                      <span className="mr-2 text-xs sm:text-sm">View Project</span>
-                      <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 transition-transform duration-300 group-hover:translate-x-1" />
-                    </button>
-
-                    <div className="absolute bottom-2 left-2 sm:bottom-4 sm:left-4 md:left-8 lg:left-10 lg:block hidden">
-                      <div className="text-4xl sm:text-6xl font-bold opacity-20 text-white">
-                        {String(index + 1).padStart(2, "0")}
+                      <div className="absolute bottom-2 left-2 sm:bottom-4 sm:left-4 md:left-8 lg:left-10 lg:block hidden">
+                        <div className="text-4xl sm:text-6xl font-bold opacity-20 text-white">
+                          {String(index + 1).padStart(2, "0")}
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <div className="w-full lg:w-3/5 relative overflow-hidden flex-1 pointer-events-none">
-                    <div className="absolute inset-0 w-full h-full p-4 sm:p-6 md:p-8 lg:p-10">
-                      <div className="w-full h-full rounded-1xl sm:rounded-2xl overflow-hidden">
-                        <PerformanceImage
-                          src={project.image}          // ← sized URL
-                          alt={project.imageAlt}       // ← real alt
-                          className="w-full h-full object-cover"
-                          blurDataURL={project.blurPlaceholder}                          
-                          loading={index === 0 ? 'eager' : 'lazy'}
-                          priority={index === 0}
-                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 600px, 900px"
-                          quality={70}
-                          placeholder="blur"
-                        />
+                    <div className="w-full lg:w-3/5 relative overflow-hidden flex-1 pointer-events-none">
+                      <div className="absolute inset-0 w-full h-full p-4 sm:p-6 md:p-8 lg:p-10">
+                        <div className="w-full h-full rounded-1xl sm:rounded-2xl overflow-hidden">
+                          {/* ============================================
+                              OPTIMIZATION 5: Enhanced Image Component
+                              - First image: eager loading + high priority
+                              - Next 2: eager loading
+                              - Rest: lazy loading
+                              ============================================ */}
+                          <PerformanceImage
+                            src={project.image}
+                            alt={project.imageAlt}
+                            className="w-full h-full object-cover"
+                            blurDataURL={project.blurPlaceholder}
+                            loading={index < 3 ? 'eager' : 'lazy'}
+                            priority={index === 0}
+                            fetchPriority={index === 0 ? 'high' : index < 3 ? 'high' : 'auto'}
+                            sizes="(max-width: 640px) 90vw, (max-width: 1024px) 600px, 900px"
+                            quality={index < 3 ? 85 : 70}
+                            placeholder="blur"
+                            decoding={index < 3 ? 'sync' : 'async'}
+                          />
+                        </div>
                       </div>
-                    </div>
-                    <div className="absolute bottom-2 right-2 sm:bottom-4 sm:right-4 lg:hidden">
-                      <div className="text-2xl sm:text-3xl font-bold opacity-30 text-white">
-                        {String(index + 1).padStart(2, "0")}
+                      <div className="absolute bottom-2 right-2 sm:bottom-4 sm:right-4 lg:hidden">
+                        <div className="text-2xl sm:text-3xl font-bold opacity-30 text-white">
+                          {String(index + 1).padStart(2, "0")}
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </section>
 

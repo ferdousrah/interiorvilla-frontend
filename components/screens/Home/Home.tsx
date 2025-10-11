@@ -45,7 +45,7 @@ const Home = (): JSX.Element => {
           title={seo.metaTitle}
           description={seo.metaDescription}
           keywords={seo.metaKey}
-          url="https://interiorvillabd.com"
+          url="https://interiorvillabd.com/"
           extraJsonLd={seo.seoStructuredData}
         />
       )}

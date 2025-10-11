@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <script src="https://analytics.ahrefs.com/analytics.js" data-key="FS4t49Pm/7A4nc6yUaNS1A" async></script>
+    <script src="https://analytics.ahrefs.com/analytics.js" data-key="PA+l3ZUnJ82Y0ZwWAUDcPg" async></script>
 
     <!-- Preconnect -->
     <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
@@ -12,7 +12,6 @@
     <link rel="preconnect" href="https://interiorvillabd.com" crossorigin>
     <link rel="dns-prefetch" href="https://interiorvillabd.com">
     <link rel="dns-prefetch" href="https://cms.interiorvillabd.com">
-
 
     <!-- Critical CSS -->
     <style>
@@ -24,24 +23,23 @@
       img { max-width:100%; height:auto; font-size:0; }
       :root { --primary:#75BF44; --secondary:#EE5428; --primary-hover:#68AB3C; --secondary-hover:#D64C24; }
       .skip-link {
-      position: absolute;
-      top: -40px;
-      left: 0;
-      background-color: #75bf44; /* your primary green */
-      color: #ffffff;
-      padding: 10px 16px;
-      font-weight: 600;
-      border-radius: 6px;
-      z-index: 1000;
-      transition: top 0.3s ease;
-      text-decoration: none;
-    }
-    .skip-link:focus {
-      top: 0;
-      outline: 2px solid #fff;
-      outline-offset: 2px;
-    }
-
+        position: absolute;
+        top: -40px;
+        left: 0;
+        background-color: #75bf44;
+        color: #ffffff;
+        padding: 10px 16px;
+        font-weight: 600;
+        border-radius: 6px;
+        z-index: 1000;
+        transition: top 0.3s ease;
+        text-decoration: none;
+      }
+      .skip-link:focus {
+        top: 0;
+        outline: 2px solid #fff;
+        outline-offset: 2px;
+      }
     </style>
 
     <!-- Theme color -->
@@ -71,7 +69,22 @@
       gtag('config', 'G-GJYR6D7RKN');
     </script>
 
-    <!-- Global Structured Data -->
+    <!-- Meta Pixel Code -->
+    <script>
+      !function(f,b,e,v,n,t,s)
+      {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+      n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+      if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+      n.queue=[];t=b.createElement(e);t.async=!0;
+      t.src=v;s=b.getElementsByTagName(e)[0];
+      s.parentNode.insertBefore(t,s)}(window, document,'script',
+      'https://connect.facebook.net/en_US/fbevents.js');
+      fbq('init', '24841966372080238');
+      fbq('track', 'PageView');
+    </script>
+    <!-- End Meta Pixel Code -->
+
+    <!-- Structured Data -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -115,6 +128,7 @@
     }
     </script>
   </head>
+
   <body>
     <a href="#main-content" class="sr-only skip-link focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-primary text-white px-4 py-2 rounded-md z-50">
       Skip to main content
@@ -126,6 +140,13 @@
     </div>
 
     <div id="root"></div>
+
+    <!-- Meta Pixel Fallback (Valid placement) -->
+    <noscript>
+      <img height="1" width="1" style="display:none"
+        src="https://www.facebook.com/tr?id=24841966372080238&ev=PageView&noscript=1"
+        alt="Meta Pixel Tracking Image" />
+    </noscript>
 
     <!-- App entry -->
     <script type="module" src="/src/main.jsx"></script>

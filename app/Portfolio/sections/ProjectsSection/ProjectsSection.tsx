@@ -84,10 +84,10 @@ const filterOptions = [
 type Filter = typeof filterOptions[number];
 
 const API_BY_FILTER: Record<Filter, string> = {
-  All: `${CMS_ORIGIN}/api/projects?sort=-portfolioPosition`,
-  'Residential Interior': `${CMS_ORIGIN}/api/projects?where[isResidential][equals]=true&sort=-portfolioPosition`,
-  'Commercial Interior': `${CMS_ORIGIN}/api/projects?where[isCommercial][equals]=true&sort=-portfolioPosition`,
-  'Architectural Consultancy': `${CMS_ORIGIN}/api/projects?where[isArchitectural][equals]=true&sort=-portfolioPosition`,
+  All: `${CMS_ORIGIN}/api/projects?sort=portfolioPosition`,
+  'Residential Interior': `${CMS_ORIGIN}/api/projects?where[isResidential][equals]=true&sort=portfolioPosition`,
+  'Commercial Interior': `${CMS_ORIGIN}/api/projects?where[isCommercial][equals]=true&sort=portfolioPosition`,
+  'Architectural Consultancy': `${CMS_ORIGIN}/api/projects?where[isArchitectural][equals]=true&sort=portfolioPosition`,
 };
 
 const PAGE_SIZE = 4;
