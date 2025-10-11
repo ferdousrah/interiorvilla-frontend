@@ -146,10 +146,7 @@ app.get('/api/offices', (req, res) => {
     });
 });
 
-// Serve static files from dist directory (for production)
-app.use(express.static(path.join(__dirname, 'dist')));
-
-// SSR middleware for SEO meta tags injection
+// SSR middleware for SEO meta tags injection (MUST be before static files)
 app.use(async (req, res, next) => {
   try {
     // Skip API routes
@@ -204,6 +201,9 @@ app.use(async (req, res, next) => {
     }
   }
 });
+
+// Serve static files from dist directory (for production) - MUST be after SSR middleware
+app.use(express.static(path.join(__dirname, 'dist')));
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ Server successfully started on port ${PORT}`);
