@@ -294,14 +294,17 @@ const MainMenu: React.FC = () => {
                 <nav className="flex space-x-2" role="navigation" aria-label="Main navigation">
                   {navItems.map((item, index) => (
                     <div key={index} className="relative group" onMouseEnter={() => handleMouseEnter(item.name)} onMouseLeave={handleMouseLeave}>
-                        <Link to={item.href} aria-label={`Navigate to ${item.name}`}>
                           <Button
                             variant={location.pathname === item.href ? "default" : "ghost"}
                                 className={`min-w-[108px] px-6 rounded-[50px] whitespace-nowrap transition-all duration-300 hover:bg-primary hover:text-white hover:scale-105 hover:shadow-lg ${
                                     location.pathname === item.href ? "bg-primary text-white shadow-lg" : "text-white"
                                 }`}
-                            onClick={() => {
-                              window.scrollTo({ top: 0, left: 0, behavior: "instant" as ScrollBehavior });
+                            onClick={(e) => {
+                              if (!item.subItems) {
+                                e.preventDefault();
+                                window.scrollTo({ top: 0, left: 0, behavior: "instant" as ScrollBehavior });
+                                navigate(item.href);
+                              }
                             }}
                           >
                             <span className="[font-family:'Fahkwang',Helvetica] font-medium text-center transition-all duration-300">{item.name}</span>
@@ -311,7 +314,6 @@ const MainMenu: React.FC = () => {
                               </motion.span>
                             )}
                           </Button>
-                        </Link>
 
                       {/* Mega menu / submenus */}
                       <AnimatePresence>
