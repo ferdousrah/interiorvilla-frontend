@@ -15,7 +15,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3000;
 
 // Add error handling for server startup
 process.on('uncaughtException', (error) => {
@@ -36,7 +36,7 @@ app.post('/api/send-email', sendEmailHandler);
 // Team members API endpoint
 app.get('/api/team-members', (req, res) => {
   // Proxy request to Payload CMS
-  fetch('https://cms.interiorvillabd.com/api/team-members?depth=1')
+  fetch('https://interiorvillabd.com/api/team-members?depth=1')
     .then(response => {
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
@@ -62,7 +62,7 @@ app.get('/api/projects', (req, res) => {
     }
   });
   
-  const url = `https://cms.interiorvillabd.com/api/projects${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+  const url = `https://interiorvillabd.com/api/projects${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
   
   console.log('Proxying request to:', url);
   
@@ -94,7 +94,7 @@ app.get('/api/testimonials', (req, res) => {
     }
   });
   
-  const url = `https://cms.interiorvillabd.com/api/testimonials${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+  const url = `https://interiorvillabd.com/api/testimonials${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
   
   console.log('Proxying testimonials request to:', url);
   
@@ -126,7 +126,7 @@ app.get('/api/offices', (req, res) => {
     }
   });
   
-  const url = `https://cms.interiorvillabd.com/api/offices${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+  const url = `https://interiorvillabd.com/api/offices${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
   
   console.log('Proxying offices request to:', url);
   

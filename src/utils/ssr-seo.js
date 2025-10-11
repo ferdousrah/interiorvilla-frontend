@@ -10,31 +10,31 @@ const routeToApiMap = {
   '/faq': `${API_BASE}/globals/faq?depth=1&draft=false`,
 
   // Main Service Pages
-  '/services/residential-interior': `${API_BASE}/globals/residential-interior?depth=1&draft=false`,
-  '/services/commercial-interior': `${API_BASE}/globals/commercial-interior?depth=1&draft=false`,
-  '/services/architectural-consultancy': `${API_BASE}/globals/architectural-consultancy?depth=1&draft=false`,
+  '/services/residential-interior': `${API_BASE}/services/1?depth=1&draft=false&locale=undefined`,
+  '/services/commercial-interior': `${API_BASE}/services/5?depth=1&draft=false&locale=undefined`,
+  '/services/architectural-consultancy': `${API_BASE}/services/21?depth=1&draft=false&locale=undefined`,
 
   // Residential Interior Sub-pages
-  '/services/residential/apartment-interior-design': `${API_BASE}/globals/apartment-interior-design?depth=1&draft=false`,
-  '/services/residential/home-interior-design': `${API_BASE}/globals/home-interior-design?depth=1&draft=false`,
-  '/services/residential/duplex-interior-design': `${API_BASE}/globals/duplex-interior-design?depth=1&draft=false`,
+  '/services/residential/apartment-interior-design': `${API_BASE}/services/2?depth=1&draft=false&locale=undefined`,
+  '/services/residential/home-interior-design': `${API_BASE}/services/3?depth=1&draft=false&locale=undefined`,
+  '/services/residential/duplex-interior-design': `${API_BASE}/services/4?depth=1&draft=false&locale=undefined`,
 
   // Commercial Interior Sub-pages
-  '/services/commercial-interior/corporate-and-office-interior-design': `${API_BASE}/globals/corporate-office-interior?depth=1&draft=false`,
-  '/services/commercial-interior/buying-house-office-interior-design': `${API_BASE}/globals/buying-house-office-interior?depth=1&draft=false`,
-  '/services/commercial-interior/travel-agency-office-interior-design': `${API_BASE}/globals/travel-agency-office-interior?depth=1&draft=false`,
-  '/services/commercial-interior/hotel-and-hospitality-interior-design': `${API_BASE}/globals/hotel-hospitality-interior?depth=1&draft=false`,
-  '/services/commercial-interior/restaurant-and-cafe-interior-design': `${API_BASE}/globals/restaurant-cafe-interior?depth=1&draft=false`,
-  '/services/commercial-interior/brand-showroom-interior-design': `${API_BASE}/globals/brand-showroom-interior?depth=1&draft=false`,
-  '/services/commercial-interior/mens-salon-and-lifestyle-interior-design': `${API_BASE}/globals/salon-lifestyle-interior?depth=1&draft=false`,
-  '/services/commercial-interior/hospital-and-clinic-interior-design': `${API_BASE}/globals/hospital-clinic-interior?depth=1&draft=false`,
-  '/services/commercial-interior/pharmacy-interior-design': `${API_BASE}/globals/pharmacy-interior?depth=1&draft=false`,
-  '/services/commercial-interior/dental-chamber-interior-design': `${API_BASE}/globals/dental-chamber-interior?depth=1&draft=false`,
-  '/services/commercial-interior/spa-and-beauty-parlor-interior-design': `${API_BASE}/globals/spa-beauty-parlor-interior?depth=1&draft=false`,
-  '/services/commercial-interior/resort-interior-design': `${API_BASE}/globals/resort-interior?depth=1&draft=false`,
-  '/services/commercial-interior/retail-shop-interior-design': `${API_BASE}/globals/retail-shop-interior?depth=1&draft=false`,
-  '/services/commercial-interior/educational-institute-interior-design': `${API_BASE}/globals/educational-institute-interior?depth=1&draft=false`,
-  '/services/commercial-interior/fitness-center-interior-design': `${API_BASE}/globals/fitness-center-interior?depth=1&draft=false`,
+  '/services/commercial-interior/corporate-and-office-interior-design': `${API_BASE}/services/6?depth=1&draft=false&locale=undefined`,
+  '/services/commercial-interior/buying-house-office-interior-design': `${API_BASE}/services/7?depth=1&draft=false&locale=undefined`,
+  '/services/commercial-interior/travel-agency-office-interior-design': `${API_BASE}/services/8?depth=1&draft=false&locale=undefined`,
+  '/services/commercial-interior/hotel-and-hospitality-interior-design': `${API_BASE}/services/9?depth=1&draft=false&locale=undefined`,
+  '/services/commercial-interior/restaurant-and-cafe-interior-design': `${API_BASE}/services/10?depth=1&draft=false&locale=undefined`,
+  '/services/commercial-interior/brand-showroom-interior-design': `${API_BASE}/services/11?depth=1&draft=false&locale=undefined`,
+  '/services/commercial-interior/mens-salon-and-lifestyle-interior-design': `${API_BASE}/services/12?depth=1&draft=false&locale=undefined`,
+  '/services/commercial-interior/hospital-and-clinic-interior-design': `${API_BASE}/services/13?depth=1&draft=false&locale=undefined`,
+  '/services/commercial-interior/pharmacy-interior-design': `${API_BASE}/services/14?depth=1&draft=false&locale=undefined`,
+  '/services/commercial-interior/dental-chamber-interior-design': `${API_BASE}/services/15?depth=1&draft=false&locale=undefined`,
+  '/services/commercial-interior/spa-and-beauty-parlor-interior-design': `${API_BASE}/services/16?depth=1&draft=false&locale=undefined`,
+  '/services/commercial-interior/resort-interior-design': `${API_BASE}/services/17?depth=1&draft=false&locale=undefined`,
+  '/services/commercial-interior/retail-shop-interior-design': `${API_BASE}/services/18?depth=1&draft=false&locale=undefined`,
+  '/services/commercial-interior/educational-institute-interior-design': `${API_BASE}/services/19?depth=1&draft=false&locale=undefined`,
+  '/services/commercial-interior/fitness-center-interior-design': `${API_BASE}/services/20?depth=1&draft=false&locale=undefined`,
 };
 
 export async function fetchSeoDataForRoute(path) {
