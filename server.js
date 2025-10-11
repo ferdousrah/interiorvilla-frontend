@@ -4,7 +4,9 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import { readFileSync } from 'fs';
 import sendEmailHandler from './api/send-email.js';
+import { fetchSeoDataForRoute, generateMetaTags, injectMetaTagsIntoHtml } from './src/utils/ssr-seo.js';
 
 // Load environment variables
 dotenv.config();
@@ -147,9 +149,43 @@ app.get('/api/offices', (req, res) => {
 // Serve static files from dist directory (for production)
 app.use(express.static(path.join(__dirname, 'dist')));
 
-// Handle client-side routing (for production)
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+// SSR middleware for SEO meta tags injection
+app.get('*', async (req, res) => {
+  try {
+    // Read the built index.html file
+    const indexPath = path.join(__dirname, 'dist', 'index.html');
+    let html = readFileSync(indexPath, 'utf-8');
+
+    // Skip SEO injection for static assets
+    if (req.path.match(/\.(js|css|png|jpg|jpeg|gif|svg|ico|webp|woff|woff2|ttf|eot|json|xml|txt)$/i)) {
+      return res.sendFile(indexPath);
+    }
+
+    // Fetch SEO data for the current route
+    const seoData = await fetchSeoDataForRoute(req.path);
+
+    if (seoData) {
+      // Build canonical URL
+      const canonicalUrl = `https://interiorvillabd.com${req.path}`;
+
+      // Generate meta tags from SEO data
+      const metaTags = generateMetaTags(seoData, canonicalUrl);
+
+      // Inject meta tags into HTML
+      html = injectMetaTagsIntoHtml(html, metaTags);
+
+      console.log(`✅ Injected SEO meta tags for: ${req.path}`);
+    } else {
+      console.log(`⚠️  No SEO data found for: ${req.path}`);
+    }
+
+    // Send the modified HTML
+    res.send(html);
+  } catch (error) {
+    console.error('Error in SSR middleware:', error);
+    // Fallback to sending the original file
+    res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+  }
 });
 
 app.listen(PORT, '0.0.0.0', () => {
