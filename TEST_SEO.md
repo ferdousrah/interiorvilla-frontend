@@ -69,12 +69,27 @@ You should see:
 
 Try these URLs in your browser and check page source:
 
+**Static Pages:**
 - Home: `http://localhost:3001/`
 - Portfolio: `http://localhost:3001/portfolio`
 - About: `http://localhost:3001/about`
 - Contact: `http://localhost:3001/contact`
 
+**Service Pages:**
+- Residential: `http://localhost:3001/services/residential-interior`
+- Commercial: `http://localhost:3001/services/commercial-interior`
+- Corporate Office: `http://localhost:3001/services/commercial-interior/corporate-and-office-interior-design`
+
+**Dynamic Pages (use your actual slugs from CMS):**
+- Blog Post: `http://localhost:3001/blog/your-blog-slug-here`
+- Project: `http://localhost:3001/portfolio/project-details/your-project-slug-here`
+
 Each should have **different** meta tags based on that page's CMS content.
+
+**For dynamic pages (blogs and projects), also look for the featured image:**
+```html
+<meta property="og:image" content="https://interiorvillabd.com/uploads/..." />
+```
 
 ### 6. Check Server Logs
 
