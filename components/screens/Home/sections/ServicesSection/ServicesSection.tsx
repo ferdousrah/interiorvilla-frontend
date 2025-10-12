@@ -288,31 +288,59 @@ export const ServicesSection = (): JSX.Element => {
     };
   }, []);
 
+  // Preload videos on mount
+  useEffect(() => {
+    videoRefs.current.forEach((video) => {
+      if (video) {
+        video.load(); // Preload video metadata
+        video.muted = true; // Ensure muted for autoplay policy
+      }
+    });
+  }, []);
+
   // Handle card hover for video playback
   const handleCardHover = (index: number, isHovering: boolean) => {
     setHoveredCard(isHovering ? index : null);
-    
+
     const video = videoRefs.current[index];
-    
+
     if (isHovering && video) {
       // Stop any currently playing video
       if (activeVideo && activeVideo !== video) {
         activeVideo.pause();
+        activeVideo.currentTime = 0;
       }
-      
-      // Play the new video
+
+      // Ensure video is ready and play
       video.currentTime = 0;
-      video.play().catch((error) => {
-        // Silently handle AbortError and other play interruptions
-        if (error.name !== 'AbortError') {
-          console.error('Video play error:', error);
-        }
-      });
-      setActiveVideo(video);
+      video.muted = true; // Ensure muted for autoplay policy
+
+      // Load and play the video
+      const playPromise = video.play();
+
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            setActiveVideo(video);
+          })
+          .catch((error) => {
+            // Handle errors
+            if (error.name === 'NotAllowedError') {
+              console.warn('Video autoplay prevented by browser policy. User interaction may be required.');
+            } else if (error.name !== 'AbortError') {
+              console.error('Video play error:', error);
+            }
+          });
+      }
     } else {
-      // Pause video
+      // Pause and reset video
       if (video) {
         video.pause();
+        video.currentTime = 0;
+      }
+      if (activeVideo && activeVideo !== video) {
+        activeVideo.pause();
+        activeVideo.currentTime = 0;
       }
       setActiveVideo(null);
     }
@@ -340,12 +368,17 @@ export const ServicesSection = (): JSX.Element => {
             style={{
               opacity: hoveredCard === index ? 1 : 0,
               transform: hoveredCard === index ? 'scale(1.05)' : 'scale(1)',
-              transition: 'opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1), transform 1.5s cubic-bezier(0.4, 0, 0.2, 1)'
+              transition: 'opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1), transform 1.5s cubic-bezier(0.4, 0, 0.2, 1)',
+              pointerEvents: 'none'
             }}
             muted
-            loop
             playsInline
-            preload="metadata"
+            loop
+            preload="auto"
+            disablePictureInPicture
+            disableRemotePlayback
+            x-webkit-airplay="deny"
+            webkit-playsinline="true"
           >
             <source src={service.video} type="video/mp4" />
           </video>
