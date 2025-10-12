@@ -52,6 +52,7 @@
 
     <!-- Preload critical assets -->
     <link rel="preload" href="/interior-villa-dark.png" as="image" fetchpriority="high" type="image/png" />
+    <link rel="preload" href="https://interiorvillabd.com/api/media/file/H-1-1.webp" as="image" fetchpriority="high" type="image/webp" />
     <link rel="modulepreload" href="/src/main.jsx" />
 
     <!-- Resource hints -->
@@ -149,11 +150,10 @@
       const removeLoadingScreen = () => {
         const loadingScreen = document.getElementById('loading-screen');
         if (loadingScreen) {
-          loadingScreen.style.opacity = '0';
-          loadingScreen.style.transition = 'opacity 0.3s ease-out';
-          setTimeout(() => loadingScreen.remove(), 300);
+          loadingScreen.style.display = 'none';
         }
       };
+      setTimeout(removeLoadingScreen, 100);
       if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', removeLoadingScreen);
       } else {

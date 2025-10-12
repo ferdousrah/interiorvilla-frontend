@@ -37,6 +37,15 @@ function rewriteToPublicURL(url: string): string {
 
 const CMS_BASE_URL = 'https://interiorvillabd.com';
 
+const FALLBACK_FIRST_SLIDE: SlideImage = {
+  id: 0,
+  src: 'https://interiorvillabd.com/api/media/file/H-1-1.webp',
+  fallbackSrc: 'https://interiorvillabd.com/api/media/file/H-1-1.jpg',
+  alt: 'Luxury Interior Design',
+  title: 'Luxury Interior Design',
+  subtitle: 'Transform your space with expert design',
+};
+
 export const HeroImageSlider: React.FC<HeroImageSliderProps> = ({
   className = '',
   autoPlay = true,
@@ -46,11 +55,12 @@ export const HeroImageSlider: React.FC<HeroImageSliderProps> = ({
   transitionEffect = 'fade',
   imageSize = 'large',
 }) => {
-  const [slides, setSlides] = useState<SlideImage[]>([]);
+  const [slides, setSlides] = useState<SlideImage[]>([FALLBACK_FIRST_SLIDE]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(autoPlay);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [direction, setDirection] = useState(0);
   const [isDarkImage, setIsDarkImage] = useState(true);
+  const [isLoaded, setIsLoaded] = useState(false);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const subtitleRef = useRef<HTMLParagraphElement>(null);
   const intervalRef = useRef<number | null>(null);
@@ -79,14 +89,19 @@ export const HeroImageSlider: React.FC<HeroImageSliderProps> = ({
           };
         });
 
-        setSlides(mapped);
+        if (mapped.length > 0) {
+          setSlides(mapped);
+          setIsLoaded(true);
+          setIsPlaying(autoPlay);
+        }
       } catch (err) {
         console.error('Failed to load slides:', err);
+        setIsLoaded(true);
       }
     };
 
     fetchSlides();
-  }, []);
+  }, [autoPlay]);
 
   /* ---------- Preload first hero image ---------- */
   useEffect(() => {
@@ -165,7 +180,7 @@ export const HeroImageSlider: React.FC<HeroImageSliderProps> = ({
 
   /* ---------- Animate text with GSAP (depth reveal) ---------- */
   useEffect(() => {
-    if (!titleRef.current) return;
+    if (!titleRef.current || !isLoaded) return;
     const split = new SplitType(titleRef.current, { types: 'chars' });
     gsap.fromTo(
       split.chars,
@@ -181,7 +196,7 @@ export const HeroImageSlider: React.FC<HeroImageSliderProps> = ({
       }
     );
     return () => split.revert();
-  }, [currentIndex]);
+  }, [currentIndex, isLoaded]);
 
   const goToSlide = (index: number) => {
     setDirection(index > currentIndex ? 1 : -1);
@@ -244,10 +259,10 @@ export const HeroImageSlider: React.FC<HeroImageSliderProps> = ({
           key={currentIndex}
           custom={direction}
           variants={variants}
-          initial="enter"
+          initial={isLoaded ? "enter" : "center"}
           animate="center"
           exit="exit"
-          transition={{ duration: 1, ease: 'easeInOut' }}
+          transition={{ duration: isLoaded ? 1 : 0, ease: 'easeInOut' }}
           className="absolute inset-0 w-full h-full"
         >
           <PerformanceImage
