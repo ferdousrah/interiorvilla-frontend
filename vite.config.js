@@ -38,6 +38,7 @@ export default defineConfig({
     minify: 'terser',
     cssCodeSplit: true,
     cssMinify: true,
+    reportCompressedSize: false,
     terserOptions: {
       compress: {
         drop_console: true,
@@ -64,10 +65,28 @@ export default defineConfig({
     chunkSizeWarningLimit: 500,
     rollupOptions: {
       output: {
-        manualChunks: {
-          // Only essential chunks - defer heavy libraries
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'ui-essentials': ['lucide-react', 'clsx', 'tailwind-merge']
+        manualChunks: (id) => {
+          if (id.includes('node_modules')) {
+            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
+              return 'react-vendor';
+            }
+            if (id.includes('framer-motion')) {
+              return 'motion';
+            }
+            if (id.includes('gsap')) {
+              return 'gsap';
+            }
+            if (id.includes('three')) {
+              return 'glb-model-viewer';
+            }
+            if (id.includes('lucide-react') || id.includes('clsx') || id.includes('tailwind-merge')) {
+              return 'ui-essentials';
+            }
+            if (id.includes('fancyapps')) {
+              return 'fancybox';
+            }
+            return 'vendor';
+          }
         },
         chunkFileNames: (chunkInfo) => {
           const facadeModuleId = chunkInfo.facadeModuleId ? chunkInfo.facadeModuleId.split('/').pop() : 'chunk';

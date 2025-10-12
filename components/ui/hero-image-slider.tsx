@@ -92,11 +92,13 @@ export const HeroImageSlider: React.FC<HeroImageSliderProps> = ({
   useEffect(() => {
     if (slides.length > 0) {
       const first = slides[0];
+
       const link = document.createElement('link');
       link.rel = 'preload';
       link.as = 'image';
       link.href = first.src;
       link.fetchPriority = 'high';
+      link.type = 'image/webp';
       document.head.appendChild(link);
 
       const preconnect = document.createElement('link');
@@ -104,6 +106,10 @@ export const HeroImageSlider: React.FC<HeroImageSliderProps> = ({
       preconnect.href = CMS_BASE_URL;
       preconnect.crossOrigin = '';
       document.head.appendChild(preconnect);
+
+      const img = new Image();
+      img.src = first.src;
+      img.decode?.().catch(() => {});
     }
   }, [slides]);
 
@@ -247,11 +253,14 @@ export const HeroImageSlider: React.FC<HeroImageSliderProps> = ({
           <PerformanceImage
             src={slide.src}
             alt={slide.alt}
+            priority={currentIndex === 0}
+            fetchpriority={currentIndex === 0 ? 'high' : 'low'}
             blurDataURL={slide.blurPlaceholder}
             placeholder="blur"
-            priority={currentIndex === 0}
             loading={currentIndex === 0 ? 'eager' : 'lazy'}
             fallbackSrc={slide.fallbackSrc}
+            width={1920}
+            height={900}
             className="w-full h-full object-cover object-center"
           />
 

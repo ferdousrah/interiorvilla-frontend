@@ -19,6 +19,7 @@ interface PerformanceImageProps {
   quality?: number;
   placeholder?: 'blur' | 'empty';
   blurDataURL?: string;
+  fetchpriority?: 'high' | 'low' | 'auto';
 }
 
 export const PerformanceImage = React.forwardRef<HTMLImageElement, PerformanceImageProps>(
@@ -39,6 +40,7 @@ export const PerformanceImage = React.forwardRef<HTMLImageElement, PerformanceIm
       quality = 75,
       placeholder = 'blur',
       blurDataURL,
+      fetchpriority = 'auto',
       ...props
     },
     ref
@@ -114,7 +116,8 @@ export const PerformanceImage = React.forwardRef<HTMLImageElement, PerformanceIm
           width={width}
           height={height}
           loading={priority ? 'eager' : loading}
-          decoding="async"
+          fetchpriority={fetchpriority}
+          decoding={priority ? 'sync' : 'async'}
           onLoad={handleLoad}
           onError={handleError}
           style={{
