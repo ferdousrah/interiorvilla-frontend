@@ -37,15 +37,6 @@ function rewriteToPublicURL(url: string): string {
 
 const CMS_BASE_URL = 'https://interiorvillabd.com';
 
-const FALLBACK_FIRST_SLIDE: SlideImage = {
-  id: 0,
-  src: 'https://interiorvillabd.com/api/media/file/H-1-1.webp',
-  fallbackSrc: 'https://interiorvillabd.com/api/media/file/H-1-1.jpg',
-  alt: 'Luxury Interior Design',
-  title: 'Luxury Interior Design',
-  subtitle: 'Transform your space with expert design',
-};
-
 export const HeroImageSlider: React.FC<HeroImageSliderProps> = ({
   className = '',
   autoPlay = true,
@@ -55,12 +46,13 @@ export const HeroImageSlider: React.FC<HeroImageSliderProps> = ({
   transitionEffect = 'fade',
   imageSize = 'large',
 }) => {
-  const [slides, setSlides] = useState<SlideImage[]>([FALLBACK_FIRST_SLIDE]);
+  const [slides, setSlides] = useState<SlideImage[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [direction, setDirection] = useState(0);
   const [isDarkImage, setIsDarkImage] = useState(true);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isFirstImageLoaded, setIsFirstImageLoaded] = useState(false);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const subtitleRef = useRef<HTMLParagraphElement>(null);
   const intervalRef = useRef<number | null>(null);
@@ -69,7 +61,10 @@ export const HeroImageSlider: React.FC<HeroImageSliderProps> = ({
   useEffect(() => {
     const fetchSlides = async () => {
       try {
-        const res = await fetch(`${CMS_BASE_URL}/api/slider?sort=slider.position:asc`);
+        const res = await fetch(`${CMS_BASE_URL}/api/slider?sort=slider.position:asc&limit=10`, {
+          cache: 'force-cache',
+          priority: 'high',
+        } as RequestInit);
         const data = await res.json();
 
         const mapped: SlideImage[] = data.docs.map((item: any) => {
@@ -93,6 +88,17 @@ export const HeroImageSlider: React.FC<HeroImageSliderProps> = ({
           setSlides(mapped);
           setIsLoaded(true);
           setIsPlaying(autoPlay);
+
+          // Dynamically preload first image
+          if (mapped[0]) {
+            const link = document.createElement('link');
+            link.rel = 'preload';
+            link.as = 'image';
+            link.href = mapped[0].src;
+            link.fetchPriority = 'high';
+            link.type = 'image/webp';
+            document.head.appendChild(link);
+          }
         }
       } catch (err) {
         console.error('Failed to load slides:', err);
@@ -103,30 +109,18 @@ export const HeroImageSlider: React.FC<HeroImageSliderProps> = ({
     fetchSlides();
   }, [autoPlay]);
 
-  /* ---------- Preload first hero image ---------- */
+  /* ---------- Preconnect to CMS ---------- */
   useEffect(() => {
-    if (slides.length > 0) {
-      const first = slides[0];
+    const preconnect = document.createElement('link');
+    preconnect.rel = 'preconnect';
+    preconnect.href = CMS_BASE_URL;
+    preconnect.crossOrigin = '';
+    document.head.appendChild(preconnect);
 
-      const link = document.createElement('link');
-      link.rel = 'preload';
-      link.as = 'image';
-      link.href = first.src;
-      link.fetchPriority = 'high';
-      link.type = 'image/webp';
-      document.head.appendChild(link);
-
-      const preconnect = document.createElement('link');
-      preconnect.rel = 'preconnect';
-      preconnect.href = CMS_BASE_URL;
-      preconnect.crossOrigin = '';
-      document.head.appendChild(preconnect);
-
-      const img = new Image();
-      img.src = first.src;
-      img.decode?.().catch(() => {});
-    }
-  }, [slides]);
+    return () => {
+      document.head.removeChild(preconnect);
+    };
+  }, []);
 
   /* ---------- Autoplay ---------- */
   useEffect(() => {
@@ -242,6 +236,17 @@ export const HeroImageSlider: React.FC<HeroImageSliderProps> = ({
   }
 
   const slide = slides[currentIndex];
+
+  // Show loading state
+  if (slides.length === 0) {
+    return (
+      <div className={`relative w-full overflow-hidden ${heightMap[imageSize]} ${className} bg-gray-200 animate-pulse`}>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="text-gray-400 text-lg">Loading...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
