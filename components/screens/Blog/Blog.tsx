@@ -47,19 +47,18 @@ const Blog = (): JSX.Element => {
       {/* Custom Cursor */}
       <CustomCursor className="custom-cursor" />
 
-      {/* Hero Section from CMS */}
-            <PageHero
-              title={hero?.title || "Blog"}
-              bgImage={
-                hero?.heroImage?.sizes?.large?.url
-                  ? `${hero.heroImage.sizes.large.url.replace(/\.[^.]+$/, ".webp")}`
-                  : "/image.webp" // ✅ fallback also in webp
-              }
-              breadcrumbs={[
-                { label: "Home", href: "/" },
-                { label: "Blog", href: "/blog", isActive: true },
-              ]}
-            />      
+      <PageHero
+        title={hero?.title || "Blog"}
+        bgImage={
+          hero?.heroImage?.url
+            ? hero.heroImage.url.replace(/\.(jpg|png)$/i, ".webp")
+            : "/image.png"
+        }
+        breadcrumbs={[
+          { label: "Home", href: "/" },
+          { label: "Blog", isActive: true },
+        ]}
+      />      
 
       {/* Main Content */}
       <section className="w-full">
