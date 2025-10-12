@@ -36,6 +36,7 @@ export const PageHero: React.FC<PageHeroProps> = ({ title, bgImage, breadcrumbs 
         start: "top bottom",
         end: "bottom top",
         scrub: true,
+        invalidateOnRefresh: true,
       },
     });
 
@@ -50,6 +51,7 @@ export const PageHero: React.FC<PageHeroProps> = ({ title, bgImage, breadcrumbs 
           start: "top bottom",
           end: "bottom top",
           scrub: true,
+          invalidateOnRefresh: true,
         },
       }
     );
@@ -71,6 +73,11 @@ export const PageHero: React.FC<PageHeroProps> = ({ title, bgImage, breadcrumbs 
           className="w-full h-full object-cover will-change-transform"
           alt={title}
           src={bgImage}
+          style={{
+            transformOrigin: "center center",
+            backfaceVisibility: "hidden",
+            transform: "translate3d(0, 0, 0)",
+          }}
         />
       </div>
 
