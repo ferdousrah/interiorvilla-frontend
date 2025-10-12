@@ -81,6 +81,7 @@ export const ServicesSection = (): JSX.Element => {
   const headingWrapperRef = useRef<HTMLDivElement>(null);
   const [hoveredCard, setHoveredCard] = useState<number | null>(null);
   const [activeVideo, setActiveVideo] = useState<HTMLVideoElement | null>(null);
+  const [videosReady, setVideosReady] = useState(false);
 
   // Wait for fonts to load before using SplitText
   const [fontsReady, setFontsReady] = useState(false);
@@ -288,18 +289,58 @@ export const ServicesSection = (): JSX.Element => {
     };
   }, []);
 
-  // Preload videos on mount
+  // Preload videos on mount and prime for autoplay
   useEffect(() => {
-    videoRefs.current.forEach((video) => {
-      if (video) {
-        video.load(); // Preload video metadata
-        video.muted = true; // Ensure muted for autoplay policy
-      }
-    });
+    const primeVideos = async () => {
+      const videoPromises = videoRefs.current.map(async (video) => {
+        if (video) {
+          video.muted = true;
+          video.playsInline = true;
+          video.preload = 'auto';
+
+          try {
+            await video.load();
+            // Try to play and immediately pause to prime the video
+            const playPromise = video.play();
+            if (playPromise !== undefined) {
+              await playPromise;
+              video.pause();
+              video.currentTime = 0;
+            }
+          } catch (err) {
+            // Silent fail - video will be primed on first user interaction
+          }
+        }
+      });
+
+      await Promise.all(videoPromises);
+      setVideosReady(true);
+    };
+
+    // Add user interaction listener to prime videos
+    const handleFirstInteraction = () => {
+      primeVideos();
+      document.removeEventListener('click', handleFirstInteraction);
+      document.removeEventListener('touchstart', handleFirstInteraction);
+      document.removeEventListener('keydown', handleFirstInteraction);
+    };
+
+    document.addEventListener('click', handleFirstInteraction);
+    document.addEventListener('touchstart', handleFirstInteraction);
+    document.addEventListener('keydown', handleFirstInteraction);
+
+    // Try to prime immediately (will work if user already interacted)
+    primeVideos();
+
+    return () => {
+      document.removeEventListener('click', handleFirstInteraction);
+      document.removeEventListener('touchstart', handleFirstInteraction);
+      document.removeEventListener('keydown', handleFirstInteraction);
+    };
   }, []);
 
   // Handle card hover for video playback
-  const handleCardHover = (index: number, isHovering: boolean) => {
+  const handleCardHover = async (index: number, isHovering: boolean) => {
     setHoveredCard(isHovering ? index : null);
 
     const video = videoRefs.current[index];
@@ -312,25 +353,30 @@ export const ServicesSection = (): JSX.Element => {
       }
 
       // Ensure video is ready and play
+      video.muted = true;
+      video.playsInline = true;
       video.currentTime = 0;
-      video.muted = true; // Ensure muted for autoplay policy
 
-      // Load and play the video
-      const playPromise = video.play();
-
-      if (playPromise !== undefined) {
-        playPromise
-          .then(() => {
+      try {
+        // Try to play the video
+        await video.play();
+        setActiveVideo(video);
+      } catch (error: any) {
+        // Handle errors
+        if (error.name === 'NotAllowedError' || error.name === 'NotSupportedError') {
+          // Browser blocked autoplay, try to reload and play again
+          try {
+            await video.load();
+            video.muted = true;
+            video.playsInline = true;
+            await video.play();
             setActiveVideo(video);
-          })
-          .catch((error) => {
-            // Handle errors
-            if (error.name === 'NotAllowedError') {
-              console.warn('Video autoplay prevented by browser policy. User interaction may be required.');
-            } else if (error.name !== 'AbortError') {
-              console.error('Video play error:', error);
-            }
-          });
+          } catch (retryError) {
+            console.warn('Video autoplay prevented by browser policy.');
+          }
+        } else if (error.name !== 'AbortError') {
+          console.error('Video play error:', error);
+        }
       }
     } else {
       // Pause and reset video
@@ -374,11 +420,10 @@ export const ServicesSection = (): JSX.Element => {
             muted
             playsInline
             loop
-            preload="auto"
+            preload="metadata"
             disablePictureInPicture
             disableRemotePlayback
-            x-webkit-airplay="deny"
-            webkit-playsinline="true"
+            autoPlay={false}
           >
             <source src={service.video} type="video/mp4" />
           </video>
