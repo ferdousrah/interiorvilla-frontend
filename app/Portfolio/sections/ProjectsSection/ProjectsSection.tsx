@@ -160,8 +160,12 @@ export const ProjectsSection = (): JSX.Element => {
                 ? doc.category
                 : 'Project');
 
+            const uniqueId = doc?.id
+              ? Number(doc.id)
+              : `${activeFilterRef.current}-${pageToLoad}-${i}`.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+
             return {
-              id: Number(doc?.id ?? (pageToLoad - 1) * PAGE_SIZE + i + 1),
+              id: uniqueId,
               category: categoryText,
               title:
                 doc?.title ||
@@ -179,7 +183,12 @@ export const ProjectsSection = (): JSX.Element => {
           }
         );
 
-        setProjects((prev) => (replace ? mapped : [...prev, ...mapped]));
+        setProjects((prev) => {
+          if (replace) return mapped;
+          const existingSlugs = new Set(prev.map(p => p.slug));
+          const newProjects = mapped.filter(p => !existingSlugs.has(p.slug));
+          return [...prev, ...newProjects];
+        });
         setPage(data.page ?? pageToLoad);
         setHasMore(
           Boolean(data.nextPage) ||
@@ -345,7 +354,7 @@ export const ProjectsSection = (): JSX.Element => {
           >
             {projects.map((project, i) => (
               <motion.div
-                key={project.id}
+                key={`${activeFilter}-${project.slug || project.id}`}
                 initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.35 }}

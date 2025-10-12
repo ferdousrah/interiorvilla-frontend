@@ -295,13 +295,15 @@ const MainMenu: React.FC = () => {
                   {navItems.map((item, index) => (
                     <div key={index} className="relative group" onMouseEnter={() => handleMouseEnter(item.name)} onMouseLeave={handleMouseLeave}>
                           <Button
+                            type="button"
                             variant={location.pathname === item.href ? "default" : "ghost"}
                                 className={`min-w-[108px] px-6 rounded-[50px] whitespace-nowrap transition-all duration-300 hover:bg-primary hover:text-white hover:scale-105 hover:shadow-lg ${
                                     location.pathname === item.href ? "bg-primary text-white shadow-lg" : "text-white"
                                 }`}
                             onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
                               if (!item.subItems) {
-                                e.preventDefault();
                                 window.scrollTo({ top: 0, left: 0, behavior: "instant" as ScrollBehavior });
                                 navigate(item.href);
                               }
