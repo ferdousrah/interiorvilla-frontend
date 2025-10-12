@@ -267,7 +267,12 @@ export const BlogGridSection = (): JSX.Element => {
   };
 
   return (
-    <section ref={sectionRef} className="py-16 md:py-20 bg-white relative">
+    <>
+    <section
+        ref={sectionRef}
+        className="py-16 md:py-20 bg-white -mt-48 relative z-10"
+      >
+      
       <div className="container mx-auto px-4 max-w-7xl">
         {/* Header */}
         <div ref={headerRef} className="text-center mb-12 md:mb-16">
@@ -428,5 +433,6 @@ export const BlogGridSection = (): JSX.Element => {
         )}
       </div>
     </section>
+    </>
   );
 };

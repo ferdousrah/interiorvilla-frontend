@@ -19,7 +19,7 @@ interface BlogData {
 }
 
 const Blog = (): JSX.Element => {
-  const [data, setData] = useState<BlogData | null>(null);
+  const [data, setData] = useState<any>(null);
 
   useEffect(() => {
     fetch("https://interiorvillabd.com/api/globals/blog?depth=1&draft=false")
@@ -47,19 +47,19 @@ const Blog = (): JSX.Element => {
       {/* Custom Cursor */}
       <CustomCursor className="custom-cursor" />
 
-      {/* PageHero (CMS-driven) */}
-      <PageHero
-        title={hero?.title || "Blog"}
-        bgImage={
-          hero?.heroImage?.url
-            ? hero.heroImage.url.replace(/\.(jpg|png)$/i, ".webp")
-            : "/image.png"
-        }
-        breadcrumbs={[
-          { label: "Home", href: "/" },
-          { label: "Blog", isActive: true },
-        ]}
-      />      
+      {/* Hero Section from CMS */}
+            <PageHero
+              title={hero?.title || "Blog"}
+              bgImage={
+                hero?.heroImage?.sizes?.large?.url
+                  ? `${hero.heroImage.sizes.large.url.replace(/\.[^.]+$/, ".webp")}`
+                  : "/image.webp" // ✅ fallback also in webp
+              }
+              breadcrumbs={[
+                { label: "Home", href: "/" },
+                { label: "Blog", href: "/blog", isActive: true },
+              ]}
+            />      
 
       {/* Main Content */}
       <section className="w-full">
