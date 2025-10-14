@@ -290,22 +290,40 @@ export const ServicesSection = (): JSX.Element => {
 
   // Setup videos on mount
   useEffect(() => {
-    videoRefs.current.forEach((video) => {
+    videoRefs.current.forEach((video, index) => {
       if (video) {
         video.muted = true;
         video.playsInline = true;
         video.defaultMuted = true;
+
+        // Add load event listener
+        video.addEventListener('loadeddata', () => {
+          console.log(`Video ${index} loaded successfully`);
+        });
+
+        video.addEventListener('error', (e) => {
+          console.error(`Video ${index} error:`, e, video.error);
+        });
       }
     });
   }, []);
 
   // Handle card hover for video playback
   const handleCardHover = (index: number, isHovering: boolean) => {
+    console.log(`Card ${index} hovered:`, isHovering);
     setHoveredCard(isHovering ? index : null);
 
     const video = videoRefs.current[index];
 
     if (isHovering && video) {
+      console.log(`Attempting to play video ${index}`, {
+        src: video.src,
+        readyState: video.readyState,
+        networkState: video.networkState,
+        paused: video.paused,
+        muted: video.muted
+      });
+
       // Stop any currently playing video
       if (activeVideo && activeVideo !== video) {
         activeVideo.pause();
@@ -318,12 +336,14 @@ export const ServicesSection = (): JSX.Element => {
       // Use requestAnimationFrame to ensure smooth playback
       requestAnimationFrame(() => {
         video.play().then(() => {
+          console.log(`Video ${index} playing successfully`);
           setActiveVideo(video);
         }).catch((error) => {
-          console.warn('Video play failed:', error.message);
+          console.error(`Video ${index} play failed:`, error.message, error);
         });
       });
     } else {
+      console.log(`Stopping video ${index}`);
       // Pause and reset video
       if (video) {
         video.pause();
