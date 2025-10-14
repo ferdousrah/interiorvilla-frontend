@@ -1,5 +1,6 @@
 import { ArrowRightIcon } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "../../../../ui/button";
 import { Card, CardContent, CardFooter } from "../../../../ui/card";
 import { PerformanceImage } from "../../../../ui/performance-image";
@@ -18,6 +19,7 @@ const services = [
       "Sustainable living. Luxurious design. We specialize in creating intelligent, eco-friendly homes, from single-family residences to multi-housing solutions.",
     iconBg: "#f5fdfd",
     video: "/videos/residential.mp4",
+    link: "/residential-interior",
     colorTheme: {
       primary: "#4F46E5", // Indigo
       secondary: "#6366F1",
@@ -25,7 +27,7 @@ const services = [
     },
     features: [
       "Personalized design consultation",
-      "3D visualization and planning", 
+      "3D visualization and planning",
       "Premium material selection",
       "Professional installation"
     ]
@@ -37,6 +39,7 @@ const services = [
       "Experience the difference. Our minimalist designs transform your workplace into an inspiring and productive environment, whether it's a factory or a corporate office.",
     iconBg: "#f5fdfd",
     video: "/videos/commercial.mp4",
+    link: "/commercial-interior",
     colorTheme: {
       primary: "#059669", // Emerald
       secondary: "#10B981",
@@ -45,7 +48,7 @@ const services = [
     features: [
       "Brand-focused design strategy",
       "Productivity-optimized layouts",
-      "Modern workspace solutions", 
+      "Modern workspace solutions",
       "Sustainable design practices"
     ]
   },
@@ -56,6 +59,7 @@ const services = [
       "Stand out from the competition with innovative designs. Our architects specialize in a wide range of projects, from small-scale rentals to large-scale developments, ensuring your vision comes to life.",
     iconBg: "#f5fdfd",
     video: "/videos/architecture.mp4",
+    link: "/architectural-consultancy",
     colorTheme: {
       primary: "#DC2626", // Red
       secondary: "#EF4444",
@@ -71,6 +75,7 @@ const services = [
 ];
 
 export const ServicesSection = (): JSX.Element => {
+  const navigate = useNavigate();
   const sectionRef = useRef<HTMLElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
@@ -588,6 +593,7 @@ export const ServicesSection = (): JSX.Element => {
   {/* KEEP ONLY this "Explore Service" button */}
   <div className="mt-auto">
     <Button
+      onClick={() => navigate(service.link)}
       className="rounded-full px-8 py-4 w-full text-base font-medium group relative overflow-hidden"
       style={{
         backgroundColor: `${service.colorTheme.primary}15`,
@@ -616,7 +622,7 @@ export const ServicesSection = (): JSX.Element => {
       <ArrowRightIcon className="ml-2 w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" />
 
       {/* Animated background on button hover */}
-      <div 
+      <div
         className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
         style={{
           background: `linear-gradient(45deg, ${service.colorTheme.primary}15, ${service.colorTheme.secondary}15)`
