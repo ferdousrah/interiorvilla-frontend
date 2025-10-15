@@ -5,6 +5,7 @@ import { useLocation, Navigate } from 'react-router-dom'
 import { AccessibilityImprovements } from '../components/ui/accessibility-improvements'
 import { LazyComponent } from '../components/ui/lazy-component'
 import { WhatsAppWidget } from '../components/ui/whatsapp-widget.jsx'
+import { ScrollToTop as ScrollToTopButton } from '../components/ui/scroll-to-top'
 import SEO from './utils/SEO';
 
 // Lazy load ALL components to reduce initial bundle size
@@ -382,6 +383,7 @@ function App() {
       </Routes>
       <AccessibilityImprovements />
       <WhatsAppWidget />
+      <ScrollToTopButton />
     </Router>
   )
 }
