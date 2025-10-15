@@ -6,7 +6,8 @@ export const ScrollToTop = () => {
 
   useEffect(() => {
     const toggleVisibility = () => {
-      if (window.scrollY > 300) {
+      const scrollPosition = window.scrollY || window.pageYOffset || document.documentElement.scrollTop;
+      if (scrollPosition > 300) {
         setIsVisible(true);
       } else {
         setIsVisible(false);
@@ -15,7 +16,7 @@ export const ScrollToTop = () => {
 
     toggleVisibility();
 
-    window.addEventListener("scroll", toggleVisibility);
+    window.addEventListener("scroll", toggleVisibility, { passive: true });
 
     return () => {
       window.removeEventListener("scroll", toggleVisibility);
@@ -29,12 +30,12 @@ export const ScrollToTop = () => {
     });
   };
 
-  if (!isVisible) return null;
-
   return (
     <button
       onClick={scrollToTop}
-      className="fixed bottom-28 right-6 z-[9999] p-4 rounded-full bg-gradient-to-br from-slate-800 to-slate-900 text-white shadow-2xl transition-all duration-300 hover:scale-110 hover:shadow-2xl animate-fade-in"
+      className={`fixed right-6 z-[9999] p-4 rounded-full bg-gradient-to-br from-slate-800 to-slate-900 text-white shadow-2xl transition-all duration-300 hover:scale-110 ${
+        isVisible ? "bottom-28 opacity-100" : "bottom-28 opacity-0 pointer-events-none"
+      }`}
       aria-label="Scroll to top"
       style={{
         backdropFilter: "blur(8px)",
