@@ -6,17 +6,14 @@ export const ScrollToTop = () => {
 
   useEffect(() => {
     const toggleVisibility = () => {
-      const scrollPosition = window.scrollY || window.pageYOffset || document.documentElement.scrollTop;
-      if (scrollPosition > 300) {
+      if (window.pageYOffset > 300) {
         setIsVisible(true);
       } else {
         setIsVisible(false);
       }
     };
 
-    toggleVisibility();
-
-    window.addEventListener("scroll", toggleVisibility, { passive: true });
+    window.addEventListener("scroll", toggleVisibility);
 
     return () => {
       window.removeEventListener("scroll", toggleVisibility);
@@ -33,8 +30,8 @@ export const ScrollToTop = () => {
   return (
     <button
       onClick={scrollToTop}
-      className={`fixed right-6 z-[9999] p-4 rounded-full bg-gradient-to-br from-slate-800 to-slate-900 text-white shadow-2xl transition-all duration-300 hover:scale-110 ${
-        isVisible ? "bottom-28 opacity-100" : "bottom-28 opacity-0 pointer-events-none"
+      className={`fixed bottom-8 right-8 z-50 p-3 rounded-full bg-gradient-to-br from-slate-800 to-slate-900 text-white shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-xl ${
+        isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10 pointer-events-none"
       }`}
       aria-label="Scroll to top"
       style={{
@@ -42,7 +39,7 @@ export const ScrollToTop = () => {
         border: "1px solid rgba(255, 255, 255, 0.1)",
       }}
     >
-      <ArrowUp className="w-6 h-6" strokeWidth={2.5} />
+      <ArrowUp className="w-5 h-5" />
     </button>
   );
 };
