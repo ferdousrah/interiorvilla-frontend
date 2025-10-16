@@ -13,24 +13,42 @@ import {
 import { ProjectProvider, useProject } from "./ProjectContext";
 import SEO from "../../src/utils/SEO"; // ✅ import SEO component
 
-const LoadingGate = ({ children }: { children: React.ReactNode }) => {
+const ProjectDetailsInner = () => {
   const { loading, error } = useProject();
-  if (loading) return <div className="w-full py-24 text-center text-[#626161]">Loading project…</div>;
-  if (error) return <div className="w-full py-24 text-center text-red-600">Failed to load project: {error}</div>;
-  return <>{children}</>;
-};
 
-const ProjectDetailsInner = () => (
-  <>
-    <HeroSection />
-    <article className="w-full">
-      <BeforeAfterSection />
-      <ProjectGallerySection />
-      <ProjectInfoSection />
-      <CTASection />
-    </article>
-  </>
-);
+  if (loading) {
+    return (
+      <section className="w-full min-h-[60vh] flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600 [font-family:'Fahkwang',Helvetica]">Loading project...</p>
+        </div>
+      </section>
+    );
+  }
+
+  if (error) {
+    return (
+      <section className="w-full min-h-[60vh] flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-600 [font-family:'Fahkwang',Helvetica]">Failed to load project: {error}</p>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <>
+      <HeroSection />
+      <article className="w-full">
+        <BeforeAfterSection />
+        <ProjectGallerySection />
+        <ProjectInfoSection />
+        <CTASection />
+      </article>
+    </>
+  );
+};
 
 const ProjectDetails = (): JSX.Element => {
   const { slug } = useParams();
@@ -68,9 +86,7 @@ const ProjectDetails = (): JSX.Element => {
       <CustomCursor className="custom-cursor" />
 
       <ProjectProvider>
-        <LoadingGate>
-          <ProjectDetailsInner />
-        </LoadingGate>
+        <ProjectDetailsInner />
       </ProjectProvider>
 
       <FooterSection />
