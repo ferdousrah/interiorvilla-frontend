@@ -18,22 +18,28 @@ const ProjectDetailsInner = () => {
 
   if (loading) {
     return (
-      <section className="w-full min-h-[60vh] flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600 [font-family:'Fahkwang',Helvetica]">Loading project...</p>
-        </div>
-      </section>
+      <>
+        <section className="w-full min-h-[60vh] flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-600 [font-family:'Fahkwang',Helvetica]">Loading project...</p>
+          </div>
+        </section>
+        <FooterSection />
+      </>
     );
   }
 
   if (error) {
     return (
-      <section className="w-full min-h-[60vh] flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-600 [font-family:'Fahkwang',Helvetica]">Failed to load project: {error}</p>
-        </div>
-      </section>
+      <>
+        <section className="w-full min-h-[60vh] flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-red-600 [font-family:'Fahkwang',Helvetica]">Failed to load project: {error}</p>
+          </div>
+        </section>
+        <FooterSection />
+      </>
     );
   }
 
@@ -46,6 +52,7 @@ const ProjectDetailsInner = () => {
         <ProjectInfoSection />
         <CTASection />
       </article>
+      <FooterSection />
     </>
   );
 };
@@ -88,8 +95,6 @@ const ProjectDetails = (): JSX.Element => {
       <ProjectProvider>
         <ProjectDetailsInner />
       </ProjectProvider>
-
-      <FooterSection />
     </main>
   );
 };
