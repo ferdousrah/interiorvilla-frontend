@@ -1,6 +1,7 @@
 // footer section
 import { CopyrightIcon, Youtube } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { Button } from "../../../../ui/button";
 import { Card, CardContent } from "../../../../ui/card";
 import { Input } from "../../../../ui/input";
@@ -406,27 +407,27 @@ export const FooterSection = (): JSX.Element => {
             <div className="w-full h-px bg-white/30 -mt-2"></div>
 
             <div className="flex flex-col items-start gap-3 w-full">
-              <a
-                href="/residential-interior"
+              <Link
+                to="/services/residential-interior"
                 className="[font-family:'Fahkwang',Helvetica] font-normal text-white text-sm tracking-[0] leading-6 transition-all duration-300 hover:text-primary hover:translate-x-2 relative group overflow-hidden"
               >
                 <span className="relative z-10">Residential Interior</span>
                 <span className="absolute bottom-0 left-0 w-0 h-[1px] bg-primary transition-all duration-500 ease-out group-hover:w-full"></span>
-              </a>
-              <a
-                href="/commercial-interior"
+              </Link>
+              <Link
+                to="/services/commercial-interior"
                 className="[font-family:'Fahkwang',Helvetica] font-normal text-white text-sm tracking-[0] leading-6 transition-all duration-300 hover:text-primary hover:translate-x-2 relative group overflow-hidden"
               >
                 <span className="relative z-10">Commercial Interior</span>
                 <span className="absolute bottom-0 left-0 w-0 h-[1px] bg-primary transition-all duration-500 ease-out group-hover:w-full"></span>
-              </a>
-              <a
-                href="/architectural-consultancy"
+              </Link>
+              <Link
+                to="/services/architectural-consultancy"
                 className="[font-family:'Fahkwang',Helvetica] font-normal text-white text-sm tracking-[0] leading-6 transition-all duration-300 hover:text-primary hover:translate-x-2 relative group overflow-hidden"
               >
                 <span className="relative z-10">Architectural Consultancy</span>
                 <span className="absolute bottom-0 left-0 w-0 h-[1px] bg-primary transition-all duration-500 ease-out group-hover:w-full"></span>
-              </a>
+              </Link>
             </div>
           </div>
 
@@ -440,34 +441,34 @@ export const FooterSection = (): JSX.Element => {
             <div className="w-full h-px bg-white/30 -mt-2"></div>
 
             <div className="flex flex-col items-start gap-3 w-full">
-              <a
-                href="/about"
+              <Link
+                to="/about"
                 className="[font-family:'Fahkwang',Helvetica] font-normal text-white text-sm tracking-[0] leading-6 transition-all duration-300 hover:text-primary hover:translate-x-2 relative group overflow-hidden"
               >
                 <span className="relative z-10">About Us</span>
                 <span className="absolute bottom-0 left-0 w-0 h-[1px] bg-primary transition-all duration-500 ease-out group-hover:w-full"></span>
-              </a>
-              <a
-                href="/portfolio"
+              </Link>
+              <Link
+                to="/portfolio"
                 className="[font-family:'Fahkwang',Helvetica] font-normal text-white text-sm tracking-[0] leading-6 transition-all duration-300 hover:text-primary hover:translate-x-2 relative group overflow-hidden"
               >
                 <span className="relative z-10">Portfolio</span>
                 <span className="absolute bottom-0 left-0 w-0 h-[1px] bg-primary transition-all duration-500 ease-out group-hover:w-full"></span>
-              </a>
-              <a
-                href="/blog"
+              </Link>
+              <Link
+                to="/blog"
                 className="[font-family:'Fahkwang',Helvetica] font-normal text-white text-sm tracking-[0] leading-6 transition-all duration-300 hover:text-primary hover:translate-x-2 relative group overflow-hidden"
               >
                 <span className="relative z-10">Blog</span>
                 <span className="absolute bottom-0 left-0 w-0 h-[1px] bg-primary transition-all duration-500 ease-out group-hover:w-full"></span>
-              </a>
-              <a
-                href="/contact"
+              </Link>
+              <Link
+                to="/contact"
                 className="[font-family:'Fahkwang',Helvetica] font-normal text-white text-sm tracking-[0] leading-6 transition-all duration-300 hover:text-primary hover:translate-x-2 relative group overflow-hidden"
               >
                 <span className="relative z-10">Contact Us</span>
                 <span className="absolute bottom-0 left-0 w-0 h-[1px] bg-primary transition-all duration-500 ease-out group-hover:w-full"></span>
-              </a>
+              </Link>
             </div>
           </div>
 
