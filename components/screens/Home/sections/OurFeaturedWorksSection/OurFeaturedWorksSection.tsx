@@ -523,7 +523,10 @@ export const OurFeaturedWorksSection = (): JSX.Element => {
         <div className="container mx-auto px-4 text-center relative z-5">
           <div className="max-w-4xl mx-auto">
             <button
-              onClick={() => { if (typeof window !== 'undefined') window.location.assign("/portfolio"); }}
+              onClick={() => {
+                window.scrollTo({ top: 0, behavior: 'instant' });
+                navigate("/portfolio");
+              }}
               className="group flex items-center gap-2 sm:gap-3 px-4 py-2 sm:px-6 sm:py-3 md:px-8 md:py-4 rounded-full text-white text-sm sm:text-base font-semibold bg-black hover:bg-gray-800 transition-all duration-500 hover:scale-105 border border-gray-700 relative z-10 mx-auto"
               style={{ boxShadow: "0 15px 50px rgba(0,0,0,0.3), 0 0 30px rgba(0,0,0,0.2)", minWidth: "180px" }}
             >
