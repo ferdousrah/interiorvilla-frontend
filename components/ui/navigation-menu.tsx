@@ -356,11 +356,14 @@ const MainMenu: React.FC = () => {
                                                                 <div className="flex flex-col mb-4">
                                                                   <Link
                                                                     to={section.links[section.links.length - 1].href}
-                                                                    onClick={() => navigate(section.links[section.links.length - 1].href)}
+                                                                    onClick={(e) => {
+                                                                      e.preventDefault();
+                                                                      navigate(section.links[section.links.length - 1].href);
+                                                                    }}
                                                                     className="flex items-center text-xl font-semibold [font-family:'Fahkwang',Helvetica] transition-all duration-300 relative"
                                                                     style={{ color: section.color }}
                                                                   >
-                                                                    
+
                                                                     {section.title}
                                                                     <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-current transition-all duration-300 group-hover:w-full"></span>
                                                                   </Link>
@@ -382,7 +385,10 @@ const MainMenu: React.FC = () => {
                                                                         role="menuitem"
                                                                         variants={itemVariants}
                                                                         transition={{ delay: sectionIndex * 0.1 + linkIndex * 0.05 }}
-                                                                        onClick={() => navigate(link.href)}
+                                                                        onClick={(e) => {
+                                                                          e.preventDefault();
+                                                                          navigate(link.href);
+                                                                        }}
                                                                         className="w-full flex items-center justify-between px-4 py-2 rounded-md text-sm text-gray-600 hover:text-primary hover:bg-white/50 transition-all duration-300 group"
                                                                       >
                                                                         <span className="relative z-10">{link.name}</span>
@@ -401,7 +407,10 @@ const MainMenu: React.FC = () => {
                                                                 Need help choosing? <span className="text-primary font-medium">Contact our experts</span>
                                                               </div>
                                                               <button
-                                                                onClick={() => navigate("/contact")}
+                                                                onClick={(e) => {
+                                                                  e.preventDefault();
+                                                                  navigate("/contact");
+                                                                }}
                                                                 className="px-6 py-3 bg-primary text-white rounded-lg text-sm font-medium [font-family:'Fahkwang',Helvetica] hover:bg-primary-hover transition-all duration-300 hover:scale-105"
                                                               >
                                                                 Get Consultation
@@ -433,7 +442,10 @@ const MainMenu: React.FC = () => {
                                                             role="menuitem"
                                                             variants={itemVariants}
                                                             transition={{ delay: subIndex * 0.1 }}
-                                                            onClick={() => navigate(subItem.href)}
+                                                            onClick={(e) => {
+                                                              e.preventDefault();
+                                                              navigate(subItem.href);
+                                                            }}
                                                             className="w-full px-4 py-3 text-left text-sm text-white hover:text-primary transition-colors duration-300 [font-family:'Fahkwang',Helvetica] relative group overflow-hidden"
                                                           >
                                                             <span className="relative z-10">{subItem.name}</span>
@@ -478,14 +490,21 @@ const MainMenu: React.FC = () => {
                         className={`flex items-center justify-between p-4 rounded-xl cursor-pointer ${
                           item.active ? "bg-primary text-white shadow-lg" : "text-gray-300 hover:bg-gray-800/50"
                         }`}
-                        onClick={() => item.subItems ? handleSubmenuToggle(item.name) : handleSubmenuNavigation(item.href)}
+                        onClick={(e) => {
+                          if (item.subItems) {
+                            e.preventDefault();
+                            handleSubmenuToggle(item.name);
+                          } else {
+                            handleSubmenuNavigation(item.href);
+                          }
+                        }}
                       >
-                        <Link to={item.href} onClick={e => item.subItems && e.preventDefault()} className="flex items-center space-x-4 flex-1">
+                        <div className="flex items-center space-x-4 flex-1">
                           <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-gray-700/50">
                             <IconComponent className="w-5 h-5" />
                           </div>
                           <span>{item.name}</span>
-                        </Link>
+                        </div>
                         {item.subItems && <ChevronDown className="w-4 h-4" />}
                       </div>
 
@@ -499,7 +518,14 @@ const MainMenu: React.FC = () => {
                                   <p className="text-xs text-gray-400">{section.description}</p>
                                   <div className="space-y-2 mt-2">
                                     {section.links.map((link, j) => (
-                                      <button key={j} onClick={() => handleSubmenuNavigation(link.href)} className="block w-full text-left px-3 py-2 text-sm rounded-md text-gray-300 hover:text-white hover:bg-gray-700/40">
+                                      <button
+                                        key={j}
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          handleSubmenuNavigation(link.href);
+                                        }}
+                                        className="block w-full text-left px-3 py-2 text-sm rounded-md text-gray-300 hover:text-white hover:bg-gray-700/40"
+                                      >
                                         {link.name}
                                       </button>
                                     ))}
@@ -510,7 +536,14 @@ const MainMenu: React.FC = () => {
                           ) : (
                             <motion.div initial={{ height: 0 }} animate={{ height: "auto" }} exit={{ height: 0 }} className="overflow-y-auto max-h-[60vh] ml-4 mt-2 sidebar-submenu-scroll">
                               {item.subItems.map((subItem, subIndex) => (
-                                <button key={subIndex} onClick={() => handleSubmenuNavigation(subItem.href)} className="flex items-center p-3 text-gray-300 hover:text-white hover:bg-gray-800/30">
+                                <button
+                                  key={subIndex}
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    handleSubmenuNavigation(subItem.href);
+                                  }}
+                                  className="flex items-center p-3 text-gray-300 hover:text-white hover:bg-gray-800/30"
+                                >
                                   <div className="w-2 h-2 rounded-full bg-gray-600 mr-4"></div>
                                   {subItem.name}
                                 </button>
