@@ -125,9 +125,9 @@ export const AppointmentSection = (): JSX.Element => {
   return (
     <section 
       ref={sectionRef}
-      className="py-16 md:py-24 bg-white"
+      className="bg-white -mt-48 relative z-10"
     >
-      <div className="container mx-auto px-4 max-w-6xl">
+      <div className="container mx-auto px-12 max-w-6xl  py-12">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12">
           {/* Left Card - Let's Start Your Dream Project */}
           <motion.div

@@ -111,7 +111,7 @@ export const ContactSection = (): JSX.Element => {
       try {
         setLoadingOffices(true);
         setLoadError("");
-        const res = await fetch("https://cms.interiorvillabd.com/api/offices?sort=asc", { mode: "cors" });
+        const res = await fetch("https://interiorvillabd.com/api/offices?sort=asc", { mode: "cors" });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         const raw: any[] = Array.isArray(data)

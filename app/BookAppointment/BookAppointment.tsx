@@ -1,8 +1,8 @@
 import React from "react";
 import { CustomCursor } from "../../components/ui/cursor";
 import { FooterSection } from "../../components/screens/Home/sections/FooterSection/FooterSection";
+import { PageHero } from "../../components/ui/PageHero";
 import {
-  HeroSection,
   AppointmentSection
 } from "./sections";
 
@@ -13,7 +13,16 @@ const BookAppointment = (): JSX.Element => {
       <CustomCursor className="custom-cursor" />
       
       {/* Hero Section */}
-      <HeroSection />
+      <PageHero
+              title="Book An Appointment"
+              bgImage={
+                "/image.png"
+              }
+              breadcrumbs={[
+                { label: "Home", href: "/" },
+                { label: "Book An Appointment", isActive: true },
+              ]}
+            />
 
       {/* Main Content Container */}
       <div className="w-full">
