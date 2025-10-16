@@ -34,31 +34,13 @@ const ResidentialInterior = (): JSX.Element => {
     fetchService();
   }, []);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-white text-gray-600">
-        Loading Residential Interior...
-      </div>
-    );
-  }
-
-  if (error || !serviceData) {
-    return (
-      <div className="flex items-center justify-center min-h-screen text-red-600">
-        Failed to load service data.
-      </div>
-    );
-  }
-
-  // ✅ Extract SEO, Hero, and Intro Section
-  const { hero, seoDetails, introSection } = serviceData;
+  const { hero, seoDetails, introSection } = serviceData || {};
 
   const metaTitle = seoDetails?.metaTitle || "Residential Interior | Interior Villa";
   const metaDescription = seoDetails?.metaDescription || introSection?.description || "";
   const metaKeywords = seoDetails?.metaKey || "";
   const structuredData = seoDetails?.seoStructuredData || "";
 
-  // ✅ Hero image (.webp fallback)
   const heroImage = hero?.heroImage?.url
     ? `https://interiorvillabd.com${hero.heroImage.url.replace(/\.(png|jpg|jpeg)$/i, ".webp")}`
     : "/image.webp";
@@ -81,7 +63,7 @@ const ResidentialInterior = (): JSX.Element => {
 
       {/* ✅ Dynamic Hero Section */}
       <PageHero
-        title={hero?.title || "Residential Interior"}        
+        title={hero?.title || "Residential Interior"}
         bgImage={heroImage}
         breadcrumbs={[
           { label: "Home", href: "/" },
@@ -90,20 +72,35 @@ const ResidentialInterior = (): JSX.Element => {
         ]}
       />
 
-      
-      {/* Main Content Container */}
-      <section className="w-full">
-        <AboutSection
-          title={introSection?.sectionTitle}
-          description={introSection?.description}
-        />
-        <ProcessSection />
-        <ProjectsSection />
-        <CTASection />
-      </section>
+      {loading ? (
+        <section className="w-full min-h-[50vh] flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-600 [font-family:'Fahkwang',Helvetica]">Loading content...</p>
+          </div>
+        </section>
+      ) : error ? (
+        <section className="w-full min-h-[50vh] flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-red-600 [font-family:'Fahkwang',Helvetica]">Failed to load service data.</p>
+          </div>
+        </section>
+      ) : (
+        <>
+          <section className="w-full">
+            <AboutSection
+              title={introSection?.sectionTitle}
+              description={introSection?.description}
+            />
+            <ProcessSection />
+            <ProjectsSection />
+            <CTASection />
+          </section>
 
-      {/* Footer */}
-      <FooterSection />
+          {/* Footer */}
+          <FooterSection />
+        </>
+      )}
     </main>
   );
 };

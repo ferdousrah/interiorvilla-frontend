@@ -34,24 +34,7 @@ const CorporateOfficeInterior = (): JSX.Element => {
     fetchService();
   }, []);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-white text-gray-600">
-        Loading...
-      </div>
-    );
-  }
-
-  if (error || !serviceData) {
-    return (
-      <div className="flex items-center justify-center min-h-screen text-red-600">
-        Failed to load service data.
-      </div>
-    );
-  }
-
-  // ✅ Extract SEO, Hero, and Intro Section
-  const { hero, seoDetails, introSection } = serviceData;
+  const { hero, seoDetails, introSection } = serviceData || {};
 
   const metaTitle = seoDetails?.metaTitle || "Corporate & Office Interior Design in Bangladesh | Modern Workspaces";
   const metaDescription = seoDetails?.metaDescription || introSection?.description || "";
@@ -91,20 +74,36 @@ const CorporateOfficeInterior = (): JSX.Element => {
         ]}
       />
 
-      
-      {/* Main Content Container */}
-      <section className="w-full">
-        <AboutSection
-          title={introSection?.sectionTitle}
-          description={introSection?.description}
-        />
-        <ProcessSection />
-        <ProjectsSection />
-        <CTASection />
-      </section>
 
-      {/* Footer */}
-      <FooterSection />
+      {loading ? (
+        <section className="w-full min-h-[50vh] flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-600 [font-family:'Fahkwang',Helvetica]">Loading content...</p>
+          </div>
+        </section>
+      ) : error ? (
+        <section className="w-full min-h-[50vh] flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-red-600 [font-family:'Fahkwang',Helvetica]">Failed to load service data.</p>
+          </div>
+        </section>
+      ) : (
+        <>
+          <section className="w-full">
+            <AboutSection
+              title={introSection?.sectionTitle}
+              description={introSection?.description}
+            />
+            <ProcessSection />
+            <ProjectsSection />
+            <CTASection />
+          </section>
+
+          {/* Footer */}
+          <FooterSection />
+        </>
+      )}
     </main>
   );
 };
