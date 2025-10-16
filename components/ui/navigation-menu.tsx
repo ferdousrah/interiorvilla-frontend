@@ -358,6 +358,8 @@ const MainMenu: React.FC = () => {
                                                                     to={section.links[section.links.length - 1].href}
                                                                     onClick={(e) => {
                                                                       e.preventDefault();
+                                                                      e.stopPropagation();
+                                                                      window.scrollTo({ top: 0, left: 0, behavior: "instant" as ScrollBehavior });
                                                                       navigate(section.links[section.links.length - 1].href);
                                                                     }}
                                                                     className="flex items-center text-xl font-semibold [font-family:'Fahkwang',Helvetica] transition-all duration-300 relative"
@@ -387,6 +389,8 @@ const MainMenu: React.FC = () => {
                                                                         transition={{ delay: sectionIndex * 0.1 + linkIndex * 0.05 }}
                                                                         onClick={(e) => {
                                                                           e.preventDefault();
+                                                                          e.stopPropagation();
+                                                                          window.scrollTo({ top: 0, left: 0, behavior: "instant" as ScrollBehavior });
                                                                           navigate(link.href);
                                                                         }}
                                                                         className="w-full flex items-center justify-between px-4 py-2 rounded-md text-sm text-gray-600 hover:text-primary hover:bg-white/50 transition-all duration-300 group"
@@ -409,6 +413,8 @@ const MainMenu: React.FC = () => {
                                                               <button
                                                                 onClick={(e) => {
                                                                   e.preventDefault();
+                                                                  e.stopPropagation();
+                                                                  window.scrollTo({ top: 0, left: 0, behavior: "instant" as ScrollBehavior });
                                                                   navigate("/contact");
                                                                 }}
                                                                 className="px-6 py-3 bg-primary text-white rounded-lg text-sm font-medium [font-family:'Fahkwang',Helvetica] hover:bg-primary-hover transition-all duration-300 hover:scale-105"
@@ -444,6 +450,8 @@ const MainMenu: React.FC = () => {
                                                             transition={{ delay: subIndex * 0.1 }}
                                                             onClick={(e) => {
                                                               e.preventDefault();
+                                                              e.stopPropagation();
+                                                              window.scrollTo({ top: 0, left: 0, behavior: "instant" as ScrollBehavior });
                                                               navigate(subItem.href);
                                                             }}
                                                             className="w-full px-4 py-3 text-left text-sm text-white hover:text-primary transition-colors duration-300 [font-family:'Fahkwang',Helvetica] relative group overflow-hidden"
