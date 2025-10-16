@@ -72,17 +72,19 @@ const About = (): JSX.Element => {
           </div>
         </section>
       ) : (
-        <section className="w-full">
-          <ExperienceSection />
-          <ApproachSection />
-          <MissionVisionSection />
-          <TeamSection />
-          <CTASection />
-        </section>
-      )}
+        <>
+          <section className="w-full">
+            <ExperienceSection />
+            <ApproachSection />
+            <MissionVisionSection />
+            <TeamSection />
+            <CTASection />
+          </section>
 
-      {/* Footer */}
-      <FooterSection />
+          {/* Footer */}
+          <FooterSection />
+        </>
+      )}
     </main>
   );
 };
