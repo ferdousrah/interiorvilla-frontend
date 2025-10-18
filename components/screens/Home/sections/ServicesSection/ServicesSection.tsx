@@ -3,7 +3,6 @@ import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../../../../ui/button";
 import { Card, CardContent, CardFooter } from "../../../../ui/card";
-import { PerformanceImage } from "../../../../ui/performance-image";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { SplitText } from "gsap/SplitText";
@@ -84,8 +83,9 @@ export const ServicesSection = (): JSX.Element => {
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const headingWrapperRef = useRef<HTMLDivElement>(null);
+  
+  // State to track which card is hovered
   const [hoveredCard, setHoveredCard] = useState<number | null>(null);
-  const [activeVideo, setActiveVideo] = useState<HTMLVideoElement | null>(null);
 
   // Wait for fonts to load before using SplitText
   const [fontsReady, setFontsReady] = useState(false);
@@ -105,70 +105,87 @@ export const ServicesSection = (): JSX.Element => {
     checkFonts();
   }, []);
 
-  // Add hover animation for main heading
+  // -------------------------------------------------------------------
+  // 1. GSAP: SplitText and Header Hover Animation
+  // -------------------------------------------------------------------
   useEffect(() => {
     if (!headingRef.current || !fontsReady) return;
 
-    // Split text into characters
-    const splitText = new SplitText(headingRef.current, { 
-      type: "chars,words",
-      charsClass: "char",
-      wordsClass: "word"
-    });
+    let splitText: SplitText | null = null;
 
-    // Add hover animation
-    if (headingWrapperRef.current) {
-      headingWrapperRef.current.addEventListener('mousemove', (e) => {
-        const rect = headingWrapperRef.current!.getBoundingClientRect();
-        const x = (e.clientX - rect.left) / rect.width;
-        const y = (e.clientY - rect.top) / rect.height;
-        
-        gsap.to(splitText.chars, {
-          duration: 0.5,
-          y: (i, target) => (y - 0.5) * 15 * Math.sin((i + 1) * 0.5),
-          x: (i, target) => (x - 0.5) * 15 * Math.cos((i + 1) * 0.5),
-          rotationY: (x - 0.5) * 20,
-          rotationX: (y - 0.5) * -20,
-          ease: "power2.out",
-          stagger: {
-            amount: 0.3,
-            from: "center"
-          }
+    try {
+        // Split text into characters
+        splitText = new SplitText(headingRef.current, { 
+            type: "chars,words",
+            charsClass: "char",
+            wordsClass: "word"
         });
-      });
 
-      headingWrapperRef.current.addEventListener('mouseleave', () => {
-        gsap.to(splitText.chars, {
-          duration: 1,
-          y: 0,
-          x: 0,
-          rotationY: 0,
-          rotationX: 0,
-          ease: "elastic.out(1, 0.3)",
-          stagger: {
-            amount: 0.3,
-            from: "center"
-          }
-        });
-      });
+        // Add hover animation listeners
+        const handleMouseMove = (e: MouseEvent) => {
+            if (!headingWrapperRef.current || !splitText) return;
+
+            const rect = headingWrapperRef.current.getBoundingClientRect();
+            const x = (e.clientX - rect.left) / rect.width;
+            const y = (e.clientY - rect.top) / rect.height;
+            
+            gsap.to(splitText.chars, {
+                duration: 0.5,
+                y: (i, target) => (y - 0.5) * 15 * Math.sin((i + 1) * 0.5),
+                x: (i, target) => (x - 0.5) * 15 * Math.cos((i + 1) * 0.5),
+                rotationY: (x - 0.5) * 20,
+                rotationX: (y - 0.5) * -20,
+                ease: "power2.out",
+                stagger: {
+                    amount: 0.3,
+                    from: "center"
+                }
+            });
+        };
+
+        const handleMouseLeave = () => {
+            if (!splitText) return;
+            gsap.to(splitText.chars, {
+                duration: 1,
+                y: 0,
+                x: 0,
+                rotationY: 0,
+                rotationX: 0,
+                ease: "elastic.out(1, 0.3)",
+                stagger: {
+                    amount: 0.3,
+                    from: "center"
+                }
+            });
+        };
+
+        headingWrapperRef.current?.addEventListener('mousemove', handleMouseMove);
+        headingWrapperRef.current?.addEventListener('mouseleave', handleMouseLeave);
+
+        // Cleanup function
+        return () => {
+            splitText?.revert();
+            headingWrapperRef.current?.removeEventListener('mousemove', handleMouseMove);
+            headingWrapperRef.current?.removeEventListener('mouseleave', handleMouseLeave);
+        };
+
+    } catch (e) {
+        console.error("SplitText or GSAP failed:", e);
+        if (splitText) splitText.revert();
     }
-
-    // Cleanup function
-    return () => {
-      splitText.revert();
-      if (headingWrapperRef.current) {
-        headingWrapperRef.current.removeEventListener('mousemove', () => {});
-        headingWrapperRef.current.removeEventListener('mouseleave', () => {});
-      }
-    };
   }, [fontsReady]);
 
+  // -------------------------------------------------------------------
+  // 2. GSAP: ScrollTrigger Animations and Proper Cleanup
+  // -------------------------------------------------------------------
   useEffect(() => {
     if (!sectionRef.current) return;
 
+    const cleanupTriggers: ScrollTrigger[] = [];
+    
     // Parallax effect for background grid
     if (backgroundRef.current) {
-      gsap.to(backgroundRef.current, {
+      const bgTween = gsap.to(backgroundRef.current, {
         yPercent: -25,
         ease: "none",
         scrollTrigger: {
@@ -179,22 +196,16 @@ export const ServicesSection = (): JSX.Element => {
           invalidateOnRefresh: true
         }
       });
+      if (bgTween.scrollTrigger) cleanupTriggers.push(bgTween.scrollTrigger);
     }
 
     // Header animation with parallax
     if (headerRef.current) {
-      gsap.fromTo(headerRef.current,
+      // Entrance animation
+      const headerEntrance = gsap.fromTo(headerRef.current,
+        { opacity: 0, y: 60, scale: 0.95 },
         {
-          opacity: 0,
-          y: 60,
-          scale: 0.95
-        },
-        {
-          opacity: 1,
-          y: 0,
-          scale: 1,
-          duration: 1.2,
-          ease: "power3.out",
+          opacity: 1, y: 0, scale: 1, duration: 1.2, ease: "power3.out",
           scrollTrigger: {
             trigger: headerRef.current,
             start: "top 85%",
@@ -203,9 +214,10 @@ export const ServicesSection = (): JSX.Element => {
           }
         }
       );
+      if (headerEntrance.scrollTrigger) cleanupTriggers.push(headerEntrance.scrollTrigger);
 
       // Subtle parallax for header
-      gsap.to(headerRef.current, {
+      const headerParallax = gsap.to(headerRef.current, {
         yPercent: -10,
         ease: "none",
         scrollTrigger: {
@@ -216,6 +228,7 @@ export const ServicesSection = (): JSX.Element => {
           invalidateOnRefresh: true
         }
       });
+      if (headerParallax.scrollTrigger) cleanupTriggers.push(headerParallax.scrollTrigger);
     }
 
     // Staggered card animations with individual parallax
@@ -223,20 +236,10 @@ export const ServicesSection = (): JSX.Element => {
       if (!card) return;
 
       // Initial entrance animation
-      gsap.fromTo(card,
+      const cardEntrance = gsap.fromTo(card,
+        { opacity: 0, y: 80, rotationX: -15, scale: 0.9 },
         {
-          opacity: 0,
-          y: 80,
-          rotationX: -15,
-          scale: 0.9
-        },
-        {
-          opacity: 1,
-          y: 0,
-          rotationX: 0,
-          scale: 1,
-          duration: 1,
-          ease: "power3.out",
+          opacity: 1, y: 0, rotationX: 0, scale: 1, duration: 1, ease: "power3.out",
           delay: index * 0.2,
           scrollTrigger: {
             trigger: card,
@@ -246,9 +249,10 @@ export const ServicesSection = (): JSX.Element => {
           }
         }
       );
+      if (cardEntrance.scrollTrigger) cleanupTriggers.push(cardEntrance.scrollTrigger);
 
       // Individual parallax movement for each card
-      gsap.to(card, {
+      const cardParallax = gsap.to(card, {
         yPercent: -5 - (index * 3), // Different speeds for depth
         ease: "none",
         scrollTrigger: {
@@ -259,14 +263,12 @@ export const ServicesSection = (): JSX.Element => {
           invalidateOnRefresh: true
         }
       });
-
-      // Store cleanup functions
-      card.dataset.cleanup = 'true';
+      if (cardParallax.scrollTrigger) cleanupTriggers.push(cardParallax.scrollTrigger);
     });
 
     // Grid container parallax
     if (gridRef.current) {
-      gsap.to(gridRef.current, {
+      const gridParallax = gsap.to(gridRef.current, {
         yPercent: -8,
         ease: "none",
         scrollTrigger: {
@@ -277,102 +279,109 @@ export const ServicesSection = (): JSX.Element => {
           invalidateOnRefresh: true
         }
       });
+      if (gridParallax.scrollTrigger) cleanupTriggers.push(gridParallax.scrollTrigger);
     }
 
-    // Cleanup function
+    // CORRECT CLEANUP: Kill only the triggers created above
     return () => {
-      ScrollTrigger.getAll().forEach(trigger => trigger.kill());
-      
-      // Remove event listeners
-      cardRefs.current.forEach(card => {
-        if (card && card.dataset.cleanup) {
-          card.removeEventListener('mouseenter', () => {});
-          card.removeEventListener('mouseleave', () => {});
-        }
-      });
+      cleanupTriggers.forEach(trigger => trigger.kill());
     };
   }, []);
 
-  // Setup videos on mount
+  // -------------------------------------------------------------------
+  // 3. Video Playback Management (Added video.load() for readiness)
+  // -------------------------------------------------------------------
+
+  // Setup videos on initial mount and FORCE LOAD
   useEffect(() => {
-    videoRefs.current.forEach((video, index) => {
+    videoRefs.current.forEach((video) => {
       if (video) {
+        // Essential video properties
         video.muted = true;
         video.playsInline = true;
         video.defaultMuted = true;
 
-        // Add load event listener
-        video.addEventListener('loadeddata', () => {
-          console.log(`Video ${index} loaded successfully`);
-        });
-
+        // 🔥 CRITICAL FIX: Explicitly call load() to force the browser to
+        // fetch and decode the video metadata/data immediately.
+        video.load(); 
+        
+        // Optional: Preload checks for debugging
         video.addEventListener('error', (e) => {
-          console.error(`Video ${index} error:`, e, video.error);
+          console.error(`Video error for ${video.src}:`, video.error, e);
         });
       }
     });
   }, []);
 
-  // Handle card hover for video playback
-  const handleCardHover = (index: number, isHovering: boolean) => {
-    console.log(`Card ${index} hovered:`, isHovering);
-    setHoveredCard(isHovering ? index : null);
 
-    const video = videoRefs.current[index];
+  // Handles video play/pause on state change, checking readyState
+  useEffect(() => {
+    let cleanupPlayListener: (() => void)[] = [];
 
-    if (isHovering && video) {
-      console.log(`Attempting to play video ${index}`, {
-        src: video.src,
-        readyState: video.readyState,
-        networkState: video.networkState,
-        paused: video.paused,
-        muted: video.muted
-      });
-
-      // Stop any currently playing video
-      if (activeVideo && activeVideo !== video) {
-        activeVideo.pause();
-        activeVideo.currentTime = 0;
-      }
-
-      // Reset and play
-      video.currentTime = 0;
-
-      // Use requestAnimationFrame to ensure smooth playback
-      requestAnimationFrame(() => {
-        video.play().then(() => {
-          console.log(`Video ${index} playing successfully`);
-          setActiveVideo(video);
-        }).catch((error) => {
-          console.error(`Video ${index} play failed:`, error.message, error);
-        });
-      });
-    } else {
-      console.log(`Stopping video ${index}`);
-      // Pause and reset video
+    // 1. Pause and reset ALL videos first for cleanup
+    videoRefs.current.forEach((video, index) => {
       if (video) {
-        video.pause();
-        video.currentTime = 0;
+        if (index !== hoveredCard && !video.paused) {
+            video.pause();
+            video.currentTime = 0;
+        }
       }
-      if (activeVideo && activeVideo !== video) {
-        activeVideo.pause();
-        activeVideo.currentTime = 0;
+    });
+
+    // 2. Play the currently hovered video
+    if (hoveredCard !== null) {
+      const videoToPlay = videoRefs.current[hoveredCard];
+      
+      if (videoToPlay) {
+        
+        const attemptPlay = () => {
+            // Remove the listener immediately to prevent multiple calls
+            videoToPlay.removeEventListener('canplay', attemptPlay);
+            
+            // Set to start and attempt play
+            videoToPlay.currentTime = 0;
+            videoToPlay.play().catch((error) => {
+              // This is the fallback for any silent browser refusal
+              console.error(`Video ${hoveredCard} play failed:`, error.message, error);
+            });
+        };
+
+        // If video is ready (readyState 2 = data for current position), play immediately
+        // The load() call above helps ensure it reaches this state quickly.
+        if (videoToPlay.readyState >= 2) { 
+            attemptPlay();
+        } else {
+            // Wait for the 'canplay' event if not ready
+            videoToPlay.addEventListener('canplay', attemptPlay);
+            cleanupPlayListener.push(() => {
+                videoToPlay.removeEventListener('canplay', attemptPlay);
+            });
+        }
       }
-      setActiveVideo(null);
     }
+    
+    // Cleanup function for the effect
+    return () => {
+        cleanupPlayListener.forEach(cleanup => cleanup());
+    };
+    
+  }, [hoveredCard]);
+
+
+  // Handler function now only updates state
+  const handleCardHover = (index: number, isHovering: boolean) => {
+    setHoveredCard(isHovering ? index : null);
   };
 
   return (
     <section 
-  ref={sectionRef}
-  className="w-full flex flex-col items-start pt-10 pb-12 relative overflow-hidden"
-  style={{
-    backgroundColor: hoveredCard !== null ? 'transparent' : '#ffffff',
-    transition: 'background-color 1.2s cubic-bezier(0.4, 0, 0.2, 1)'
-  }}
->
-
-
+      ref={sectionRef}
+      className="w-full flex flex-col items-start pt-10 pb-12 relative overflow-hidden"
+      style={{
+        backgroundColor: hoveredCard !== null ? 'transparent' : '#ffffff',
+        transition: 'background-color 1.2s cubic-bezier(0.4, 0, 0.2, 1)'
+      }}
+    >
 
       {/* Section Background Videos */}
       <div className="absolute inset-0 w-full h-full">
@@ -393,42 +402,41 @@ export const ServicesSection = (): JSX.Element => {
             preload="auto"
             autoPlay={false}
             controls={false}
-            webkit-playsinline="true"
           >
             <source src={service.video} type="video/mp4" />
           </video>
         ))}
         
-        {/* MORE TRANSPARENT Dark Overlay - NO COLOR GRADIENTS */}
+        {/* Dark Overlay */}
         <div 
           className="absolute inset-0"
           style={{
             background: hoveredCard !== null 
-              ? 'rgba(0, 0, 0, 0.3)' // More transparent - reduced from 0.6 to 0.3
+              ? 'rgba(0, 0, 0, 0.3)'
               : 'transparent',
             opacity: hoveredCard !== null ? 1 : 0,
             transition: 'all 1.2s cubic-bezier(0.4, 0, 0.2, 1)'
           }}
         />
         
-        {/* Glassmorphism Effect - More transparent */}
+        {/* Glassmorphism Effect */}
         <div 
           className="absolute inset-0"
           style={{
             background: hoveredCard !== null 
-              ? 'rgba(255, 255, 255, 0.02)' // More transparent - reduced from 0.05 to 0.02
+              ? 'rgba(255, 255, 255, 0.02)'
               : 'transparent',
-            backdropFilter: hoveredCard !== null ? 'blur(2px)' : 'none', // Reduced blur from 3px to 2px
+            backdropFilter: hoveredCard !== null ? 'blur(2px)' : 'none',
             transition: 'all 1.2s cubic-bezier(0.4, 0, 0.2, 1)'
           }}
         />
       </div>
 
       <div className="container mx-auto max-w-7xl relative z-10">
-        {/* Section Header with MORE GAP */}
+        {/* Section Header */}
         <div 
           ref={headerRef}
-          className="flex flex-col items-center text-center mb-24 mt-5" // Added mt-5 for 20px top gap
+          className="flex flex-col items-center text-center mb-24 mt-5"
           style={{
             transformOrigin: 'center center',
             backfaceVisibility: 'hidden',
@@ -479,15 +487,15 @@ export const ServicesSection = (): JSX.Element => {
           </p>
         </div>
 
-        {/* Service Cards with FIXED ALIGNMENT - EXPAND ONLY TO BOTTOM */}
+        {/* Service Cards */}
         <div 
           ref={gridRef}
-          className="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10 will-change-transform items-start" // Added items-start for proper alignment
+          className="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10 will-change-transform items-start"
           style={{
             transformOrigin: 'center center',
             backfaceVisibility: 'hidden',
             transform: 'translate3d(0, 0, 0)',
-            overflow: 'visible', // important
+            overflow: 'visible',
           }}
         >
           {services.map((service, index) => {
@@ -497,9 +505,9 @@ export const ServicesSection = (): JSX.Element => {
               <div
                 key={index}
                 ref={el => cardRefs.current[index] = el}
-                className="will-change-transform flex" // Added flex for consistent alignment
+                className="will-change-transform flex"
                 style={{
-                  transformOrigin: 'center top', // FIXED: Changed from 'center center' to 'center top'
+                  transformOrigin: 'center top',
                   backfaceVisibility: 'hidden',
                   transform: 'translate3d(0, 0, 0)',
                   transformStyle: 'preserve-3d'
@@ -508,37 +516,36 @@ export const ServicesSection = (): JSX.Element => {
                 onMouseLeave={() => handleCardHover(index, false)}
               >
                 <Card 
-                      className="rounded-[20px] overflow-hidden relative group w-full"
-                      style={{
-                        height: isHovered ? '460px' : '360px', // Reduced from 700px/320px
-                        backgroundColor: isHovered 
-                          ? 'rgba(0, 0, 0, 0.25)'
-                          : '#f6f8fa',
-                        backdropFilter: isHovered ? 'blur(10px)' : 'none',
-                        border: 'none',
-                        boxShadow: isHovered 
-                          ? '0 30px 60px -12px rgba(0, 0, 0, 0.4)'
-                          : '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                        transformOrigin: 'center top',
-                        transition: 'all 1.5s cubic-bezier(0.4, 0, 0.2, 1)',
-                        transform: isHovered ? 'translateY(0) scale(1.02)' : 'translateY(0) scale(1)'
-                      }}
-                    >
-
+                  className="rounded-[20px] overflow-hidden relative group w-full"
+                  style={{
+                    height: isHovered ? '460px' : '360px',
+                    backgroundColor: isHovered 
+                      ? 'rgba(0, 0, 0, 0.25)'
+                      : '#f6f8fa',
+                    backdropFilter: isHovered ? 'blur(10px)' : 'none',
+                    border: 'none',
+                    boxShadow: isHovered 
+                      ? '0 30px 60px -12px rgba(0, 0, 0, 0.4)'
+                      : '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                    transformOrigin: 'center top',
+                    transition: 'all 1.5s cubic-bezier(0.4, 0, 0.2, 1)',
+                    transform: isHovered ? 'translateY(0) scale(1.02)' : 'translateY(0) scale(1)'
+                  }}
+                >
                   <CardContent className="p-11 pt-11 relative z-10 h-full flex flex-col">
                     {/* Header Section - FIXED POSITION */}
-                    <div className="flex gap-6 mb-8 flex-shrink-0"> {/* Added flex-shrink-0 to prevent compression */}
+                    <div className="flex gap-6 mb-8 flex-shrink-0">
                       <div
                         className="w-[82px] h-[82px] rounded-full flex items-center justify-center flex-shrink-0"
                         style={{ 
                           backgroundColor: isHovered 
-                            ? 'rgba(255, 255, 255, 0.15)' // More transparent - reduced from 0.2 to 0.15
+                            ? 'rgba(255, 255, 255, 0.15)'
                             : service.iconBg,
                           border: isHovered 
-                            ? '2px solid rgba(255, 255, 255, 0.2)' // More transparent - reduced from 0.3 to 0.2
+                            ? '2px solid rgba(255, 255, 255, 0.2)'
                             : '1px solid #000000',
                           transition: 'all 1.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                          backdropFilter: isHovered ? 'blur(8px)' : 'none' // Reduced blur from 10px to 8px
+                          backdropFilter: isHovered ? 'blur(8px)' : 'none'
                         }}
                       >
                         <img 
@@ -546,7 +553,6 @@ export const ServicesSection = (): JSX.Element => {
                           alt={`${service.title} icon`} 
                           className="w-11 h-[37px] object-contain" 
                         />
-
                       </div>
                       <div className="mt-[6px] flex-1">
                         <h3 
@@ -563,7 +569,7 @@ export const ServicesSection = (): JSX.Element => {
                     </div>
                     
                     {/* Description - FIXED POSITION */}
-                    <div className="mb-8 flex-shrink-0"> {/* Added flex-shrink-0 to prevent compression */}
+                    <div className="mb-8 flex-shrink-0">
                       <p 
                         className="opacity-80 [font-family:'Fahkwang',Helvetica] font-normal text-sm leading-8"
                         style={{
@@ -576,61 +582,57 @@ export const ServicesSection = (): JSX.Element => {
                       </p>
                     </div>
 
-                    {/* Expanded content on hover - EXPANDS DOWNWARD ONLY */}
-                    {/* Expanded content on hover - EXPANDS DOWNWARD ONLY */}
-<div 
-  className="overflow-hidden flex-1 flex flex-col"
-  style={{
-    maxHeight: isHovered ? '400px' : '0px',
-    opacity: isHovered ? 1 : 0,
-    transform: isHovered ? 'translateY(0)' : 'translateY(-30px)',
-    transition: 'all 1.5s cubic-bezier(0.4, 0, 0.2, 1)'
-  }}
->
-  {/* REMOVE this entire features list block */}
-  {/* <div className="pt-6 mb-8 flex-1">...</div> */}
+                    {/* Expanded content on hover */}
+                    <div 
+                      className="overflow-hidden flex-1 flex flex-col"
+                      style={{
+                        maxHeight: isHovered ? '400px' : '0px',
+                        opacity: isHovered ? 1 : 0,
+                        transform: isHovered ? 'translateY(0)' : 'translateY(-30px)',
+                        transition: 'all 1.5s cubic-bezier(0.4, 0, 0.2, 1)'
+                      }}
+                    >
+                      {/* Button */}
+                      <div className="mt-auto">
+                        <Button
+                          onClick={() => navigate(service.link)}
+                          className="rounded-full px-8 py-4 w-full text-base font-medium group relative overflow-hidden"
+                          style={{
+                            backgroundColor: `${service.colorTheme.primary}15`,
+                            border: `2px solid ${service.colorTheme.primary}40`,
+                            color: '#ffffff',
+                            backdropFilter: 'blur(8px)',
+                            transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+                            textShadow: '0 1px 4px rgba(0, 0, 0, 0.3)'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = `${service.colorTheme.primary}30`;
+                            e.currentTarget.style.borderColor = `${service.colorTheme.primary}80`;
+                            e.currentTarget.style.transform = 'translateY(-2px) scale(1.02)';
+                            e.currentTarget.style.boxShadow = `0 10px 25px ${service.colorTheme.primary}20`;
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = `${service.colorTheme.primary}15`;
+                            e.currentTarget.style.borderColor = `${service.colorTheme.primary}40`;
+                            e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                            e.currentTarget.style.boxShadow = 'none';
+                          }}
+                        >
+                          <span className="[font-family:'Fahkwang',Helvetica] font-medium relative z-10">
+                            Explore Service
+                          </span>
+                          <ArrowRightIcon className="ml-2 w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" />
 
-  {/* KEEP ONLY this "Explore Service" button */}
-  <div className="mt-auto">
-    <Button
-      onClick={() => navigate(service.link)}
-      className="rounded-full px-8 py-4 w-full text-base font-medium group relative overflow-hidden"
-      style={{
-        backgroundColor: `${service.colorTheme.primary}15`,
-        border: `2px solid ${service.colorTheme.primary}40`,
-        color: '#ffffff',
-        backdropFilter: 'blur(8px)',
-        transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
-        textShadow: '0 1px 4px rgba(0, 0, 0, 0.3)'
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.backgroundColor = `${service.colorTheme.primary}30`;
-        e.currentTarget.style.borderColor = `${service.colorTheme.primary}80`;
-        e.currentTarget.style.transform = 'translateY(-2px) scale(1.02)';
-        e.currentTarget.style.boxShadow = `0 10px 25px ${service.colorTheme.primary}20`;
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.backgroundColor = `${service.colorTheme.primary}15`;
-        e.currentTarget.style.borderColor = `${service.colorTheme.primary}40`;
-        e.currentTarget.style.transform = 'translateY(0) scale(1)';
-        e.currentTarget.style.boxShadow = 'none';
-      }}
-    >
-      <span className="[font-family:'Fahkwang',Helvetica] font-medium relative z-10">
-        Explore Service
-      </span>
-      <ArrowRightIcon className="ml-2 w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" />
-
-      {/* Animated background on button hover */}
-      <div
-        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-        style={{
-          background: `linear-gradient(45deg, ${service.colorTheme.primary}15, ${service.colorTheme.secondary}15)`
-        }}
-      />
-    </Button>
-  </div>
-</div>
+                          {/* Animated background on button hover */}
+                          <div
+                            className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                            style={{
+                              background: `linear-gradient(45deg, ${service.colorTheme.primary}15, ${service.colorTheme.secondary}15)`
+                            }}
+                          />
+                        </Button>
+                      </div>
+                    </div>
 
                   </CardContent>
 
