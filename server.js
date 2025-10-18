@@ -155,7 +155,7 @@ app.use(async (req, res, next) => {
     }
 
     // Skip static assets - let express.static handle them
-    if (req.path.match(/\.(js|css|png|jpg|jpeg|gif|svg|ico|webp|woff|woff2|ttf|eot|json|xml|txt|map)$/i)) {
+    if (req.path.match(/\.(js|css|png|jpg|jpeg|gif|svg|ico|webp|woff|woff2|ttf|eot|json|xml|txt|map|mp4|webm|ogg|mov|avi)$/i)) {
       return next();
     }
 
