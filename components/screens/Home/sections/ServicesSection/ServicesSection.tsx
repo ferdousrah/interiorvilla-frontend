@@ -17,7 +17,7 @@ const services = [
     description:
       "Sustainable living. Luxurious design. We specialize in creating intelligent, eco-friendly homes, from single-family residences to multi-housing solutions.",
     iconBg: "#f5fdfd",
-    video: "/videos/residential.mp4",
+    video: "/videos/an-ambitious-nation.mp4",
     link: "/services/residential-interior",
     colorTheme: {
       primary: "#4F46E5", // Indigo
@@ -37,7 +37,7 @@ const services = [
     description:
       "Experience the difference. Our minimalist designs transform your workplace into an inspiring and productive environment, whether it's a factory or a corporate office.",
     iconBg: "#f5fdfd",
-    video: "/videos/commercial.mp4",
+    video: "/videos/video2-compress.mp4",
     link: "/services/commercial-interior",
     colorTheme: {
       primary: "#059669", // Emerald
@@ -57,7 +57,7 @@ const services = [
     description:
       "Stand out from the competition with innovative designs. Our architects specialize in a wide range of projects, from small-scale rentals to large-scale developments, ensuring your vision comes to life.",
     iconBg: "#f5fdfd",
-    video: "/videos/architecture.mp4",
+    video: "/videos/video1-compress.mp4",
     link: "/services/architectural-consultancy",
     colorTheme: {
       primary: "#DC2626", // Red
