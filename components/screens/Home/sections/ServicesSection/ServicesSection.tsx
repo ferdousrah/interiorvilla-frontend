@@ -294,20 +294,29 @@ export const ServicesSection = (): JSX.Element => {
 
   // Setup videos on initial mount and FORCE LOAD
   useEffect(() => {
-    videoRefs.current.forEach((video) => {
+    videoRefs.current.forEach((video, index) => {
       if (video) {
         // Essential video properties
         video.muted = true;
         video.playsInline = true;
         video.defaultMuted = true;
+        video.setAttribute('muted', '');
+        video.setAttribute('playsinline', '');
+
+        // Set volume to 0 as an extra precaution
+        video.volume = 0;
 
         // 🔥 CRITICAL FIX: Explicitly call load() to force the browser to
         // fetch and decode the video metadata/data immediately.
-        video.load(); 
-        
+        video.load();
+
         // Optional: Preload checks for debugging
         video.addEventListener('error', (e) => {
-          console.error(`Video error for ${video.src}:`, video.error, e);
+          console.error(`Video ${index} error for ${video.src}:`, video.error, e);
+        });
+
+        video.addEventListener('loadeddata', () => {
+          console.log(`Video ${index} loaded successfully:`, video.src);
         });
       }
     });
@@ -331,40 +340,62 @@ export const ServicesSection = (): JSX.Element => {
     // 2. Play the currently hovered video
     if (hoveredCard !== null) {
       const videoToPlay = videoRefs.current[hoveredCard];
-      
+
       if (videoToPlay) {
-        
+
         const attemptPlay = () => {
             // Remove the listener immediately to prevent multiple calls
             videoToPlay.removeEventListener('canplay', attemptPlay);
-            
+            videoToPlay.removeEventListener('loadeddata', attemptPlay);
+
+            // Ensure video is muted before playing
+            videoToPlay.muted = true;
+            videoToPlay.volume = 0;
+
             // Set to start and attempt play
             videoToPlay.currentTime = 0;
-            videoToPlay.play().catch((error) => {
-              // This is the fallback for any silent browser refusal
-              console.error(`Video ${hoveredCard} play failed:`, error.message, error);
-            });
+
+            // Use a promise to handle play
+            const playPromise = videoToPlay.play();
+
+            if (playPromise !== undefined) {
+              playPromise
+                .then(() => {
+                  console.log(`Video ${hoveredCard} playing successfully`);
+                })
+                .catch((error) => {
+                  console.error(`Video ${hoveredCard} play failed:`, error.message, error);
+
+                  // Try to play again after a short delay if it fails
+                  setTimeout(() => {
+                    videoToPlay.muted = true;
+                    videoToPlay.play().catch(e => console.error(`Retry failed:`, e));
+                  }, 100);
+                });
+            }
         };
 
         // If video is ready (readyState 2 = data for current position), play immediately
         // The load() call above helps ensure it reaches this state quickly.
-        if (videoToPlay.readyState >= 2) { 
+        if (videoToPlay.readyState >= 2) {
             attemptPlay();
         } else {
-            // Wait for the 'canplay' event if not ready
+            // Wait for the 'canplay' or 'loadeddata' event if not ready
             videoToPlay.addEventListener('canplay', attemptPlay);
+            videoToPlay.addEventListener('loadeddata', attemptPlay);
             cleanupPlayListener.push(() => {
                 videoToPlay.removeEventListener('canplay', attemptPlay);
+                videoToPlay.removeEventListener('loadeddata', attemptPlay);
             });
         }
       }
     }
-    
+
     // Cleanup function for the effect
     return () => {
         cleanupPlayListener.forEach(cleanup => cleanup());
     };
-    
+
   }, [hoveredCard]);
 
 
@@ -402,8 +433,12 @@ export const ServicesSection = (): JSX.Element => {
             preload="auto"
             autoPlay={false}
             controls={false}
+            webkit-playsinline="true"
+            x5-playsinline="true"
+            data-index={index}
           >
             <source src={service.video} type="video/mp4" />
+            Your browser does not support the video tag.
           </video>
         ))}
         
