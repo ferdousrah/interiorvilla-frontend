@@ -166,7 +166,7 @@ export const OurFeaturedWorksSection = (): JSX.Element => {
         const fetchPromise = fetch(
           `${CMS_ORIGIN}/api/projects?where[featuredOnHome][equals]=true&sort=position`,
           { 
-            cache: "no-store",
+            cache: "force-cache",
             // Add priority hint for faster fetch
             priority: 'high' as any
           }
