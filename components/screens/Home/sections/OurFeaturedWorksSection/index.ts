@@ -1,1 +1,0 @@
-export { OurFeaturedWorksSection } from './OurFeaturedWorksSection';

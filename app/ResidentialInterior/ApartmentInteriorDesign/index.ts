@@ -1,1 +1,0 @@
-export { default as ApartmentInteriorDesign } from "./ApartmentInteriorDesign";

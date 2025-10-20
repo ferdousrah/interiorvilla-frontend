@@ -1,1 +1,0 @@
-export { ApproachSection } from "./ApproachSection";
