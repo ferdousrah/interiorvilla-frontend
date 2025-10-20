@@ -1,0 +1,22 @@
+User-agent: *
+Allow: /
+
+# Disallow backend/admin paths (not needed on public site, but safe to add)
+Disallow: /admin
+Disallow: /cms
+Disallow: /dashboard
+Disallow: /api/
+Disallow: /media/
+
+# Prevent indexing build or source assets
+Disallow: /src/
+Disallow: /dist/
+Disallow: /static/
+Disallow: /*.js$
+Disallow: /*.css$
+Disallow: /*.map$
+Disallow: /*.ts$
+Disallow: /*.tsx$
+
+# Sitemap
+Sitemap: https://interiorvillabd.com/sitemap.xml
