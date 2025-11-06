@@ -191,8 +191,8 @@ export const FooterSection = (): JSX.Element => {
       // Footer menus animation
       if (footerMenusRef.current) {
         const menuColumns = footerMenusRef.current.children;
-        
-        gsap.fromTo(menuColumns,
+
+        const animation = gsap.fromTo(menuColumns,
           {
             opacity: 0,
             y: 80,
@@ -214,6 +214,12 @@ export const FooterSection = (): JSX.Element => {
           }
         );
 
+        setTimeout(() => {
+          if (menuColumns) {
+            gsap.set(menuColumns, { opacity: 1, y: 0, scale: 1 });
+          }
+        }, 3000);
+
         // Parallax for footer menus
         gsap.to(footerMenusRef.current, {
           yPercent: -6,
@@ -230,7 +236,8 @@ export const FooterSection = (): JSX.Element => {
 
       // Bottom section animation
       if (bottomSectionRef.current) {
-        gsap.fromTo(bottomSectionRef.current,
+        const bottomSection = bottomSectionRef.current;
+        gsap.fromTo(bottomSection,
           {
             opacity: 0,
             y: 40
@@ -241,13 +248,17 @@ export const FooterSection = (): JSX.Element => {
             duration: 1,
             ease: "power2.out",
             scrollTrigger: {
-              trigger: bottomSectionRef.current,
+              trigger: bottomSection,
               start: "top 98%",
               end: "top 75%",
               toggleActions: "play none none none",
             }
           }
         );
+
+        setTimeout(() => {
+          gsap.set(bottomSection, { opacity: 1, y: 0 });
+        }, 3000);
       }
 
       // Background elements parallax
