@@ -20,7 +20,11 @@ const ServiceAreaDetails = (): JSX.Element => {
       .then((res) => res.json())
       .then((json) => {
         if (json?.docs?.[0]) {
-          setServiceArea(json.docs[0]);
+          const area = json.docs[0];
+          setServiceArea({
+            ...area,
+            name: area.areaName,
+          });
         }
         setLoading(false);
       })

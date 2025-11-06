@@ -140,15 +140,17 @@ export const BlogContentSection = ({ serviceArea }: BlogContentSectionProps): JS
         {/* Main Content */}
         <div ref={contentRef} className="max-w-4xl mx-auto">
           {/* Content */}
-          <div
-            className="prose prose-lg max-w-none text-[#626161] leading-relaxed text-justify mb-12"
-            dangerouslySetInnerHTML={{
-              __html: renderLexical(serviceArea.fullContent?.root),
-            }}
-          />
+          {serviceArea.fullContent?.root && (
+            <div
+              className="prose prose-lg max-w-none text-[#626161] leading-relaxed text-justify mb-12"
+              dangerouslySetInnerHTML={{
+                __html: renderLexical(serviceArea.fullContent.root) || '',
+              }}
+            />
+          )}
 
           {/* Google Maps Embed */}
-          {serviceArea.googleEmbedCode && (
+          {serviceArea.googleEmbedCode && typeof serviceArea.googleEmbedCode === 'string' && (
             <div className="mt-12">
               <h2 className="text-2xl md:text-3xl font-medium text-[#01190c] mb-6">
                 Location

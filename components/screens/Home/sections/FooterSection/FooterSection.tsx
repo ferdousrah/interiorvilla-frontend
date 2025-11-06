@@ -24,9 +24,9 @@ export const FooterSection = (): JSX.Element => {
   const bottomSectionRef = useRef<HTMLDivElement>(null);
   const backgroundElementsRef = useRef<HTMLDivElement>(null);
 
-  // Wait for fonts to load before using SplitText
   const [fontsReady, setFontsReady] = useState(false);
-  
+  const [serviceAreas, setServiceAreas] = useState<any[]>([]);
+
   useEffect(() => {
     const checkFonts = async () => {
       try {
@@ -35,11 +35,21 @@ export const FooterSection = (): JSX.Element => {
         }
         setFontsReady(true);
       } catch (error) {
-        // Fallback if fonts API not available
         setTimeout(() => setFontsReady(true), 1000);
       }
     };
     checkFonts();
+  }, []);
+
+  useEffect(() => {
+    fetch('https://interiorvillabd.com/api/service-areas?limit=100')
+      .then(res => res.json())
+      .then(data => {
+        if (data?.docs) {
+          setServiceAreas(data.docs);
+        }
+      })
+      .catch(err => console.error('Failed to fetch service areas:', err));
   }, []);
 
   // Add hover animation for footer heading
@@ -504,7 +514,7 @@ export const FooterSection = (): JSX.Element => {
                     to={`/service-areas/${area.slug}`}
                     className="inline-flex items-center px-3 py-1.5 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full text-white text-xs [font-family:'Fahkwang',Helvetica] font-normal transition-all duration-300 hover:bg-primary hover:border-primary hover:scale-105 hover:shadow-lg hover:shadow-primary/20"
                   >
-                    {area.name}
+                    {area.areaName}
                   </Link>
                 ))}
               </div>
