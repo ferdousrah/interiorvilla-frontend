@@ -34,7 +34,7 @@ const ApartmentInteriorDesign = (): JSX.Element => {
     fetchService();
   }, []);
 
-  const { hero, seoDetails, introSection } = serviceData || {};
+  const { hero, seoDetails, introSection, recentProjects } = serviceData || {};
 
   const metaTitle =
     seoDetails?.metaTitle || "Apartment Interior Design | Interior Villa";
@@ -99,7 +99,10 @@ const ApartmentInteriorDesign = (): JSX.Element => {
               description={introSection?.description}
             />
             <ProcessSection />
-            <ProjectsSection />
+            <ProjectsSection
+              //sectionTitle={recentProjects?.sectionTitle}
+              description={recentProjects?.sectionDescription}
+            />
             <CTASection />
           </section>
 

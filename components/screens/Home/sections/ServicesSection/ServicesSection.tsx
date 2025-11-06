@@ -1,6 +1,6 @@
 import { ArrowRightIcon } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Button } from "../../../../ui/button";
 import { Card, CardContent, CardFooter } from "../../../../ui/card";
 import gsap from "gsap";
@@ -629,8 +629,8 @@ export const ServicesSection = (): JSX.Element => {
                     >
                       {/* Button */}
                       <div className="mt-auto">
-                        <Button
-                          onClick={() => navigate(service.link)}
+                        <Link to={service.link}>
+                        <Button                          
                           className="rounded-full px-8 py-4 w-full text-base font-medium group relative overflow-hidden"
                           style={{
                             backgroundColor: `${service.colorTheme.primary}15`,
@@ -666,6 +666,7 @@ export const ServicesSection = (): JSX.Element => {
                             }}
                           />
                         </Button>
+                        </Link>
                       </div>
                     </div>
 

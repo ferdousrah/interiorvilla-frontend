@@ -54,48 +54,51 @@ export const FooterSection = (): JSX.Element => {
     });
 
     // Add hover animation
-    if (footerHeadingWrapperRef.current) {
-      footerHeadingWrapperRef.current.addEventListener('mousemove', (e) => {
-        const rect = footerHeadingWrapperRef.current!.getBoundingClientRect();
-        const x = (e.clientX - rect.left) / rect.width;
-        const y = (e.clientY - rect.top) / rect.height;
-        
-        gsap.to(splitText.chars, {
-          duration: 0.5,
-          y: (i, target) => (y - 0.5) * 15 * Math.sin((i + 1) * 0.5),
-          x: (i, target) => (x - 0.5) * 15 * Math.cos((i + 1) * 0.5),
-          rotationY: (x - 0.5) * 20,
-          rotationX: (y - 0.5) * -20,
-          ease: "power2.out",
-          stagger: {
-            amount: 0.3,
-            from: "center"
-          }
-        });
+    const handleMouseMove = (e: MouseEvent) => {
+      const rect = footerHeadingWrapperRef.current!.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width;
+      const y = (e.clientY - rect.top) / rect.height;
+      
+      gsap.to(splitText.chars, {
+        duration: 0.5,
+        y: (i) => (y - 0.5) * 15 * Math.sin((i + 1) * 0.5),
+        x: (i) => (x - 0.5) * 15 * Math.cos((i + 1) * 0.5),
+        rotationY: (x - 0.5) * 20,
+        rotationX: (y - 0.5) * -20,
+        ease: "power2.out",
+        stagger: {
+          amount: 0.3,
+          from: "center"
+        }
       });
+    };
 
-      footerHeadingWrapperRef.current.addEventListener('mouseleave', () => {
-        gsap.to(splitText.chars, {
-          duration: 1,
-          y: 0,
-          x: 0,
-          rotationY: 0,
-          rotationX: 0,
-          ease: "elastic.out(1, 0.3)",
-          stagger: {
-            amount: 0.3,
-            from: "center"
-          }
-        });
+    const handleMouseLeave = () => {
+      gsap.to(splitText.chars, {
+        duration: 1,
+        y: 0,
+        x: 0,
+        rotationY: 0,
+        rotationX: 0,
+        ease: "elastic.out(1, 0.3)",
+        stagger: {
+          amount: 0.3,
+          from: "center"
+        }
       });
+    };
+
+    if (footerHeadingWrapperRef.current) {
+      footerHeadingWrapperRef.current.addEventListener('mousemove', handleMouseMove);
+      footerHeadingWrapperRef.current.addEventListener('mouseleave', handleMouseLeave);
     }
 
     // Cleanup function
     return () => {
       splitText.revert();
       if (footerHeadingWrapperRef.current) {
-        footerHeadingWrapperRef.current.removeEventListener('mousemove', () => {});
-        footerHeadingWrapperRef.current.removeEventListener('mouseleave', () => {});
+        footerHeadingWrapperRef.current.removeEventListener('mousemove', handleMouseMove);
+        footerHeadingWrapperRef.current.removeEventListener('mouseleave', handleMouseLeave);
       }
     };
   }, [fontsReady]);
@@ -103,195 +106,161 @@ export const FooterSection = (): JSX.Element => {
   useEffect(() => {
     if (!sectionRef.current) return;
 
-    // Left content animation (excluding h2)
-    if (leftContentRef.current) {
-      const children = leftContentRef.current.children;
-      // Skip the h2 (first child) and animate the rest
-      const elementsToAnimate = Array.from(children).slice(1);
-      
-      if (elementsToAnimate.length > 0) {
-        // Set initial state immediately
-        gsap.set(elementsToAnimate, { opacity: 1, y: 0, scale: 1 });
+    const ctx = gsap.context(() => {
+      // Left content animation (excluding h2)
+      if (leftContentRef.current) {
+        const children = leftContentRef.current.children;
+        // Skip the h2 (first child) and animate the rest
+        const elementsToAnimate = Array.from(children).slice(1);
         
-        // Then add scroll animation
-        gsap.fromTo(elementsToAnimate,
+        if (elementsToAnimate.length > 0) {
+          gsap.fromTo(elementsToAnimate,
+            {
+              opacity: 0,
+              y: 60,
+              scale: 0.95
+            },
+            {
+              opacity: 1,
+              y: 0,
+              scale: 1,
+              duration: 1.2,
+              stagger: 0.2,
+              ease: "power3.out",
+              scrollTrigger: {
+                trigger: leftContentRef.current,
+                start: "top 95%",
+                end: "top 60%",
+                toggleActions: "play none none none",
+              }
+            }
+          );
+        }
+
+        // Parallax for left content
+        gsap.to(leftContentRef.current, {
+          yPercent: -8,
+          ease: "none",
+          scrollTrigger: {
+            trigger: sectionRef.current,
+            start: "top bottom",
+            end: "bottom top",
+            scrub: 0.8,
+            invalidateOnRefresh: true
+          }
+        });
+      }
+
+      // Social section animation
+      if (socialSectionRef.current) {
+        const socialIcons = socialSectionRef.current.querySelectorAll('[aria-label]');
+        
+        gsap.fromTo(socialIcons,
           {
             opacity: 0,
-            y: 60,
-            scale: 0.95
+            scale: 0.5,
+            rotation: -180
+          },
+          {
+            opacity: 1,
+            scale: 1,
+            rotation: 0,
+            duration: 1,
+            stagger: 0.1,
+            ease: "back.out(1.7)",
+            scrollTrigger: {
+              trigger: socialSectionRef.current,
+              start: "top 95%",
+              end: "top 70%",
+              toggleActions: "play none none none"
+            }
+          }
+        );
+      }
+
+      // Footer menus animation
+      if (footerMenusRef.current) {
+        const menuColumns = footerMenusRef.current.children;
+        
+        gsap.fromTo(menuColumns,
+          {
+            opacity: 0,
+            y: 80,
+            scale: 0.9
           },
           {
             opacity: 1,
             y: 0,
             scale: 1,
             duration: 1.2,
-            stagger: 0.2,
+            stagger: 0.15,
             ease: "power3.out",
             scrollTrigger: {
-              trigger: leftContentRef.current,
-              start: "top 85%",
-              end: "top 55%",
-              toggleActions: "play none none reverse",
-              once: false
+              trigger: footerMenusRef.current,
+              start: "top 95%",
+              end: "top 60%",
+              toggleActions: "play none none none",
+            }
+          }
+        );
+
+        // Parallax for footer menus
+        gsap.to(footerMenusRef.current, {
+          yPercent: -6,
+          ease: "none",
+          scrollTrigger: {
+            trigger: sectionRef.current,
+            start: "top bottom",
+            end: "bottom top",
+            scrub: 0.7,
+            invalidateOnRefresh: true
+          }
+        });
+      }
+
+      // Bottom section animation
+      if (bottomSectionRef.current) {
+        gsap.fromTo(bottomSectionRef.current,
+          {
+            opacity: 0,
+            y: 40
+          },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 1,
+            ease: "power2.out",
+            scrollTrigger: {
+              trigger: bottomSectionRef.current,
+              start: "top 98%",
+              end: "top 75%",
+              toggleActions: "play none none none",
             }
           }
         );
       }
 
-      // Parallax for left content
-      gsap.to(leftContentRef.current, {
-        yPercent: -8,
-        ease: "none",
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start: "top bottom",
-          end: "bottom top",
-          scrub: 0.8,
-          invalidateOnRefresh: true
-        }
-      });
-    }
-
-    // Social section animation
-    if (socialSectionRef.current) {
-      const socialIcons = socialSectionRef.current.querySelectorAll('[style*="background-image"]');
-      
-      gsap.fromTo(socialIcons,
-        {
-          opacity: 0,
-          scale: 0.5,
-          rotation: -180
-        },
-        {
-          opacity: 1,
-          scale: 1,
-          rotation: 0,
-          duration: 1,
-          stagger: 0.1,
-          ease: "back.out(1.7)",
+      // Background elements parallax
+      if (backgroundElementsRef.current) {
+        gsap.to(backgroundElementsRef.current, {
+          yPercent: -15,
+          rotation: 45,
+          ease: "none",
           scrollTrigger: {
-            trigger: socialSectionRef.current,
-            start: "top 85%",
-            end: "top 65%",
-            toggleActions: "play none none reverse"
+            trigger: sectionRef.current,
+            start: "top bottom",
+            end: "bottom top",
+            scrub: 1.2,
+            invalidateOnRefresh: true
           }
-        }
-      );
-    }
-
-    // Footer menus animation
-    if (footerMenusRef.current) {
-      const menuColumns = footerMenusRef.current.children;
-      
-      // Set initial state immediately
-      gsap.set(menuColumns, { opacity: 1, y: 0, scale: 1 });
-      
-      gsap.fromTo(menuColumns,
-        {
-          opacity: 0,
-          y: 80,
-          scale: 0.9
-        },
-        {
-          opacity: 1,
-          y: 0,
-          scale: 1,
-          duration: 1.2,
-          stagger: 0.15,
-          ease: "power3.out",
-          scrollTrigger: {
-            trigger: footerMenusRef.current,
-            start: "top 85%",
-            end: "top 55%",
-            toggleActions: "play none none reverse",
-            once: false
-          }
-        }
-      );
-
-      // Parallax for footer menus
-      gsap.to(footerMenusRef.current, {
-        yPercent: -6,
-        ease: "none",
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start: "top bottom",
-          end: "bottom top",
-          scrub: 0.7,
-          invalidateOnRefresh: true
-        }
-      });
-    }
-
-    // Bottom section animation
-    if (bottomSectionRef.current) {
-      // Set initial state immediately
-      gsap.set(bottomSectionRef.current, { opacity: 1, y: 0 });
-      
-      gsap.fromTo(bottomSectionRef.current,
-        {
-          opacity: 0,
-          y: 40
-        },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 1,
-          ease: "power2.out",
-          scrollTrigger: {
-            trigger: bottomSectionRef.current,
-            start: "top 90%",
-            end: "top 70%",
-            toggleActions: "play none none reverse",
-            once: false
-          }
-        }
-      );
-    }
-
-    // Background elements parallax
-    if (backgroundElementsRef.current) {
-      gsap.to(backgroundElementsRef.current, {
-        yPercent: -15,
-        rotation: 45,
-        ease: "none",
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start: "top bottom",
-          end: "bottom top",
-          scrub: 1.2,
-          invalidateOnRefresh: true
-        }
-      });
-    }
+        });
+      }
+    });
 
     // Cleanup function
-    return () => {
-      ScrollTrigger.getAll().forEach(trigger => trigger.kill());
-    };
+    return () => ctx.revert();
   }, []);
 
-  // Footer menu data for mapping
-  const footerMenus = [
-    {
-      title: "Services",
-      items: ["Footer Menu One", "Footer Menu Two", "Footer Menu Three"],
-    },
-    {
-      title: "About Us",
-      items: ["Footer Menu Four", "Footer Menu Five", "Footer Menu Six"],
-    },
-    {
-      title: "Usefull Links",
-      items: ["Footer Menu Seven", "Footer Menu Eight", "Footer Menu Nine"],
-    },
-    {
-      title: "Service",
-      items: ["Footer Menu Ten", "Footer Menu Eleven", "Footer Menu Twelve"],
-    },
-  ];
-
-  
   return (
     <section 
       ref={sectionRef}
@@ -394,6 +363,51 @@ export const FooterSection = (): JSX.Element => {
                 <MapPin className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
                 18/10-A, Block-F, Ring Road, Mohammadpur, Dhaka-1207.
               </div>
+              
+              <div className="flex items-center gap-4 mt-4">
+              {[
+                { icon: Facebook, name: "Facebook", color: "#1877F2", url: "https://www.facebook.com/interiorvila" },
+                { icon: Instagram, name: "Instagram", color: "#1DA1F2", url: "https://www.instagram.com/interiorvillabd/" },
+                { icon: Youtube, name: "Youtube", color: "#FF0000", url: "https://www.youtube.com/@InteriorVilla-BD" },
+                { icon: Linkedin, name: "LinkedIn", color: "#0A66C2", url: "https://www.linkedin.com/company/interiorvilla" }
+              ].map((social, index) => {
+                const IconComponent = social.icon;
+                return (
+                  <a
+                    key={index}
+                    href={social.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={social.name}
+                    className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 cursor-pointer relative overflow-hidden group transform-gpu transition-all duration-500 ease-out hover:scale-125 hover:-translate-y-2 flex items-center justify-center"
+                  >
+                    {/* Glow effect */}
+                    <div
+                      className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-30 transition-opacity duration-500 blur-sm scale-110"
+                      style={{ backgroundColor: social.color }}
+                    ></div>
+
+                    {/* Ripple effect */}
+                    <div
+                      className="absolute inset-0 rounded-xl border-2 opacity-0 group-hover:opacity-100 group-hover:scale-150 transition-all duration-700 ease-out"
+                      style={{ borderColor: social.color }}
+                    ></div>
+
+                    {/* Shine effect */}
+                    <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-transparent via-white to-transparent opacity-0 group-hover:opacity-20 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-all duration-1000 ease-out"></div>
+
+                    {/* Icon */}
+                    <IconComponent
+                      className="w-5 h-5 text-white transition-all duration-500 ease-out group-hover:rotate-12 group-hover:scale-110 relative z-10"
+                      style={{
+                        filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.3))"
+                      }}
+                    />
+                  </a>
+                );
+              })}
+              </div>
+              
             </div>
           </div>
 
@@ -473,56 +487,16 @@ export const FooterSection = (): JSX.Element => {
           </div>
 
           {/* Follow Us Column */}
-          <div className="flex flex-col items-start gap-6">
+          <div ref={socialSectionRef} className="flex flex-col items-start gap-6">
             <h4 className="[font-family:'Fahkwang',Helvetica] font-medium text-white text-lg tracking-[0] leading-[26px]">
-              Follow Us
+              Service Areas
             </h4>
             
             {/* Divider */}
             <div className="w-full h-px bg-white/30 -mt-2"></div>
             
             <div className="flex items-center gap-4">
-              {[
-                { icon: Facebook, name: "Facebook", color: "#1877F2", url: "https://www.facebook.com/interiorvila" },
-                { icon: Instagram, name: "Instagram", color: "#1DA1F2", url: "https://www.instagram.com/interiorvillabd/" },
-                { icon: Youtube, name: "Youtube", color: "#FF0000", url: "https://www.youtube.com/@InteriorVilla-BD" },
-                { icon: Linkedin, name: "LinkedIn", color: "#0A66C2", url: "https://www.linkedin.com/company/interiorvilla" }
-              ].map((social, index) => {
-                const IconComponent = social.icon;
-                return (
-                  <a
-                    key={index}
-                    href={social.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={social.name}
-                    className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 cursor-pointer relative overflow-hidden group transform-gpu transition-all duration-500 ease-out hover:scale-125 hover:-translate-y-2 flex items-center justify-center"
-                  >
-                    {/* Glow effect */}
-                    <div
-                      className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-30 transition-opacity duration-500 blur-sm scale-110"
-                      style={{ backgroundColor: social.color }}
-                    ></div>
-
-                    {/* Ripple effect */}
-                    <div
-                      className="absolute inset-0 rounded-xl border-2 opacity-0 group-hover:opacity-100 group-hover:scale-150 transition-all duration-700 ease-out"
-                      style={{ borderColor: social.color }}
-                    ></div>
-
-                    {/* Shine effect */}
-                    <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-transparent via-white to-transparent opacity-0 group-hover:opacity-20 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-all duration-1000 ease-out"></div>
-
-                    {/* Icon */}
-                    <IconComponent
-                      className="w-5 h-5 text-white transition-all duration-500 ease-out group-hover:rotate-12 group-hover:scale-110 relative z-10"
-                      style={{
-                        filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.3))"
-                      }}
-                    />
-                  </a>
-                );
-              })}
+              {/* List of service areas */}
             </div>
 
           </div>
@@ -568,7 +542,7 @@ export const FooterSection = (): JSX.Element => {
 
           <div className="flex items-center gap-4 mt-4 sm:mt-0">
             <div className="[font-family:'Fahkwang',Helvetica] font-normal text-white text-sm tracking-[0] leading-6">
-              Design & Developed by <a href="https://technocratsbd.com" target="_blank">Technocrats</a>
+              
             </div>
           </div>
         </div>

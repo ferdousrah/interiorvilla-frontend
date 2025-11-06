@@ -94,100 +94,98 @@ export const ProjectGallerySection = (): JSX.Element => {
 
   /* ---- Fancybox ---- */
   useEffect(() => {
-  Fancybox.destroy();
-
-  const hasAny =
-    (activeTab === "photos" && photoItems.length) ||
-    (activeTab === "plans" && planItems.length) ||
-    (activeTab === "videos" && videoItems.length);
-
-  if (!hasAny) return;
-
-  const t = setTimeout(() => {
-    Fancybox.bind('[data-fancybox^="gallery-"]', {
-      animated: true,
-      dragToClose: true,
-      showClass: "fancybox-fadeIn",
-      hideClass: "fancybox-fadeOut",
-      l10n: { CLOSE: "×" },
-      Hash: false,
-      Thumbs: {
-        autoStart: false,
-      },
-      Toolbar: {
-        display: {
-          left: [],
-          middle: [],
-          right: ["zoom", "slideshow", "thumbs", "close"],
-        },
-      },
-      Images: {
-        protected: true,
-        zoom: true,
-        Panzoom: {
-          maxScale: 3,
-          friction: 0.85,
-          decelFriction: 0.9,
-        },
-      },
-      wheel: "slide",
-      transitionEffect: "zoom-in-out",
-      transitionDuration: 300,
-      preload: 2, // Preload next 2 slides for instant navigation
-      idle: 2500, // Auto-hide UI after 2.5s idle
-      animatedSlideShow: true,
-      touch: {
-        vertical: true,
-        momentum: true,
-        velocity: 0.9,
-      },
-      Iframe: {
-        preload: true,
-        attr: {
-          allow:
-            "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen",
-          allowfullscreen: "true",
-          referrerpolicy: "strict-origin-when-cross-origin",
-        },
-      },
-      // GPU-optimized fade transitions
-      on: {
-        reveal: (fancybox, slide) => {
-          const el = slide.$content?.firstElementChild as HTMLElement | null;
-          if (el) {
-            el.style.willChange = "transform, opacity";
-          }
-        },
-        done: (fancybox, slide) => {
-          const el = slide.$content?.firstElementChild as HTMLElement | null;
-          if (el) {
-            el.style.willChange = "auto";
-          }
-        },
-      },
-    });
-
-    // Prefetch thumbnails for smoother transitions
-    const imgs = Array.from(document.querySelectorAll<HTMLImageElement>('img[loading="lazy"]'));
-    imgs.forEach((img) => {
-      if (img.decoding === "async" && img.dataset.prefetched !== "true") {
-        const prefetch = new Image();
-        prefetch.src = img.src;
-        img.dataset.prefetched = "true";
-      }
-    });
-  }, 0);
-
-  return () => {
-    clearTimeout(t);
     Fancybox.destroy();
-  };
-}, [activeTab, photoItems.length, planItems.length, videoItems.length]);
 
+    const hasAny =
+      (activeTab === "photos" && photoItems.length) ||
+      (activeTab === "plans" && planItems.length) ||
+      (activeTab === "videos" && videoItems.length);
+
+    if (!hasAny) return;
+
+    const t = setTimeout(() => {
+      Fancybox.bind('[data-fancybox^="gallery-"]', {
+        animated: true,
+        dragToClose: true,
+        showClass: "fancybox-fadeIn",
+        hideClass: "fancybox-fadeOut",
+        l10n: { CLOSE: "×" },
+        Hash: false,
+        Thumbs: {
+          autoStart: false,
+        },
+        Toolbar: {
+          display: {
+            left: [],
+            middle: [],
+            right: ["zoom", "slideshow", "thumbs", "close"],
+          },
+        },
+        Images: {
+          protected: true,
+          zoom: true,
+          Panzoom: {
+            maxScale: 3,
+            friction: 0.85,
+            decelFriction: 0.9,
+          },
+        },
+        wheel: "slide",
+        transitionEffect: "zoom-in-out",
+        transitionDuration: 300,
+        preload: 2,
+        idle: 2500,
+        animatedSlideShow: true,
+        touch: {
+          vertical: true,
+          momentum: true,
+          velocity: 0.9,
+        },
+        Iframe: {
+          preload: true,
+          attr: {
+            allow:
+              "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen",
+            allowfullscreen: "true",
+            referrerpolicy: "strict-origin-when-cross-origin",
+          },
+        },
+        on: {
+          reveal: (fancybox, slide) => {
+            const el = slide.$content?.firstElementChild as HTMLElement | null;
+            if (el) {
+              el.style.willChange = "transform, opacity";
+            }
+          },
+          done: (fancybox, slide) => {
+            const el = slide.$content?.firstElementChild as HTMLElement | null;
+            if (el) {
+              el.style.willChange = "auto";
+            }
+          },
+        },
+      });
+
+      const imgs = Array.from(document.querySelectorAll<HTMLImageElement>('img[loading="lazy"]'));
+      imgs.forEach((img) => {
+        if (img.decoding === "async" && img.dataset.prefetched !== "true") {
+          const prefetch = new Image();
+          prefetch.src = img.src;
+          img.dataset.prefetched = "true";
+        }
+      });
+    }, 0);
+
+    return () => {
+      clearTimeout(t);
+      Fancybox.destroy();
+    };
+  }, [activeTab, photoItems.length, planItems.length, videoItems.length]);
 
   /* ---- animations ---- */
   useEffect(() => {
-    if (!sectionRef.current) return;
+    const triggers: ScrollTrigger[] = [];
+    
     if (headingRef.current) {
       gsap.fromTo(
         headingRef.current,
@@ -199,33 +197,50 @@ export const ProjectGallerySection = (): JSX.Element => {
           ease: "power3.out",
           scrollTrigger: {
             trigger: headingRef.current,
-            start: "top 85%",
+            start: "top 95%",
             toggleActions: "play none none none",
+            onEnter: (self) => triggers.push(self),
           },
         }
       );
     }
-    if (gridRef.current) {
-      gsap.fromTo(
-        gridRef.current.children,
-        { opacity: 0, y: 60, scale: 0.96 },
-        {
-          opacity: 1,
-          y: 0,
-          scale: 1,
-          duration: 0.9,
-          stagger: 0.12,
-          ease: "power3.out",
-          scrollTrigger: {
-            trigger: gridRef.current,
-            start: "top 85%",
-            toggleActions: "play none none none",
-          },
+    
+    return () => {
+      triggers.forEach((t) => t.kill());
+      ScrollTrigger.getAll().forEach((t) => t.kill());
+    };
+  }, []);
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      if (gridRef.current) {
+        const children = Array.from(gridRef.current.children);
+        if (children.length > 0) {
+          gsap.fromTo(
+            children,
+            { opacity: 0, y: 60, scale: 0.96 },
+            {
+              opacity: 1,
+              y: 0,
+              scale: 1,
+              duration: 0.9,
+              stagger: 0.12,
+              ease: "power3.out",
+              scrollTrigger: {
+                trigger: gridRef.current,
+                start: "top 95%",
+                end: "bottom 5%",
+                toggleActions: "play none none none",
+                once: false,
+              },
+            }
+          );
         }
-      );
-    }
-    return () => ScrollTrigger.getAll().forEach((t) => t.kill());
-  }, [activeTab]);
+      }
+    });
+
+    return () => ctx.revert();
+  }, [activeTab, photoItems.length, planItems.length, videoItems.length]);
 
   /* ---- Tabs ---- */
   const tabs = [
@@ -387,7 +402,7 @@ export const ProjectGallerySection = (): JSX.Element => {
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.35 }}
             ref={gridRef}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 min-h-[300px]"
           >
             {activeTab === "videos"
               ? (current as VideoItem[]).map(renderVideo)
@@ -396,10 +411,14 @@ export const ProjectGallerySection = (): JSX.Element => {
         </AnimatePresence>
 
         {activeTab !== "videos" && (current as PhotoItem[]).length === 0 && (
-          <div className="w-full py-16 text-center text-[#626161]">No items found.</div>
+          <div className="w-full py-16 text-center text-[#626161] min-h-[200px] flex items-center justify-center">
+            No items found.
+          </div>
         )}
         {activeTab === "videos" && (current as VideoItem[]).length === 0 && (
-          <div className="w-full py-16 text-center text-[#626161]">No videos.</div>
+          <div className="w-full py-16 text-center text-[#626161] min-h-[200px] flex items-center justify-center">
+            No videos.
+          </div>
         )}
       </div>
     </section>

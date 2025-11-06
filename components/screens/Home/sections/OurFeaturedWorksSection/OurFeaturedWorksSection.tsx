@@ -2,7 +2,7 @@
 'use client'
 
 import React, { useEffect, useRef, useState, useMemo, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ScrollToPlugin } from "gsap/ScrollToPlugin";
@@ -14,6 +14,8 @@ gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
 interface Project {
   id: string | number;
   category: string;
+  categorySlug: string;
+  parentSlug: string;
   title: string;
   slug: string;
   description: string;
@@ -179,10 +181,13 @@ export const OurFeaturedWorksSection = (): JSX.Element => {
 
         const mapped: Project[] = (data.docs || []).map((doc: any, i: number) => {
           const media = typeof doc?.featuredImage === 'object' ? doc.featuredImage : null;
+          const category = doc?.category;
 
           return {
             id: doc.id ?? i + 1,
-            category: doc?.category?.title || 'Project',
+            category: category?.title || 'Project',
+            categorySlug: category?.slug || 'project',
+            parentSlug: category?.pslug || 'services',
             title: doc.title || `Project ${i + 1}`,
             slug: doc.slug || '',
             description: doc.shortDescription || '',
@@ -370,6 +375,7 @@ export const OurFeaturedWorksSection = (): JSX.Element => {
     if (!slug) return;
     navigate(`/portfolio/project-details/${slug}`);
   }, [navigate]);
+    
 
   const scrollToCard = useCallback((index: number) => {
     const sectionScrollHeight = (projects.length * 400 * window.innerHeight) / 100;
@@ -424,7 +430,7 @@ export const OurFeaturedWorksSection = (): JSX.Element => {
                       handleViewProject(project.slug);
                     }
                   }}
-                  onClick={() => handleViewProject(project.slug)}
+                  
                   className="w-full rounded-2xl sm:rounded-3xl overflow-hidden relative mx-auto cursor-pointer"
                   style={{
                     width: "90%",
@@ -439,12 +445,17 @@ export const OurFeaturedWorksSection = (): JSX.Element => {
                   <div className="flex flex-col lg:flex-row h-full">
                     <div className="w-full lg:w-2/5 p-4 sm:p-6 md:p-8 lg:p-10 flex flex-col justify-center relative z-10 flex-shrink-0">
                       <div className="mb-3 md:mb-4">
+                        <Link
+                          to={`/services/${project.parentSlug}/${project.categorySlug}`}
+                          className="inline-block px-2 py-1 sm:px-3 sm:py-1.5 rounded-full text-xs font-semibold text-green-800 bg-white/90"
+                        >
                         <span
                           className="inline-block px-2 py-1 sm:px-3 sm:py-1.5 rounded-full text-xs font-semibold text-green-800"
-                          style={{ background: "rgba(255, 255, 255, 0.9)" }}
+                          style={{ background: "rgba(255, 255, 255, 0.9)" }}                          
                         >
                           {project.category}
                         </span>
+                        </Link>
                       </div>
 
                       <h2
@@ -522,17 +533,17 @@ export const OurFeaturedWorksSection = (): JSX.Element => {
       <section className="w-full py-16 md:py-20 relative overflow-hidden bg-white">
         <div className="container mx-auto px-4 text-center relative z-5">
           <div className="max-w-4xl mx-auto">
-            <button
-              onClick={() => {
-                window.scrollTo({ top: 0, behavior: 'instant' });
-                navigate("/portfolio");
-              }}
+            <Link
+              to={`/portfolio`}
+            >
+            <button              
               className="group flex items-center gap-2 sm:gap-3 px-4 py-2 sm:px-6 sm:py-3 md:px-8 md:py-4 rounded-full text-white text-sm sm:text-base font-semibold bg-black hover:bg-gray-800 transition-all duration-500 hover:scale-105 border border-gray-700 relative z-10 mx-auto"
               style={{ boxShadow: "0 15px 50px rgba(0,0,0,0.3), 0 0 30px rgba(0,0,0,0.2)", minWidth: "180px" }}
             >
               <span className="[font-family:'Fahkwang',Helvetica] font-medium">Explore All Projects</span>
               <ArrowRight className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-2" />
             </button>
+            </Link>
           </div>
         </div>
       </section>

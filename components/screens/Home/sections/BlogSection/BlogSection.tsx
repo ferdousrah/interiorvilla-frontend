@@ -6,7 +6,7 @@ import { PerformanceImage } from "../../../../ui/performance-image";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { SplitText } from "gsap/SplitText";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 gsap.registerPlugin(ScrollTrigger, SplitText);
 
@@ -194,15 +194,17 @@ export const BlogSection = (): JSX.Element => {
                   : "—"}{" "}
                 | 5 MIN READ
               </div>
+              <Link to={`/blog/${featured.slug}`}>
               <h3 className="text-[#0d1529] text-[32px] leading-[48px] mb-4 font-semibold">
                 {featured.title}
               </h3>
+              </Link>
               <p className="text-[#48515c] text-sm leading-6 mb-6">
                 {featured.shortDescription}
               </p>
+              <Link to={`/blog/${featured.slug}`}>
               <Button
-                className="bg-primary rounded-[25px] h-9 px-6 flex items-center gap-2 transition-all duration-300 hover:scale-105 hover:shadow-lg hover:bg-primary-hover"
-                onClick={() => handleReadMoreClick(featured.slug)}
+                className="bg-primary rounded-[25px] h-9 px-6 flex items-center gap-2 transition-all duration-300 hover:scale-105 hover:shadow-lg hover:bg-primary-hover"                
                 aria-label={`Read more about ${featured.title}`}
               >
                 <span className="font-bold text-white text-xs">READ MORE</span>
@@ -210,6 +212,7 @@ export const BlogSection = (): JSX.Element => {
                   <ArrowRightIcon className="h-4 w-4 text-primary" />
                 </div>
               </Button>
+              </Link>
             </div>
           </div>
         )}
@@ -236,18 +239,21 @@ export const BlogSection = (): JSX.Element => {
                     : "—"}{" "}
                   | 5 MIN READ
                 </div>
+                <Link to={`/blog/${post.slug}`}>
                 <h3 className="text-[#0d1529] text-xl md:text-2xl mb-6 leading-tight">
                   {post.title}
                 </h3>
+                </Link>
+                <Link to={`/blog/${post.slug}`}>
                 <Button
-                  className="bg-primary rounded-[25px] h-10 px-8 transition-all duration-300 hover:bg-primary-hover hover:scale-105"
-                  onClick={() => handleReadMoreClick(post.slug)}
+                  className="bg-primary rounded-[25px] h-10 px-8 transition-all duration-300 hover:bg-primary-hover hover:scale-105"                  
                 >
                   <span className="font-bold text-white text-xs">READ MORE</span>
                   <div className="w-[28px] h-[28px] bg-white rounded-full ml-3 flex items-center justify-center">
                     <ArrowRightIcon className="h-5 w-5 text-primary" />
                   </div>
                 </Button>
+                </Link>
               </CardContent>
             </Card>
           ))}

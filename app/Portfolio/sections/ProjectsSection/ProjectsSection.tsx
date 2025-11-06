@@ -145,7 +145,7 @@ export const ProjectsSection = (): JSX.Element => {
         url.searchParams.set('limit', PAGE_SIZE.toString());
         url.searchParams.set('page', String(pageToLoad));
 
-        const res = await fetch(url.toString(), { cache: 'no-store', signal });
+        const res = await fetch(url.toString(), { cache: 'force-cache', signal });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
         const data: ApiResponse = await res.json();

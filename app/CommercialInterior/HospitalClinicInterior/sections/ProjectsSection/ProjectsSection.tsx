@@ -10,6 +10,11 @@ import { useNavigate } from "react-router-dom";
 
 gsap.registerPlugin(ScrollTrigger, SplitText, ScrollToPlugin);
 
+interface ProjectSectionProps {
+  title?: string;
+  description?: string;
+}
+
 /* ------------ Image helpers ------------ */
 const CMS_ORIGIN = "https://interiorvillabd.com";
 const MEDIA_BASE = `${CMS_ORIGIN}/api/media/file/`;
@@ -56,7 +61,7 @@ interface ProjectsApiResponse { docs: any[]; }
 /* Fallback palette */
 const palette = ["#2D3142", "#3A3F55", "#424861", "#4A516D", "#535A79"];
 
-export const ProjectsSection = (): JSX.Element => {
+export const ProjectsSection = ({ description }: ProjectSectionProps): JSX.Element => {
   const sectionRef = useRef<HTMLElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -336,9 +341,10 @@ export const ProjectsSection = (): JSX.Element => {
 
           <p
             ref={subtitleRef}
-            className="text-sm md:text-base lg:text-lg text-[#626161] max-w-2xl md:max-w-3xl lg:max-w-4xl mx-auto leading-relaxed [font-family:'Fahkwang',Helvetica]"
-          >
-            Explore our showcase of exceptional commercial interior design projects that enhance productivity and reflect brand excellence.
+            className="text-base [font-family:'Fahkwang',Helvetica] text-[#626161] leading-relaxed max-w-3xl mx-auto"
+          >            
+            {description ||
+              "Explore our showcase of exceptional commercial interior design projects that enhance productivity and reflect brand excellence."}
           </p>
         </div>
       </section>

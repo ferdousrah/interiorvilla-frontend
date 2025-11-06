@@ -34,7 +34,7 @@ const CorporateOfficeInterior = (): JSX.Element => {
     fetchService();
   }, []);
 
-  const { hero, seoDetails, introSection } = serviceData || {};
+  const { hero, seoDetails, introSection, recentProjects } = serviceData || {};
 
   const metaTitle = seoDetails?.metaTitle || "Corporate & Office Interior Design in Bangladesh | Modern Workspaces";
   const metaDescription = seoDetails?.metaDescription || introSection?.description || "";
@@ -96,7 +96,10 @@ const CorporateOfficeInterior = (): JSX.Element => {
               description={introSection?.description}
             />
             <ProcessSection />
-            <ProjectsSection />
+            <ProjectsSection
+              //sectionTitle={recentProjects?.sectionTitle}
+              description={recentProjects?.sectionDescription}
+            />
             <CTASection />
           </section>
 

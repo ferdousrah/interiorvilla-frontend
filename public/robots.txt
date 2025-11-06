@@ -1,19 +1,15 @@
 User-agent: *
 Allow: /
 
-# Disallow backend/admin paths (not needed on public site, but safe to add)
+# Disallow backend/admin paths
 Disallow: /admin
 Disallow: /cms
 Disallow: /dashboard
 Disallow: /api/
 Disallow: /media/
 
-# Prevent indexing build or source assets
+# Prevent indexing source files (but allow compiled JS/CSS)
 Disallow: /src/
-Disallow: /dist/
-Disallow: /static/
-Disallow: /*.js$
-Disallow: /*.css$
 Disallow: /*.map$
 Disallow: /*.ts$
 Disallow: /*.tsx$

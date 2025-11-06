@@ -42,6 +42,7 @@ const ArchitecturalConsultancy = React.lazy(() => import('../app/ArchitecturalCo
 const BookAppointment = React.lazy(() => import('../app/BookAppointment').then(m => ({ default: m.BookAppointment })));
 const FAQ = React.lazy(() => import('../app/FAQ').then(m => ({ default: m.FAQ })));
 const NotFound = React.lazy(() => import('../app/NotFound').then(m => ({ default: m.NotFound })));
+const ServiceAreas = React.lazy(() => import('../app/ServiceArea').then(m => ({ default: m.ServiceArea })));
 
 // Component to handle scroll to top on route change
 const ScrollToTop = () => {
@@ -372,6 +373,16 @@ function App() {
             <>              
               <LazyComponent fallback={<PageLoadingFallback />}>
                 <FAQ />
+              </LazyComponent>
+            </>
+          }
+        />
+        <Route
+          path="/service-areas/:slug"
+          element={
+            <>              
+              <LazyComponent fallback={<PageLoadingFallback />}>
+                <ServiceAreas />
               </LazyComponent>
             </>
           }

@@ -59,7 +59,7 @@ export const ProjectInfoSection = (): JSX.Element => {
   return (
     <section ref={sectionRef} className="py-8 md:py-12 bg-white -mt-8 relative z-10">
       <div className="container mx-auto px-4 max-w-6xl">
-        <div ref={infoGridRef} className="grid grid-cols-1 md:grid-cols-4 gap-12 md:gap-16 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-12 md:gap-16 mb-8">
           {/* Year */}
           <div className="text-center md:text-left">
             <h3 className="text-base font-semibold [font-family:'Fahkwang',Helvetica] text-[#01190c] mb-4 uppercase tracking-wider">

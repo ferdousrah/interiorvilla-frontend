@@ -50,7 +50,7 @@ export const CTASection = (): JSX.Element => {
 
   return (
     <section 
-      ref={sectionRef}
+      
       className="py-16 md:py-24"
     >
       <div className="container mx-auto px-4 max-w-6xl">
