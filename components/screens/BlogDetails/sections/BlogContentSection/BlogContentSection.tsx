@@ -208,7 +208,7 @@ export const BlogContentSection = (): JSX.Element => {
   return (
     <section
       ref={sectionRef}
-      className="py-16 md:py-15 bg-white relative z-10"
+      className="py-16 md:py-15 bg-white -mt-48 relative z-10"
     >
       <div className="container mx-auto px-4 max-w-7xl grid grid-cols-1 lg:grid-cols-3 gap-12">
         {/* Main Content */}

@@ -134,7 +134,7 @@ export const BlogContentSection = ({ serviceArea }: BlogContentSectionProps): JS
   return (
     <section
       ref={sectionRef}
-      className="py-16 md:py-20 bg-white relative z-10"
+      className="py-16 md:py-20 bg-white -mt-48 relative z-10"
     >
       <div className="container mx-auto px-4 max-w-7xl">
         {/* Main Content */}
