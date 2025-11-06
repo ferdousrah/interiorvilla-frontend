@@ -75,6 +75,24 @@ export async function fetchSeoDataForRoute(path) {
       };
     }
 
+    // Handle service areas
+    if (path.startsWith('/service-areas/')) {
+      const slug = path.replace('/service-areas/', '');
+      const response = await fetch(
+        `${API_BASE}/service-areas?where[slug][equals]=${slug}&depth=1&draft=false`
+      );
+      const data = await response.json();
+      const doc = data?.docs?.[0];
+
+      if (!doc) return null;
+
+      // Return seoDetails with featured image if available
+      return {
+        ...doc.seoDetails,
+        featuredImage: doc.featuredImage?.url || doc.featuredImage,
+      };
+    }
+
     // Handle static/global pages
     const apiUrl = routeToApiMap[path];
     if (!apiUrl) return null;
