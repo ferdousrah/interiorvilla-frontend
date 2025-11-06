@@ -1,1 +1,1 @@
-export { BlogDetails } from "./ServiceArea";
+export { ServiceAreaDetails } from "./ServiceArea";

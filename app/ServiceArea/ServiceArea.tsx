@@ -1,72 +1,76 @@
-// app/components/screens/BlogDetails/BlogDetails.tsx
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { CustomCursor } from "../../components/ui/cursor";
 import { FooterSection } from "../../components/screens/Home/sections/FooterSection/FooterSection";
 import { HeroSection, BlogContentSection } from "./sections";
-import SEO, { buildBlogPostingSchema } from "../../src/utils/SEO"; // ✅ SEO + helper
+import SEO from "../../src/utils/SEO";
 
-const BlogDetails = (): JSX.Element => {
+const ServiceAreaDetails = (): JSX.Element => {
   const { slug } = useParams();
-  const [blog, setBlog] = useState<any>(null);
+  const [serviceArea, setServiceArea] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!slug) return;
 
+    setLoading(true);
     fetch(
-      `https://interiorvillabd.com/api/blog-posts?where[slug][equals]=${slug}&depth=1&draft=false`
+      `https://interiorvillabd.com/api/service-areas?where[slug][equals]=${slug}&depth=1&draft=false`
     )
       .then((res) => res.json())
       .then((json) => {
         if (json?.docs?.[0]) {
-          setBlog(json.docs[0]);
+          setServiceArea(json.docs[0]);
         }
+        setLoading(false);
       })
-      .catch((err) => console.error("Failed to fetch blog details:", err));
+      .catch((err) => {
+        console.error("Failed to fetch service area details:", err);
+        setLoading(false);
+      });
   }, [slug]);
 
-  const seo = blog?.seoDetails;
+  const seo = serviceArea?.seoDetails;
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-xl">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!serviceArea) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-xl">Service area not found</div>
+      </div>
+    );
+  }
 
   return (
     <main className="flex flex-col w-full items-start relative bg-white overflow-x-hidden min-h-screen">
-      {/* ✅ SEO for blog details */}
       {seo && (
         <SEO
           title={seo.metaTitle}
           description={seo.metaDescription}
           keywords={seo.metaKey}
-          url={`https://interiorvillabd.com/blog/${slug}`}
-          image={blog?.featuredImage?.url}
-          extraJsonLd={
-            seo.seoStructuredData ||
-            buildBlogPostingSchema({
-              headline: seo.metaTitle,
-              description: seo.metaDescription,
-              image: blog?.featuredImage?.url,
-              url: `https://interiorvillabd.com/blog/${slug}`,
-              datePublished: blog?.createdAt,
-              dateModified: blog?.updatedAt,
-              authorName: blog?.author || "Interior Villa",
-            })
-          }
+          url={`https://interiorvillabd.com/service-areas/${slug}`}
+          image={serviceArea?.featuredImage?.url}
         />
       )}
 
-      {/* Custom Cursor */}
       <CustomCursor className="custom-cursor" />
 
-      {/* Hero Section */}
-      <HeroSection blog={blog} />
+      <HeroSection serviceArea={serviceArea} />
 
-      {/* Main Content Container */}
       <article className="w-full">
-        <BlogContentSection blog={blog} />
+        <BlogContentSection serviceArea={serviceArea} />
       </article>
 
-      {/* Footer */}
       <FooterSection />
     </main>
   );
 };
 
-export { BlogDetails };
+export { ServiceAreaDetails };

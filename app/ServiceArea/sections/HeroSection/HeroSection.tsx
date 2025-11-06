@@ -8,48 +8,17 @@ import { MainMenu } from "../../../../components/ui/navigation-menu"; // ✅ use
 
 gsap.registerPlugin(ScrollTrigger);
 
-export const HeroSection = (): JSX.Element => {
-  // ---- NEW: dynamic title state ----
-  const { slug } = useParams<{ slug?: string }>();
-  const [pageTitle, setPageTitle] = useState<string>("Blog Details");
+interface HeroSectionProps {
+  serviceArea?: {
+    name?: string;
+    featuredImage?: {
+      url?: string;
+    };
+  };
+}
 
-  const niceTitleFromSlug = (s: string) =>
-    decodeURIComponent(s)
-      .replace(/[-_]+/g, " ")
-      .replace(/\s+/g, " ")
-      .trim()
-      .replace(/\b([a-z])/gi, (m) => m.toUpperCase());
-
-  useEffect(() => {
-    if (!slug) {
-      setPageTitle("Blog Details");
-      return;
-    }
-
-    setPageTitle(niceTitleFromSlug(slug));
-
-    const ctrl = new AbortController();
-    (async () => {
-      try {
-        const res = await fetch(
-          `https://interiorvillabd.com/api/blog-posts?limit=1&where[slug][equals]=${encodeURIComponent(
-            slug
-          )}`,
-          { signal: ctrl.signal }
-        );
-        if (res.ok) {
-          const data = await res.json();
-          const t = data?.docs?.[0]?.title;
-          if (t) setPageTitle(t);
-        }
-      } catch {
-        // ignore
-      }
-    })();
-
-    return () => ctrl.abort();
-  }, [slug]);
-  // ---- END dynamic title ----
+export const HeroSection = ({ serviceArea }: HeroSectionProps): JSX.Element => {
+  const pageTitle = serviceArea?.name || "Service Area";
 
   const heroImageRef = useRef<HTMLImageElement>(null);
   const heroContainerRef = useRef<HTMLDivElement>(null);
@@ -100,8 +69,8 @@ export const HeroSection = (): JSX.Element => {
         <img
           ref={heroImageRef}
           className="w-full h-full object-cover will-change-transform"
-          alt="Blog Details Hero"
-          src="/image.png"
+          alt={`${pageTitle} Hero`}
+          src={serviceArea?.featuredImage?.url || "/image.png"}
           style={{
             transformOrigin: "center center",
             backfaceVisibility: "hidden",
@@ -145,12 +114,9 @@ export const HeroSection = (): JSX.Element => {
                 Home
               </Link>
               <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 text-white/60" />
-              <Link
-                to="/blog"
-                className="text-white/80 hover:text-white transition-colors duration-300 [font-family:'Fahkwang',Helvetica] text-sm sm:text-base"
-              >
-                Blog
-              </Link>
+              <span className="text-white/80 [font-family:'Fahkwang',Helvetica] text-sm sm:text-base">
+                Service Areas
+              </span>
               <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 text-white/60" />
               <span className="text-primary [font-family:'Fahkwang',Helvetica] text-sm sm:text-base font-medium">
                 {pageTitle}
