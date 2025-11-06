@@ -89,14 +89,16 @@ async function generateSitemap() {
     }
 
     // Fetch dynamic content
-    console.log('📡 Fetching projects and blog posts...');
-    const [projects, blogs] = await Promise.all([
+    console.log('📡 Fetching projects, blog posts, and service areas...');
+    const [projects, blogs, serviceAreas] = await Promise.all([
       fetchWithRetry(`${CMS_URL}/projects?limit=100&depth=0`),
       fetchWithRetry(`${CMS_URL}/blog-posts?limit=100&depth=0`),
+      fetchWithRetry(`${CMS_URL}/service-areas?limit=100&depth=0`),
     ]);
 
     console.log(`✅ Fetched ${projects?.docs?.length || 0} projects`);
     console.log(`✅ Fetched ${blogs?.docs?.length || 0} blog posts`);
+    console.log(`✅ Fetched ${serviceAreas?.docs?.length || 0} service areas`);
 
     // Generate URL entries
     const urls = [];
@@ -136,13 +138,31 @@ async function generateSitemap() {
           console.warn('⚠️ Blog post missing slug:', blog.id);
           return;
         }
-        
+
         const lastmod = blog.updatedAt || blog.createdAt || new Date().toISOString();
         urls.push(createUrlEntry({
           loc: `${BASE_URL}/blog/${blog.slug}`,
           priority: 0.7,
           lastmod: new Date(lastmod).toISOString(),
           changefreq: 'weekly',
+        }));
+      });
+    }
+
+    // Dynamic service area pages
+    if (serviceAreas?.docs?.length) {
+      serviceAreas.docs.forEach(serviceArea => {
+        if (!serviceArea.slug) {
+          console.warn('⚠️ Service area missing slug:', serviceArea.id);
+          return;
+        }
+
+        const lastmod = serviceArea.updatedAt || serviceArea.createdAt || new Date().toISOString();
+        urls.push(createUrlEntry({
+          loc: `${BASE_URL}/service-areas/${serviceArea.slug}`,
+          priority: 0.8,
+          lastmod: new Date(lastmod).toISOString(),
+          changefreq: 'monthly',
         }));
       });
     }
