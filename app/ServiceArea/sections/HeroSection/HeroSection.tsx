@@ -79,23 +79,19 @@ export const HeroSection = ({ serviceArea }: HeroSectionProps): JSX.Element => {
         />
       </div>
 
-      {/* Shared Header/Menu */}
+      {/* Shared Sticky Header/Menu */}
       <MainMenu />
 
       {/* Hero Content */}
       <div className="absolute inset-0 bg-black/40 flex items-center justify-start">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
-          <div className="text-left text-white max-w-4xl">
-            {/* Page Title */}
+          <div className="text-left text-white max-w-3xl">
             <motion.h1
               initial={{ opacity: 0, x: -50 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 1, delay: 0.5 }}
               className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-[48px] font-bold [font-family:'Fahkwang',Helvetica] mb-4 sm:mb-6 leading-tight"
-              style={{
-                fontSize: "clamp(2rem, 5vw, 48px)",
-                lineHeight: "1.1",
-              }}
+              style={{ fontSize: "clamp(2rem, 5vw, 48px)", lineHeight: "1.1" }}
             >
               {pageTitle}
             </motion.h1>
@@ -105,7 +101,7 @@ export const HeroSection = ({ serviceArea }: HeroSectionProps): JSX.Element => {
               initial={{ opacity: 0, x: -30 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8, delay: 0.8 }}
-              className="flex items-center space-x-2"
+              className="flex items-center flex-wrap space-x-2"
             >
               <Link
                 to="/"
