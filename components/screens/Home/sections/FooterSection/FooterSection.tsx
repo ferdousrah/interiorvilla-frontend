@@ -486,17 +486,28 @@ export const FooterSection = (): JSX.Element => {
             </div>
           </div>
 
-          {/* Follow Us Column */}
+          {/* Service Areas Column */}
           <div ref={socialSectionRef} className="flex flex-col items-start gap-6">
             <h4 className="[font-family:'Fahkwang',Helvetica] font-medium text-white text-lg tracking-[0] leading-[26px]">
               Service Areas
             </h4>
-            
+
             {/* Divider */}
             <div className="w-full h-px bg-white/30 -mt-2"></div>
-            
-            <div className="flex items-center gap-4">
-              {/* List of service areas */}
+
+            {/* Scrollable Service Areas Container */}
+            <div className="w-full h-[200px] overflow-y-auto pr-2 service-areas-scroll">
+              <div className="flex flex-wrap gap-2">
+                {serviceAreas.map((area) => (
+                  <Link
+                    key={area.id}
+                    to={`/service-areas/${area.slug}`}
+                    className="inline-flex items-center px-3 py-1.5 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full text-white text-xs [font-family:'Fahkwang',Helvetica] font-normal transition-all duration-300 hover:bg-primary hover:border-primary hover:scale-105 hover:shadow-lg hover:shadow-primary/20"
+                  >
+                    {area.name}
+                  </Link>
+                ))}
+              </div>
             </div>
 
           </div>
